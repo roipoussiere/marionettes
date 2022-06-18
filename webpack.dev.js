@@ -8,7 +8,8 @@ module.exports = merge(common, {
     devServer: {
         static: [
             path.join(__dirname, './demo'),
-            path.join(__dirname, './dist')
+            path.join(__dirname, './dist'),
+            path.join(__dirname, './assets')
         ],
         hot: true,
     },
