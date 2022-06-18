@@ -1,0 +1,8 @@
+# Node modules
+/node_modules/
+
+# Assets (ie. 3d model files)
+/assets/
+
+# Files used for development
+-*

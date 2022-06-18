@@ -1,0 +1,21 @@
+{
+  "name": "body-posture",
+  "version": "0.0.1",
+  "description": "A tool to edit and preview 3d-model postures",
+  "scripts": {
+    "dev": "webpack serve --config ./src/webpack.dev.js"
+  },
+  "main": "index.js",
+  "author": "Roipoussiere <roipoussiere@protonmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "three": "^0.141.0",
+    "@types/three": "^0.141.0",
+    "ts-loader": "^9.3.0",
+    "typescript": "^4.7.4",
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.9.2",
+    "webpack-merge": "^5.8.0"
+  }
+}
