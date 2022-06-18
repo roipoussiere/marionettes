@@ -3,23 +3,24 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 
 export class BodyPosture {
+	canvas: HTMLCanvasElement
 	scene: THREE.Scene
-	mesh: THREE.Mesh
 	renderer: THREE.WebGLRenderer
-	camera: THREE.PerspectiveCamera
+	camera: THREE.Camera
+	control: OrbitControls
+	mesh: THREE.Mesh
 
-	constructor() {
+	constructor(canvas_id: string) {
+		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		this.scene = new THREE.Scene()
 
 		this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 10)
 		this.camera.position.z = 2
-		
-		const canvas1 = document.getElementById('tc1') as HTMLCanvasElement
-		
-		this.renderer = new THREE.WebGLRenderer({ canvas: canvas1 })
+	
+		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas })
 		this.renderer.setSize(600, 450)
 		
-		new OrbitControls(this.camera, this.renderer.domElement)
+		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 		
 		const geometry = new THREE.BoxGeometry()
 		const material = new THREE.MeshBasicMaterial({
