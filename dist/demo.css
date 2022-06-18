@@ -1,0 +1,9 @@
+body {
+    overflow: hidden;
+    margin: 0px;
+    background-color: #ddd;
+}
+
+#canvas-container {
+    text-align: center;
+}
