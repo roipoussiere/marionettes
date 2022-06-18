@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 
-class BodyPosture {
+export class BodyPosture {
 	scene: THREE.Scene
 	mesh: THREE.Mesh
 	renderer: THREE.WebGLRenderer

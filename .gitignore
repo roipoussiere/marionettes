@@ -6,3 +6,6 @@
 
 # Files used for development
 -*
+
+# Dist folder used to publish on npm
+/dist/
