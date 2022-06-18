@@ -4,7 +4,7 @@
 		<meta charset="utf-8" />
 		<title>Body posture</title>
 		<link rel="stylesheet" type="text/css" href="demo.css" />
-		<script type="module" src="body-posture.js"></script>
+		<script type="module" src="body-posture.min.js"></script>
 	</head>
 
 	<body>
@@ -12,6 +12,11 @@
 		<div id="canvas-container">
 			<canvas id="tc1" class="three"></canvas>
 		</div>
-		<!-- <script> console.log('foo'); </script> -->
+		<!-- <script type="module">
+			import { BodyPosture } from './body-posture.min.js'
+			const body_posture = new BodyPosture()
+			let animate = () => body_posture.animate(animate)
+			animate()
+		</script> -->
 	</body>
 </html>

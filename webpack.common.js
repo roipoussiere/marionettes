@@ -15,7 +15,7 @@ module.exports = {
         extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
-        filename: 'body-posture.js',
-        path: path.resolve(__dirname, '../dist'),
+        filename: 'body-posture.min.js',
+        path: path.resolve(__dirname, './dist'),
     },
 }
