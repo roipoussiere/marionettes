@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 
 export class BodyPosture {
@@ -10,49 +11,71 @@ export class BodyPosture {
 	renderer: THREE.WebGLRenderer
 	control: OrbitControls
 	fbxLoader: FBXLoader
+	gltfLoader: GLTFLoader
 
 	constructor(canvas_id: string) {
+		const window_aspect = window.innerWidth / window.innerHeight
+
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		this.scene = new THREE.Scene()
-		this.camera = new THREE.PerspectiveCamera(75, 1, 0.5, 20)
-		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas })
+
+		this.camera = new THREE.PerspectiveCamera(50, window_aspect)
+		this.camera.position.set(5, 2, 0)
+
+		this.renderer = new THREE.WebGLRenderer({
+			canvas: this.canvas,
+			antialias: true
+		})
+		this.renderer.setSize(600, 450)
+		this.renderer.shadowMap.enabled = true;
+
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 		this.fbxLoader = new FBXLoader()
+		this.gltfLoader = new GLTFLoader()
 	}
 
 	init() {
-		this.camera.position.y = 2
-		this.camera.position.z = 3
-		this.renderer.setSize(600, 450)
-
-		// this.scene.add(THREE.SkeletonHelper( skinnedMesh ));
-		this.addFbx('./xbot-light.fbx')
 		this.addGrid()
 		this.addFloor()
 		this.addLights()
+		// this.loadFbxModel('./xbot-light.fbx',
+		this.loadGltfModel('./xbot-three.glb',
+			(model: THREE.Group, scale: number) => this.addModel(model, scale))
 	}
 
-	addFbx(model_path: string) {
+	loadFbxModel(model_path: string, callback: CallableFunction) {
 		this.fbxLoader.load(
 			model_path,
-			object => {
-				object.traverse(function (child) {
-					if (child.type == 'Bone') {
-						child = <THREE.Bone> child
-						child.rotateX(Math.random() * 0.3);
-						child.rotateY(Math.random() * 0.3);
-						child.rotateZ(Math.random() * 0.3);
-						console.log('bone:', child.name)
-					} else {
-						console.log('other:', child)
-					}
-				})
-				object.scale.set(.01, .01, .01)
-				this.scene.add(object)
-			},
+			model => callback(model, 0.1),
 			xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
 			error => console.log(error)
 		)
+	}
+
+	loadGltfModel(model_path: string, callback: CallableFunction) {
+		this.gltfLoader.load(
+			model_path,
+			gltf => callback(gltf.scene, 1),
+			xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
+			error => console.log(error)
+		)
+	}
+
+	addModel(model: THREE.Group, scale: number) {
+		model.traverse(function (child) {
+			if (child.type == 'Bone') {
+				child = <THREE.Bone> child
+				child.rotateX(Math.random() * 0.3);
+				child.rotateY(Math.random() * 0.3);
+				child.rotateZ(Math.random() * 0.3);
+				console.log('bone:', child.name)
+			} else {
+				console.log('other:', child)
+			}
+		})
+		model.scale.set(scale, scale, scale)
+		this.scene.add(model)
+		// this.scene.add(new THREE.SkeletonHelper( model ));
 	}
 
 	addGrid() {
@@ -76,12 +99,12 @@ export class BodyPosture {
 	}
 
 	addLights() {
-		const light = new THREE.PointLight()
-		light.position.set(0.8, 1.4, 1.0)
-		this.scene.add(light)
-
-		const ambientLight = new THREE.AmbientLight()
+		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.5)
 		this.scene.add(ambientLight)
+
+		const light = new THREE.PointLight(new THREE.Color(0xffffff), 0.5)
+		light.position.set(10, 10, 0)
+		this.scene.add(light)
 	}
 
 	animate(callback: FrameRequestCallback) {
