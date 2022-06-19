@@ -4,6 +4,8 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 
+const SPINNER_ID = 'body-posture-spinner'
+
 export class BodyPosture {
 	canvas: HTMLCanvasElement
 	model_path: string
@@ -16,6 +18,7 @@ export class BodyPosture {
 
 	constructor(canvas_id: string, model_path: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
+		this.buildLoader()
 		this.model_path = model_path
 		this.model_ext = <string> this.model_path.split('.').pop()
 
@@ -48,6 +51,36 @@ export class BodyPosture {
 		this.addFloor()
 		this.addLights()
 		this.addModel()
+	}
+
+	buildLoader() {
+		const canvasBRect = this.canvas.getBoundingClientRect();
+
+		const spinner_size = Math.round(0.3 * Math.min(canvasBRect.width, canvasBRect.height))
+		const spinner = document.createElement('div');
+		spinner.id = SPINNER_ID
+		spinner.style.cssText = `
+position: absolute;
+display: inline-block;
+width:  ${ spinner_size }px;
+height: ${ spinner_size }px;
+left: ${ Math.round(canvasBRect.left + canvasBRect.width  / 2 - spinner_size / 2) }px;
+top:  ${ Math.round(canvasBRect.top  + canvasBRect.height / 2 - spinner_size / 2) }px;
+border: 10px solid #aaa;
+border-top: 10px solid #3498db;
+border-radius: 50%;
+animation: spin 2s linear infinite;
+		`;
+		document.body.appendChild(spinner);
+
+		var style = document.createElement('style');
+		style.innerHTML = `
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+		`;
+		document.body.appendChild(style);
 	}
 
 	addModel() {
@@ -96,6 +129,8 @@ export class BodyPosture {
 		})
 		model.scale.set(scale, scale, scale)
 		this.scene.add(model)
+		const spinner = <HTMLCanvasElement> document.getElementById(SPINNER_ID)
+		spinner.remove()
 		// this.scene.add(new THREE.SkeletonHelper( model ));
 	}
 
