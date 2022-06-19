@@ -1,8 +1,9 @@
 # Node modules
 /node_modules/
 
-# Assets (ie. 3d model files)
-/assets/
+# 3d model files
+/assets/*.fbx
+/assets/*.glb
 
 # Files used for development
 -*
