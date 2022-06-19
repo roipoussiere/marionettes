@@ -14,7 +14,7 @@ export class BodyPosture {
 	control: OrbitControls
 	loader: GLTFLoader | FBXLoader
 
-	constructor(canvas_id: string, model_path: string) {
+	constructor(canvas_id: string, canvas_size: Array<number>, model_path: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		this.model_path = model_path
 		this.model_ext = <string> this.model_path.split('.').pop()
@@ -29,7 +29,7 @@ export class BodyPosture {
 			canvas: this.canvas,
 			antialias: true
 		})
-		this.renderer.setSize(600, 450)
+		this.renderer.setSize(canvas_size[0], canvas_size[1])
 		this.renderer.shadowMap.enabled = true;
 
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
