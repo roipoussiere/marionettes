@@ -28,6 +28,7 @@ export class BodyPosture {
 		// this.scene.add(THREE.SkeletonHelper( skinnedMesh ));
 		this.addFbx('./xbot-light.fbx')
 		this.addGrid()
+		this.addFloor()
 		this.addLights()
 	}
 
@@ -58,6 +59,20 @@ export class BodyPosture {
 		let grid = new THREE.GridHelper( 4, 20 )
 		grid.position.y = 0.01
 		this.scene.add(grid)
+	}
+
+	addFloor() {
+		let floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
+		let floorMaterial = new THREE.MeshPhongMaterial({
+			color: 0xeeeeee,
+			shininess: 0
+		});
+
+		let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+		floor.rotation.x = -0.5 * Math.PI;
+		floor.receiveShadow = true;
+		floor.position.y = 0;
+		this.scene.add(floor);
 	}
 
 	addLights() {
