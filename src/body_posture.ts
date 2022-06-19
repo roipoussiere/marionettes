@@ -6,19 +6,22 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 export class BodyPosture {
 	canvas: HTMLCanvasElement
+	model_path: string
+	model_ext: string
 	scene: THREE.Scene
 	camera: THREE.Camera
 	renderer: THREE.WebGLRenderer
 	control: OrbitControls
-	fbxLoader: FBXLoader
-	gltfLoader: GLTFLoader
+	loader: GLTFLoader | FBXLoader
 
-	constructor(canvas_id: string) {
-		const window_aspect = window.innerWidth / window.innerHeight
-
+	constructor(canvas_id: string, model_path: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
+		this.model_path = model_path
+		this.model_ext = <string> this.model_path.split('.').pop()
+
 		this.scene = new THREE.Scene()
 
+		const window_aspect = window.innerWidth / window.innerHeight
 		this.camera = new THREE.PerspectiveCamera(50, window_aspect)
 		this.camera.position.set(5, 2, 0)
 
@@ -30,30 +33,48 @@ export class BodyPosture {
 		this.renderer.shadowMap.enabled = true;
 
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
-		this.fbxLoader = new FBXLoader()
-		this.gltfLoader = new GLTFLoader()
+
+		if (this.model_ext === 'fbx') {
+			this.loader = new FBXLoader()
+		} else if (this.model_ext === 'glb' || this.model_ext === 'gltf') {
+			this.loader = new GLTFLoader()
+		} else {
+			throw 'bad model extension: ' + this.model_ext
+		}
 	}
 
 	init() {
 		this.addGrid()
 		this.addFloor()
 		this.addLights()
-		// this.loadFbxModel('./xbot-light.fbx',
-		this.loadGltfModel('./xbot-three.glb',
-			(model: THREE.Group, scale: number) => this.addModel(model, scale))
+		this.addModel()
+	}
+
+	addModel() {
+		let callback: CallableFunction = (model: THREE.Group, scale: number) => {
+			this.onModelLoaded(model, scale)
+		}
+
+		if (this.model_ext === 'fbx') {
+			this.loadFbxModel(this.model_path, callback)
+		} else {
+			this.loadGltfModel(this.model_path, callback)
+		}
 	}
 
 	loadFbxModel(model_path: string, callback: CallableFunction) {
-		this.fbxLoader.load(
+		this.loader = <FBXLoader> this.loader
+		this.loader.load(
 			model_path,
-			model => callback(model, 0.1),
+			model => callback(model, 0.01),
 			xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
 			error => console.log(error)
 		)
 	}
 
 	loadGltfModel(model_path: string, callback: CallableFunction) {
-		this.gltfLoader.load(
+		this.loader = <GLTFLoader> this.loader
+		this.loader.load(
 			model_path,
 			gltf => callback(gltf.scene, 1),
 			xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
@@ -61,7 +82,7 @@ export class BodyPosture {
 		)
 	}
 
-	addModel(model: THREE.Group, scale: number) {
+	onModelLoaded(model: THREE.Group, scale: number) {
 		model.traverse(function (child) {
 			if (child.type == 'Bone') {
 				child = <THREE.Bone> child
