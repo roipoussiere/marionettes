@@ -1,9 +1,9 @@
-import { BodyManager } from './manager'
+import { Puppeteer } from './puppeteer'
 
 
-// const body_posture = new BodyManager('./xbot-light.fbx')
-const body_posture = new BodyManager('./xbot-three.glb')
-body_posture.addScene('cv1')
-body_posture.init()
-let animate = () => body_posture.animate(animate)
+// const body_posture = new Puppeteer('./xbot-light.fbx')
+const puppeteer = new Puppeteer('./xbot-three.glb')
+puppeteer.addScene('cv1')
+puppeteer.init()
+let animate = () => puppeteer.animate(animate)
 animate()

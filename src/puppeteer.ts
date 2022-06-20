@@ -1,19 +1,19 @@
 import * as THREE from 'three'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { BodyScene, SPINNER_CLASS } from './scene'
+import { Theater, SPINNER_CLASS } from './theater'
 
 
-export class BodyManager {
+export class Puppeteer {
 	model_path: string
 	model_ext: string
 	loader: GLTFLoader | FBXLoader
-	scenes: { [key: string]: BodyScene }
+	theaters: { [key: string]: Theater }
 
 	constructor(model_path: string) {
 		this.#addStyle()
 		this.model_path = model_path
-		this.scenes = {}
+		this.theaters = {}
 		this.model_ext = <string> this.model_path.split('.').pop()
 
 		if (this.model_ext === 'fbx') {
@@ -34,19 +34,19 @@ export class BodyManager {
 	}
 
 	addScene(canvas_id: string) {
-		this.scenes[canvas_id] = new BodyScene(canvas_id)
-		return this.scenes[canvas_id]
+		this.theaters[canvas_id] = new Theater(canvas_id)
+		return this.theaters[canvas_id]
 	}
 
     animate(callback: FrameRequestCallback) {
 		requestAnimationFrame(callback)	
-		Object.values(this.scenes).forEach(scene => {
+		Object.values(this.theaters).forEach(scene => {
 			scene.render()
 		})
 	}
 
 	#addToAllScenes(object: THREE.Object3D) {
-		Object.values(this.scenes).forEach(scene => {
+		Object.values(this.theaters).forEach(scene => {
 			scene.addObject(object)
 		});
 	}

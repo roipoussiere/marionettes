@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 export const SPINNER_CLASS = 'body-posture-spinner'
 
-export class BodyScene {
+export class Theater {
 	canvas: HTMLCanvasElement
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera

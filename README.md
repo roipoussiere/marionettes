@@ -1,6 +1,12 @@
-# Body posture
+# Marionettes
 
 A tool to edit and preview 3d-model postures.
+
+![](./assets/icon.png)
+
+It's a work in progress for now, come back later!
+
+Still curious? Try [the demo](https://roipoussiere.frama.io/marionettes).
 
 ## Installation
 
@@ -19,4 +25,4 @@ I got some help and inspiration from:
 
 ### Models
 
-3D models comes from [Mixamo](https://www.mixamo.com/#/?type=Character)
+3D model used in the demo page comes from [Mixamo](https://www.mixamo.com/#/?type=Character).
