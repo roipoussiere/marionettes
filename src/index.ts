@@ -1,4 +1,4 @@
-import { BodyManager } from './body_posture'
+import { BodyManager } from './manager'
 
 
 // const body_posture = new BodyManager('./xbot-light.fbx')
