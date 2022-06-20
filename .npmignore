@@ -1,0 +1,11 @@
+# 3d model files
+/assets/*.fbx
+/assets/*.glb
+
+# Files used for development
+-*
+
+# Files used for build and CI
+.gitlab-ci.yml
+tsconfig.json
+webpack.*

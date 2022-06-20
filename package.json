@@ -2,9 +2,12 @@
   "name": "marionettes",
   "version": "0.0.1",
   "description": "A tool to edit and preview 3d-model postures.",
+  "main": "dist/marionettes.js",
+  "types": "dist/marionettes.d.ts",
   "scripts": {
+    "dev": "webpack serve --config ./webpack.dev.js",
     "build": "webpack --config ./webpack.prod.js",
-    "dev": "webpack serve --config ./webpack.dev.js"
+    "prepublish": "yarn run build"
   },
   "author": "Roipoussiere <roipoussiere@protonmail.com>",
   "license": "MIT",

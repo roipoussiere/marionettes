@@ -10,6 +10,16 @@ Still curious? Try [the demo](https://roipoussiere.frama.io/marionettes).
 
 ## Installation
 
+### Via yarn / npm
+
+This project is [published on npm registry](https://www.npmjs.com/package/marionettes).
+
+    yarn install marionettes
+
+### Via sources
+
+    git clone https://framagit.org/roipoussiere/marionettes.git
+    cd marionettes
     yarn install
 
 ## Acknowledgments
