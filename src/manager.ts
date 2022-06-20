@@ -11,7 +11,7 @@ export class BodyManager {
 	scenes: { [key: string]: BodyScene }
 
 	constructor(model_path: string) {
-		this.addStyle()
+		this.#addStyle()
 		this.model_path = model_path
 		this.scenes = {}
 		this.model_ext = <string> this.model_path.split('.').pop()
@@ -26,11 +26,11 @@ export class BodyManager {
 	}
 
 	init() {
-		this.addStyle()
-		this.addGrid()
-		this.addFloor()
-		this.addLights()
-		this.addModel()
+		this.#addStyle()
+		this.#addGrid()
+		this.#addFloor()
+		this.#addLights()
+		this.#addModel()
 	}
 
 	addScene(canvas_id: string) {
@@ -38,13 +38,20 @@ export class BodyManager {
 		return this.scenes[canvas_id]
 	}
 
-	addToAllScenes(object: THREE.Object3D) {
+    animate(callback: FrameRequestCallback) {
+		requestAnimationFrame(callback)	
+		Object.values(this.scenes).forEach(scene => {
+			scene.render()
+		})
+	}
+
+	#addToAllScenes(object: THREE.Object3D) {
 		Object.values(this.scenes).forEach(scene => {
 			scene.addObject(object)
 		});
 	}
 
-	addStyle() {
+	#addStyle() {
 		var style = document.createElement('style');
 		style.innerHTML = `
 .${SPINNER_CLASS} {
@@ -63,19 +70,19 @@ export class BodyManager {
 		document.body.appendChild(style);
 	}
 
-	addModel() {
+	#addModel() {
 		let callback: CallableFunction = (model: THREE.Group, scale: number) => {
-			this.onModelLoaded(model, scale)
+			this.#onModelLoaded(model, scale)
 		}
 
 		if (this.model_ext === 'fbx') {
-			this.loadFbxModel(this.model_path, callback)
+			this.#loadFbxModel(this.model_path, callback)
 		} else {
-			this.loadGltfModel(this.model_path, callback)
+			this.#loadGltfModel(this.model_path, callback)
 		}
 	}
 
-	loadFbxModel(model_path: string, callback: CallableFunction) {
+	#loadFbxModel(model_path: string, callback: CallableFunction) {
 		this.loader = <FBXLoader> this.loader
 		this.loader.load(
 			model_path,
@@ -85,7 +92,7 @@ export class BodyManager {
 		)
 	}
 
-	loadGltfModel(model_path: string, callback: CallableFunction) {
+	#loadGltfModel(model_path: string, callback: CallableFunction) {
 		this.loader = <GLTFLoader> this.loader
 		this.loader.load(
 			model_path,
@@ -95,7 +102,7 @@ export class BodyManager {
 		)
 	}
 
-	onModelLoaded(model: THREE.Group, scale: number) {
+	#onModelLoaded(model: THREE.Group, scale: number) {
 		model.traverse(function (child) {
 			if (child.type == 'Bone') {
 				child = <THREE.Bone> child
@@ -109,7 +116,7 @@ export class BodyManager {
 		})
 		model.scale.set(scale, scale, scale)
 
-		this.addToAllScenes(model)
+		this.#addToAllScenes(model)
 
 		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
 			spinner.remove()
@@ -117,13 +124,13 @@ export class BodyManager {
 		// this.scene.add(new THREE.SkeletonHelper( model ));
 	}
 
-	addGrid() {
+	#addGrid() {
 		let grid = new THREE.GridHelper( 4, 20 )
 		grid.position.y = 0.01
-		this.addToAllScenes(grid)
+		this.#addToAllScenes(grid)
 	}
 
-	addFloor() {
+	#addFloor() {
 		let floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
 		let floorMaterial = new THREE.MeshPhongMaterial({
 			color: 0xeeeeee,
@@ -134,22 +141,15 @@ export class BodyManager {
 		floor.rotation.x = -0.5 * Math.PI;
 		floor.receiveShadow = true;
 		floor.position.y = 0;
-		this.addToAllScenes(floor)
+		this.#addToAllScenes(floor)
 	}
 
-	addLights() {
+	#addLights() {
 		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.5)
-		this.addToAllScenes(ambientLight)
+		this.#addToAllScenes(ambientLight)
 
 		const light = new THREE.PointLight(new THREE.Color(0xffffff), 0.5)
 		light.position.set(10, 10, 0)
-		this.addToAllScenes(light)
-	}
-
-	animate(callback: FrameRequestCallback) {
-		requestAnimationFrame(callback)	
-		Object.values(this.scenes).forEach(scene => {
-			scene.render()
-		})
+		this.#addToAllScenes(light)
 	}
 }

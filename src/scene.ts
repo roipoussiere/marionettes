@@ -13,7 +13,7 @@ export class BodyScene {
 
 	constructor(canvas_id: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
-		this.addSpinner()
+		this.#addSpinner()
 
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
@@ -31,7 +31,15 @@ export class BodyScene {
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 	}
 
-	addSpinner() {
+	addObject(object: THREE.Object3D) {
+		this.scene.add(object)
+	}
+
+	render() {
+		this.renderer.render(this.scene, this.camera)
+	}
+
+	#addSpinner() {
 		const canvasBRect = this.canvas.getBoundingClientRect();
 		const size = Math.round(0.3 * Math.min(canvasBRect.width, canvasBRect.height))
 		const left = Math.round(canvasBRect.left + canvasBRect.width  / 2 - size / 2)
@@ -42,13 +50,5 @@ export class BodyScene {
 		spinner.style.cssText = `width: ${ size }px; height: ${ size  }px;`
 		                      + `left: ${  left }px; top: ${    right }px;`;
 		document.body.appendChild(spinner);
-	}
-
-	addObject(object: THREE.Object3D) {
-		this.scene.add(object)
-	}
-
-	render() {
-		this.renderer.render(this.scene, this.camera)
 	}
 }
