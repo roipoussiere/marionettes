@@ -1,16 +1,23 @@
 {
   "name": "marionettes",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A tool to edit and preview 3d-model postures.",
-  "main": "dist/marionettes.js",
+  "keywords": [ "mannequin", "puppet", "marionette", "skeleton", "three", "3d" ],
+  "homepage": "https://roipoussiere.frama.io/marionettes",
+  "bugs": "https://framagit.org/roipoussiere/marionettes/-/issues",
+  "license": "MIT",
+  "author": "Roipoussiere <roipoussiere@protonmail.com>",
+  "browser": "dist/marionettes.min.js",
   "types": "dist/marionettes.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://framagit.org/roipoussiere/marionettes"
+  },
   "scripts": {
     "dev": "webpack serve --config ./webpack.dev.js",
     "build": "webpack --config ./webpack.prod.js",
     "prepublish": "yarn run build"
   },
-  "author": "Roipoussiere <roipoussiere@protonmail.com>",
-  "license": "MIT",
   "devDependencies": {
     "three": "^0.141.0",
     "@types/three": "^0.141.0",
