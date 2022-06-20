@@ -4,29 +4,18 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 
-const SPINNER_ID = 'body-posture-spinner'
+const SPINNER_CLASS = 'body-posture-spinner'
 
-export class BodyPosture {
+export class BodyScene {
 	canvas: HTMLCanvasElement
-	model_path: string
-	model_ext: string
-	scene: THREE.Scene
-	camera: THREE.Camera
 	renderer: THREE.WebGLRenderer
+	camera: THREE.Camera
+	scene: THREE.Scene
 	control: OrbitControls
-	loader: GLTFLoader | FBXLoader
 
-	constructor(canvas_id: string, model_path: string) {
+	constructor(canvas_id: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
-		this.buildLoader()
-		this.model_path = model_path
-		this.model_ext = <string> this.model_path.split('.').pop()
-
-		this.scene = new THREE.Scene()
-
-		const window_aspect = window.innerWidth / window.innerHeight
-		this.camera = new THREE.PerspectiveCamera(50, window_aspect)
-		this.camera.position.set(5, 2, 0)
+		this.addSpinner()
 
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
@@ -35,7 +24,48 @@ export class BodyPosture {
 		this.renderer.setSize(this.canvas.width, this.canvas.height)
 		this.renderer.shadowMap.enabled = true;
 
+		const window_aspect = window.innerWidth / window.innerHeight
+		this.camera = new THREE.PerspectiveCamera(50, window_aspect)
+		this.camera.position.set(5, 2, 0)
+
+		this.scene = new THREE.Scene()
+
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
+	}
+
+	addSpinner() {
+		const canvasBRect = this.canvas.getBoundingClientRect();
+		const size = Math.round(0.3 * Math.min(canvasBRect.width, canvasBRect.height))
+		const left = Math.round(canvasBRect.left + canvasBRect.width  / 2 - size / 2)
+		const right = Math.round(canvasBRect.top  + canvasBRect.height / 2 - size / 2)
+
+		const spinner = document.createElement('div');
+		spinner.classList.add(SPINNER_CLASS)
+		spinner.style.cssText = `width: ${ size }px; height: ${ size  }px;`
+		                      + `left: ${  left }px; top: ${    right }px;`;
+		document.body.appendChild(spinner);
+	}
+
+	addObject(object: THREE.Object3D) {
+		this.scene.add(object)
+	}
+
+	render() {
+		this.renderer.render(this.scene, this.camera)
+	}
+}
+
+export class BodyManager {
+	model_path: string
+	model_ext: string
+	loader: GLTFLoader | FBXLoader
+	scenes: { [key: string]: BodyScene }
+
+	constructor(model_path: string) {
+		this.addStyle()
+		this.model_path = model_path
+		this.scenes = {}
+		this.model_ext = <string> this.model_path.split('.').pop()
 
 		if (this.model_ext === 'fbx') {
 			this.loader = new FBXLoader()
@@ -47,34 +77,35 @@ export class BodyPosture {
 	}
 
 	init() {
+		this.addStyle()
 		this.addGrid()
 		this.addFloor()
 		this.addLights()
 		this.addModel()
 	}
 
-	buildLoader() {
-		const canvasBRect = this.canvas.getBoundingClientRect();
+	addScene(canvas_id: string) {
+		this.scenes[canvas_id] = new BodyScene(canvas_id)
+		return this.scenes[canvas_id]
+	}
 
-		const spinner_size = Math.round(0.3 * Math.min(canvasBRect.width, canvasBRect.height))
-		const spinner = document.createElement('div');
-		spinner.id = SPINNER_ID
-		spinner.style.cssText = `
-position: absolute;
-display: inline-block;
-width:  ${ spinner_size }px;
-height: ${ spinner_size }px;
-left: ${ Math.round(canvasBRect.left + canvasBRect.width  / 2 - spinner_size / 2) }px;
-top:  ${ Math.round(canvasBRect.top  + canvasBRect.height / 2 - spinner_size / 2) }px;
-border: 10px solid #aaa;
-border-top: 10px solid #3498db;
-border-radius: 50%;
-animation: spin 2s linear infinite;
-		`;
-		document.body.appendChild(spinner);
+	addToAllScenes(object: THREE.Object3D) {
+		Object.values(this.scenes).forEach(scene => {
+			scene.addObject(object)
+		});
+	}
 
+	addStyle() {
 		var style = document.createElement('style');
 		style.innerHTML = `
+.${SPINNER_CLASS} {
+	position: absolute;
+	display: inline-block;
+	border: 10px solid #aaa;
+	border-top: 10px solid #3498db;
+	border-radius: 50%;
+	animation: spin 2s linear infinite;
+}
 @keyframes spin {
 	0% { transform: rotate(0deg); }
 	100% { transform: rotate(360deg); }
@@ -128,16 +159,19 @@ animation: spin 2s linear infinite;
 			}
 		})
 		model.scale.set(scale, scale, scale)
-		this.scene.add(model)
-		const spinner = <HTMLCanvasElement> document.getElementById(SPINNER_ID)
-		spinner.remove()
+
+		this.addToAllScenes(model)
+
+		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
+			spinner.remove()
+		})
 		// this.scene.add(new THREE.SkeletonHelper( model ));
 	}
 
 	addGrid() {
 		let grid = new THREE.GridHelper( 4, 20 )
 		grid.position.y = 0.01
-		this.scene.add(grid)
+		this.addToAllScenes(grid)
 	}
 
 	addFloor() {
@@ -151,24 +185,22 @@ animation: spin 2s linear infinite;
 		floor.rotation.x = -0.5 * Math.PI;
 		floor.receiveShadow = true;
 		floor.position.y = 0;
-		this.scene.add(floor);
+		this.addToAllScenes(floor)
 	}
 
 	addLights() {
 		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.5)
-		this.scene.add(ambientLight)
+		this.addToAllScenes(ambientLight)
 
 		const light = new THREE.PointLight(new THREE.Color(0xffffff), 0.5)
 		light.position.set(10, 10, 0)
-		this.scene.add(light)
+		this.addToAllScenes(light)
 	}
 
 	animate(callback: FrameRequestCallback) {
 		requestAnimationFrame(callback)	
-		this.render()	
-	}
-
-	render() {
-		this.renderer.render(this.scene, this.camera)
+		Object.values(this.scenes).forEach(scene => {
+			scene.render()
+		})
 	}
 }
