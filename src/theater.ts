@@ -77,7 +77,7 @@ export class Theater {
 
 		const raycaster = new THREE.Raycaster()
 		raycaster.setFromCamera(pointer, this.camera);
-
+		// console.log(pointer)
 		// Bones do not have geometry or volume, and the Raycaster cannot intersect them.
 		// Solution: compare the clicked triangle position with each skeleton joint,
 		//           get the bone with shorter distance.
@@ -95,11 +95,11 @@ export class Theater {
 
 		console.log('models:', models)
 
-		const intersects = raycaster.intersectObjects(models, true)
+		const intersects = raycaster.intersectObjects(this.scene.children)
 
 		console.log('intersects:', intersects)
 		intersects.forEach(intersect => {
-			console.log(intersect.object)
+			console.log(intersect)
 		})
 	}
 

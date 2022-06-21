@@ -28,7 +28,7 @@ export class Puppeteer {
 	init() {
 		this.#addStyle()
 		this.#addModel()
-		this.#addGrid()
+		// this.#addGrid()
 		// this.#addFloor()
 		this.#addLights()
 	}
@@ -99,6 +99,7 @@ export class Puppeteer {
 
 	#onModelLoaded(model: THREE.Group, scale: number) {
 		model.scale.set(scale, scale, scale)
+		model.name = 'model'
 		this.#addToAllScenes(model)
 
 		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
@@ -110,6 +111,7 @@ export class Puppeteer {
 
 	#addGrid() {
 		let grid = new THREE.GridHelper( 4, 20 )
+		grid.name = 'grid'
 		grid.position.y = 0.01
 		this.#addToAllScenes(grid)
 	}
@@ -122,6 +124,7 @@ export class Puppeteer {
 		});
 
 		let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+		floor.name = 'floor'
 		floor.rotation.x = -0.5 * Math.PI;
 		floor.receiveShadow = true;
 		floor.position.y = 0;
