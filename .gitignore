@@ -3,6 +3,7 @@
 
 # 3d model files
 /assets/*.fbx
+!/assets/xbot-light.fbx
 /assets/*.glb
 
 # Files used for development
