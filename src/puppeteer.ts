@@ -8,12 +8,12 @@ export class Puppeteer {
 	model_path: string
 	model_ext: string
 	loader: GLTFLoader | FBXLoader
-	theaters: { [key: string]: Theater }
+	theaters: Array<Theater>
 
 	constructor(model_path: string) {
 		this.#addStyle()
 		this.model_path = model_path
-		this.theaters = {}
+		this.theaters = []
 		this.model_ext = <string> this.model_path.split('.').pop()
 
 		if (this.model_ext === 'fbx') {
@@ -27,28 +27,23 @@ export class Puppeteer {
 
 	init() {
 		this.#addStyle()
-		this.#addGrid()
-		this.#addFloor()
-		this.#addLights()
 		this.#addModel()
+		this.#addGrid()
+		// this.#addFloor()
+		this.#addLights()
 	}
 
 	addScene(canvas_id: string) {
-		this.theaters[canvas_id] = new Theater(canvas_id)
-		return this.theaters[canvas_id]
+		this.theaters.push(new Theater(canvas_id))
 	}
 
     animate(callback: FrameRequestCallback) {
 		requestAnimationFrame(callback)	
-		Object.values(this.theaters).forEach(scene => {
-			scene.render()
-		})
+		this.theaters.forEach(theater => theater.render())
 	}
 
 	#addToAllScenes(object: THREE.Object3D) {
-		Object.values(this.theaters).forEach(scene => {
-			scene.addObject(object)
-		});
+		this.theaters.forEach(theater => theater.addObject(object))
 	}
 
 	#addStyle() {
@@ -88,7 +83,7 @@ export class Puppeteer {
 			model_path,
 			model => callback(model, 0.01),
 			xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
-			error => console.log(error)
+			error => console.error(error)
 		)
 	}
 
@@ -98,29 +93,18 @@ export class Puppeteer {
 			model_path,
 			gltf => callback(gltf.scene, 1),
 			xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
-			error => console.log(error)
+			error => console.error(error)
 		)
 	}
 
 	#onModelLoaded(model: THREE.Group, scale: number) {
-		model.traverse(function (child) {
-			if (child.type == 'Bone') {
-				child = <THREE.Bone> child
-				child.rotateX(Math.random() * 0.3);
-				child.rotateY(Math.random() * 0.3);
-				child.rotateZ(Math.random() * 0.3);
-				console.log('bone:', child.name)
-			} else {
-				console.log('other:', child)
-			}
-		})
 		model.scale.set(scale, scale, scale)
-
 		this.#addToAllScenes(model)
 
 		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
 			spinner.remove()
 		})
+		this.theaters.forEach(theater => theater.init())
 		// this.scene.add(new THREE.SkeletonHelper( model ));
 	}
 
@@ -143,7 +127,7 @@ export class Puppeteer {
 		floor.position.y = 0;
 		this.#addToAllScenes(floor)
 	}
-
+		
 	#addLights() {
 		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.5)
 		this.#addToAllScenes(ambientLight)
