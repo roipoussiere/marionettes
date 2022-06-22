@@ -3,31 +3,38 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 
 export const SPINNER_CLASS = 'body-posture-spinner'
-
+export const POINTER_SENSIBILITY = 0.5
 export const TAU = Math.PI * 2.0
+
 
 export class Theater {
 	canvas: HTMLCanvasElement
 	canvas_origin: THREE.Vector2
 	canvas_size: THREE.Vector2  // /!. Stale, see #getCanvasSize()
+	dragStart: THREE.Vector2
+	dragDelta: THREE.Vector2
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera
 	scene: THREE.Scene
 	control: OrbitControls
 	bones: { [id: string] : THREE.Bone }
 	bone_handles: Array<THREE.Object3D>
+	clickedBone: THREE.Bone
 
 	constructor(canvas_id: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		const canvas_brect = this.canvas.getBoundingClientRect()
 		this.canvas_origin = new THREE.Vector2(canvas_brect.left-1, canvas_brect.top).ceil()
 		this.canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
+		this.dragStart = new THREE.Vector2(0, 0)
+		this.dragDelta = new THREE.Vector2(0, 0)
 
 		this.#addSpinner()
 
-		this.canvas.addEventListener('click'    , e => this.raycast(e));
-		this.canvas.addEventListener('touchend' , e => this.raycast(e, true));
-		// this.canvas.addEventListener('mousemove', e => this.onMouseMove(e));
+		this.canvas.addEventListener('mousedown', e => this.onPress(e))
+		this.canvas.addEventListener('touchend' , e => this.onPress(e, true))
+		this.canvas.addEventListener('mouseup'  , e => this.onRelease(e))
+		this.canvas.addEventListener('mousemove', e => this.onMove(e))
 
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
@@ -47,6 +54,7 @@ export class Theater {
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 		this.bones = {}
 		this.bone_handles = []
+		this.clickedBone = new THREE.Bone()
 	}
 
 	init() {
@@ -65,8 +73,9 @@ export class Theater {
 					if (grand_child instanceof THREE.Bone) {
 						bone = <THREE.Bone> grand_child
 						this.bones[grand_child.name] = bone
+						// this.bones[grand_child.id] = bone
 
-                        const handlePosition = bone.getWorldPosition(new THREE.Vector3())
+                        // const handlePosition = bone.getWorldPosition(new THREE.Vector3())
 						// this.bone_handles.push(this.#makeBoneHandle(bone))
 
 						// That one is NOT updated when the bone moves, for simplicity now
@@ -107,16 +116,37 @@ export class Theater {
 		// } ( this.scene ) );
 	}
 
-	raycast(event: UIEvent, touch = false) {
-		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
-		let pointer = new THREE.Vector2(target.clientX, target.clientY)
-			.sub(this.canvas_origin)
-			.divide(this.#getCanvasSize())
-		pointer.set(2 * pointer.x - 1, -2 * pointer.y + 1)
+	onMove(event: MouseEvent) {
+		if ( ! this.control.enabled) {
+			const pointer = new THREE.Vector2(event.clientX, event.clientY)
+			this.dragDelta = this.getPositionOnCanvas(pointer).sub(this.dragStart)
+		}
+	}
 
+	getPositionOnCanvas(pointer: THREE.Vector2) {
+		return pointer.sub(this.canvas_origin).divide(this.#getCanvasSize())
+	}
+
+	onPress(event: UIEvent, touch = false) {
+		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
+		const pointer = new THREE.Vector2(target.clientX, target.clientY)
+
+		this.dragStart = this.getPositionOnCanvas(pointer)
+		this.dragDelta.set(0, 0)
+		this.raycast()
+	}
+
+	onRelease(event: UIEvent) {
+		this.control.enabled = true
+	}
+
+	raycast() {
 		const raycaster = new THREE.Raycaster()
-		raycaster.setFromCamera(pointer, this.camera);
-		// console.log(pointer)
+		raycaster.setFromCamera({
+			x: 2 * this.dragStart.x - 1,
+			y:-2 * this.dragStart.y + 1},
+		this.camera);
+
 		// Bones do not have geometry or volume, and the Raycaster cannot intersect them.
 		// Solution: compare the clicked triangle position with each skeleton joint,
 		//           get the bone with shorter distance.
@@ -146,27 +176,24 @@ export class Theater {
 	}
 
 	onBoneClicked(intersect: THREE.Intersection) {
+		this.control.enabled = false
 		console.log("intersecting at", intersect.point, intersect.face)
 
 		// Find the closest bone
-		let closestBone = new THREE.Bone()
+		this.clickedBone = new THREE.Bone()
 		let closestBoneName = ""
 		let closestBoneDistance = Infinity
 		for (let boneName in this.bones) {
 			const bone = this.bones[boneName]
 			const distance = (bone.getWorldPosition(new THREE.Vector3()).sub(intersect.point)).length()
 			if (distance < closestBoneDistance) {
-				closestBone = bone
+				this.clickedBone = bone
 				closestBoneName = boneName
 				closestBoneDistance = distance
 			}
 		}
-		console.info("Selected bone", closestBoneName, closestBone)
+		console.info("Selected bone", closestBoneName, this.clickedBone)
 
-		// Experiment with bone
-		if (closestBone.parent) {
-			closestBone.parent.rotateZ(0.1 * TAU)
-		}
 		// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
 		// closestBone.position.applyAxisAngle(new THREE.Vector3(0., 0., 1.), TAU*0.1)
 		// closestBone.position.add(new THREE.Vector3(0., 2.0, 0.))
@@ -185,6 +212,12 @@ export class Theater {
 	}
 
 	render() {
+		if( ! this.control.enabled) {	
+			if (this.clickedBone.parent) {
+				this.clickedBone.parent.rotateY(this.dragDelta.x * POINTER_SENSIBILITY)
+				this.clickedBone.parent.rotateZ(this.dragDelta.y * POINTER_SENSIBILITY)
+			}
+		}
 		this.renderer.render(this.scene, this.camera)
 	}
 

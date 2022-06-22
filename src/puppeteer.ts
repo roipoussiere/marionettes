@@ -40,7 +40,7 @@ export class Puppeteer {
 	}
 
     animate(callback: FrameRequestCallback) {
-		requestAnimationFrame(callback)	
+		requestAnimationFrame(callback)
 		this.theaters.forEach(theater => theater.render())
 	}
 
