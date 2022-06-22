@@ -35,7 +35,7 @@ export class Theater {
 		this.renderer.setSize(this.canvas.width, this.canvas.height)
 		this.renderer.shadowMap.enabled = true;
 
-		const window_aspect = window.innerWidth / window.innerHeight
+		const window_aspect = this.canvas.width / this.canvas.height
 		this.camera = new THREE.PerspectiveCamera(50, window_aspect)
 		this.camera.position.set(5, 2, 0)
 
@@ -79,7 +79,9 @@ export class Theater {
 						bone = <THREE.Bone> grand_child
 						this.bones[grand_child.name] = bone
 						this.#hintSphere(bone.position)
-					}
+					} else {
+					    console.debug("Skipping not bone", grand_child)
+                    }
 				})
 			}
 		})
