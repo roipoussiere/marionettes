@@ -31,6 +31,8 @@ export class Puppeteer {
 		// this.#addGrid()
 		// this.#addFloor()
 		this.#addLights()
+
+		this.#addToAllScenes(new THREE.AxesHelper())
 	}
 
 	addScene(canvas_id: string) {
