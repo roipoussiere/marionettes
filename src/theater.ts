@@ -4,10 +4,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 export const SPINNER_CLASS = 'body-posture-spinner'
 
+export const TAU = Math.PI * 2.0
+
 export class Theater {
 	canvas: HTMLCanvasElement
 	canvas_origin: THREE.Vector2
-	canvas_size: THREE.Vector2
+	canvas_size: THREE.Vector2  // /!. Stale, see #getCanvasSize()
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera
 	scene: THREE.Scene
@@ -43,6 +45,10 @@ export class Theater {
 		this.bones = {}
 	}
 
+	#getCanvasSize() {
+		return new THREE.Vector2(this.canvas.width, this.canvas.height)
+	}
+
 	#hintLine(start: THREE.Vector3, end: THREE.Vector3, color: number) {
 		const cylinderGeometry = new THREE.CylinderGeometry( 0.02, 0.01, length, 8 )
 		const cylinderMaterial = new THREE.MeshBasicMaterial( {color} )
@@ -53,15 +59,26 @@ export class Theater {
 		this.scene.add(cylinder)
 	}
 
+	#hintSphere(at: THREE.Vector3) {
+		const sphereGeometry = new THREE.SphereGeometry(0.02)
+		const sphereMaterial = new THREE.MeshBasicMaterial( {
+			color: new THREE.Color(0xff3399),
+		})
+		const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
+		sphereMesh.translateOnAxis(at.clone().normalize(), at.length())
+		this.scene.add(sphereMesh)
+	}
+
 	init() {
 		let bone: THREE.Bone
 
 		this.scene.children.forEach(child => {
-			if(child instanceof THREE.Group) {
+			if (child instanceof THREE.Group) {
 				child.traverse(grand_child => {
 					if (grand_child instanceof THREE.Bone) {
 						bone = <THREE.Bone> grand_child
 						this.bones[grand_child.name] = bone
+						this.#hintSphere(bone.position)
 					}
 				})
 			}
@@ -72,7 +89,7 @@ export class Theater {
 		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
 		let pointer = new THREE.Vector2(target.clientX, target.clientY)
 			.sub(this.canvas_origin)
-			.divide(this.canvas_size)
+			.divide(this.#getCanvasSize())
 		pointer.set(2 * pointer.x - 1, -2 * pointer.y + 1)
 
 		const raycaster = new THREE.Raycaster()
@@ -86,21 +103,47 @@ export class Theater {
 
 		let models:Array<THREE.Object3D> = []
 		this.scene.children.forEach(child => {
-			if(child instanceof THREE.Group) {
+			if (child instanceof THREE.Group) {
 				child.children.forEach(grandChild => {
 					models.push(<THREE.Object3D> grandChild)
 				})
 			}
 		})
 
-		console.log('models:', models)
+		// console.log('models:', models)
 
 		const intersects = raycaster.intersectObjects(models, true)
 
 		console.log('intersects:', intersects)
-		intersects.forEach(intersect => {
-			console.log(intersect.object)
-		})
+
+		if (intersects.length > 0) {
+		// intersects.forEach(intersect => {
+
+			const intersect = intersects[0]
+			console.log("intersecting at", intersect.point, intersect.face)
+
+			// Find the closest bone
+			let closestBone = new THREE.Bone()
+			let closestBoneName = ""
+			let closestBoneDistance = Infinity
+			for (let boneName in this.bones) {
+				const bone = this.bones[boneName]
+				const distance = (bone.position.sub(intersect.point)).length()
+				if (distance < closestBoneDistance) {
+					closestBone = bone
+					closestBoneName = boneName
+					closestBoneDistance = distance
+				}
+			}
+			console.info("Selected bone", closestBoneName, closestBone)
+			// This approach won't work because bones are not joints.
+
+
+			// Experiment with bone
+			closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
+
+		// })
+		}
 	}
 
 	addObject(object: THREE.Object3D) {
