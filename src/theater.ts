@@ -15,6 +15,7 @@ export class Theater {
 	scene: THREE.Scene
 	control: OrbitControls
 	bones: { [id: string] : THREE.Bone }
+	bone_handles: Array<THREE.Object3D>
 
 	constructor(canvas_id: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
@@ -45,6 +46,7 @@ export class Theater {
 
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 		this.bones = {}
+		this.bone_handles = []
 	}
 
 	init() {
@@ -56,9 +58,14 @@ export class Theater {
 					if (grand_child instanceof THREE.Bone) {
 						bone = <THREE.Bone> grand_child
 						this.bones[grand_child.name] = bone
-						this.#hintPoint(bone.position)
-						this.#hintLine(new THREE.Vector3(), bone.position)
+
+                        const handlePosition = bone.getWorldPosition(new THREE.Vector3())
+						this.bone_handles.push(this.#makeBoneHandle(bone))
+
+						// That one is NOT updated when the bone moves, for simplicity now
+						this.#hintLine(new THREE.Vector3(0.0, 10.0, 0.0), handlePosition)
 					} else {
+					    // There's a Group in here as well (?)
 					    console.debug("Skipping not bone", grand_child)
                     }
 				})
@@ -69,11 +76,10 @@ export class Theater {
 		})
 
 		// Dump the scene tree
-		const this_scene = this.scene;
 		this.scene.traverse( obj => {
 			let s = '|___';
 			let obj2 = obj;
-			while ( obj2 !== this_scene ) {
+			while ( obj2 !== this.scene ) {
 				s = '\t' + s;
 				if (obj2.parent !== null) {
 					obj2 = obj2.parent;
@@ -135,7 +141,7 @@ export class Theater {
 			let closestBoneDistance = Infinity
 			for (let boneName in this.bones) {
 				const bone = this.bones[boneName]
-				const distance = (bone.position.sub(intersect.point)).length()
+				const distance = (bone.getWorldPosition(new THREE.Vector3()).sub(intersect.point)).length()
 				if (distance < closestBoneDistance) {
 					closestBone = bone
 					closestBoneName = boneName
@@ -143,11 +149,18 @@ export class Theater {
 				}
 			}
 			console.info("Selected bone", closestBoneName, closestBone)
-			// This approach won't work because bones are not joints.
-
 
 			// Experiment with bone
-			closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
+			// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
+			closestBone.position.add(new THREE.Vector3(0., 2.0, 0.))
+
+			// Could be accessors?
+            // const model_joints = <SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
+            // const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
+
+			// Does not seem like we need this
+            // model_joints.skeleton.update()
+            // model_surface.skeleton.update()
 
 		// })
 		}
@@ -163,6 +176,18 @@ export class Theater {
 
 	#getCanvasSize() {
 		return new THREE.Vector2(this.canvas.width, this.canvas.height)
+	}
+
+	#makeBoneHandle(bone: THREE.Bone, color: THREE.Color = new THREE.Color(0xff3399)) {
+		let sceneGeometry = new THREE.SphereGeometry( 2.00);
+		let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
+		let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
+		sphere.name = "BoneHandle"
+		// Careful, the bone is submitted to intense scaling, it appears.
+		// Why isn't the scale normalized ?  WTF   Perhaps we should normalize our models first.
+		bone.add(sphere)
+
+		return sphere
 	}
 
 	#hintPoint(position: THREE.Vector3, color: THREE.Color = new THREE.Color(0xff3399)) {
@@ -192,6 +217,7 @@ export class Theater {
 		line.name = "LineHint"
 		line.add(cylinder)
 		line.lookAt(direction)
+        line.position.add(start)
 
 		this.scene.add(line)
 	}
