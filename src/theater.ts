@@ -50,6 +50,13 @@ export class Theater {
 	}
 
 	init() {
+        // Could be accessors?
+        const model_joints = <THREE.SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
+        // const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
+        model_joints.skeleton.bones.forEach(bone => bone.removeFromParent())
+        model_joints.removeFromParent()
+        // this.scene.remove(model_joints)
+
 		let bone: THREE.Bone
 
 		this.scene.children.forEach(child => {
