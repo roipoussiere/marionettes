@@ -35,38 +35,16 @@ export class Theater {
 		this.renderer.setSize(this.canvas.width, this.canvas.height)
 		this.renderer.shadowMap.enabled = true;
 
-		const window_aspect = this.canvas.width / this.canvas.height
-		this.camera = new THREE.PerspectiveCamera(50, window_aspect)
+		this.camera = new THREE.PerspectiveCamera(
+		    50,
+            this.canvas.width / this.canvas.height
+        )
 		this.camera.position.set(5, 2, 0)
 
 		this.scene = new THREE.Scene()
 
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 		this.bones = {}
-	}
-
-	#getCanvasSize() {
-		return new THREE.Vector2(this.canvas.width, this.canvas.height)
-	}
-
-	#hintLine(start: THREE.Vector3, end: THREE.Vector3, color: number) {
-		const cylinderGeometry = new THREE.CylinderGeometry( 0.02, 0.01, length, 8 )
-		const cylinderMaterial = new THREE.MeshBasicMaterial( {color} )
-		const cylinder = new THREE.Mesh( cylinderGeometry, cylinderMaterial )
-
-		// ...
-
-		this.scene.add(cylinder)
-	}
-
-	#hintSphere(at: THREE.Vector3) {
-		const sphereGeometry = new THREE.SphereGeometry(0.02)
-		const sphereMaterial = new THREE.MeshBasicMaterial( {
-			color: new THREE.Color(0xff3399),
-		})
-		const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
-		sphereMesh.translateOnAxis(at.clone().normalize(), at.length())
-		this.scene.add(sphereMesh)
 	}
 
 	init() {
@@ -78,13 +56,40 @@ export class Theater {
 					if (grand_child instanceof THREE.Bone) {
 						bone = <THREE.Bone> grand_child
 						this.bones[grand_child.name] = bone
-						this.#hintSphere(bone.position)
+						this.#hintPoint(bone.position)
+						this.#hintLine(new THREE.Vector3(), bone.position)
 					} else {
 					    console.debug("Skipping not bone", grand_child)
                     }
 				})
+			} else {
+				// Lights, Grid helper, etc.
+				//console.debug("Skipping child:", child)
 			}
 		})
+
+		// Dump the scene tree
+		const this_scene = this.scene;
+		this.scene.traverse( obj => {
+			let s = '|___';
+			let obj2 = obj;
+			while ( obj2 !== this_scene ) {
+				s = '\t' + s;
+				if (obj2.parent !== null) {
+					obj2 = obj2.parent;
+				} else {
+					break
+				}
+			}
+			console.log( s + obj.name + ' <' + obj.type + '>' );
+		});
+
+		// Neat use of console.group, if we can translate this to ts
+		// (function printGraph( obj ) {
+		// 	console.group( ' <%o> ' + obj.name, obj );
+		// 	obj.children.forEach( printGraph );
+		// 	console.groupEnd();
+		// } ( this.scene ) );
 	}
 
 	raycast(event: UIEvent, touch = false) {
@@ -103,18 +108,18 @@ export class Theater {
 		// if (0 < v1.dot(v2) < v3^2) // is the selected point in zone between v1 and v2?
 		// sin(v1.angle(v2))*len
 
-		let models:Array<THREE.Object3D> = []
+		let handles: Array<THREE.Object3D> = []
 		this.scene.children.forEach(child => {
 			if (child instanceof THREE.Group) {
 				child.children.forEach(grandChild => {
-					models.push(<THREE.Object3D> grandChild)
+					handles.push(<THREE.Object3D> grandChild)
 				})
 			}
 		})
 
-		// console.log('models:', models)
+		// console.log('handles:', handles)
 
-		const intersects = raycaster.intersectObjects(models, true)
+		const intersects = raycaster.intersectObjects(handles, true)
 
 		console.log('intersects:', intersects)
 
@@ -156,12 +161,39 @@ export class Theater {
 		this.renderer.render(this.scene, this.camera)
 	}
 
-	#hintPoint(position: THREE.Vector3, color: number) {
-		let sceneGeometry = new THREE.SphereGeometry( 0.01, 32, 16 );
+	#getCanvasSize() {
+		return new THREE.Vector2(this.canvas.width, this.canvas.height)
+	}
+
+	#hintPoint(position: THREE.Vector3, color: THREE.Color = new THREE.Color(0xff3399)) {
+		let sceneGeometry = new THREE.SphereGeometry( 0.03);
 		let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
 		let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
 		sphere.position.add(position)
+		sphere.name = "PointHint"
 		this.scene.add(sphere)
+	}
+
+	#hintLine(start: THREE.Vector3, end: THREE.Vector3, color: THREE.Color = new THREE.Color(0xff9933)) {
+		const line = new THREE.Object3D()
+		const direction = end.clone().sub(start)
+		const cylinderGeometry = new THREE.CylinderGeometry(
+			0.001,
+			0.001,
+			direction.length(),
+			6
+		)
+		const cylinderMaterial = new THREE.MeshBasicMaterial({color})
+		const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial)
+
+		cylinder.translateZ(direction.length() * 0.5)
+		cylinder.rotateX(TAU / 4.0)
+
+		line.name = "LineHint"
+		line.add(cylinder)
+		line.lookAt(direction)
+
+		this.scene.add(line)
 	}
 
 	#addSpinner() {
