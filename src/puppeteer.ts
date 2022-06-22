@@ -28,11 +28,11 @@ export class Puppeteer {
 	init() {
 		this.#addStyle()
 		this.#addModel()
-		// this.#addGrid()
-		// this.#addFloor()
+		this.#addGrid()
+		this.#addFloor()
 		this.#addLights()
 
-		this.#addToAllScenes(new THREE.AxesHelper())
+		// this.#addToAllScenes(new THREE.AxesHelper())
 	}
 
 	addScene(canvas_id: string) {

@@ -37,10 +37,10 @@ export class Theater {
 		this.renderer.shadowMap.enabled = true;
 
 		this.camera = new THREE.PerspectiveCamera(
-		    50,
+		    45,
             this.canvas.width / this.canvas.height
         )
-		this.camera.position.set(5, 2, 0)
+		this.camera.position.set(0, 2, 5)
 
 		this.scene = new THREE.Scene()
 
@@ -53,8 +53,8 @@ export class Theater {
         // Could be accessors?
         const model_joints = <THREE.SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
         // const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
-        model_joints.skeleton.bones.forEach(bone => bone.removeFromParent())
-        model_joints.removeFromParent()
+        // model_joints.skeleton.bones.forEach(bone => bone.removeFromParent())
+        // model_joints.removeFromParent()
         // this.scene.remove(model_joints)
 
 		let bone: THREE.Bone
@@ -67,10 +67,10 @@ export class Theater {
 						this.bones[grand_child.name] = bone
 
                         const handlePosition = bone.getWorldPosition(new THREE.Vector3())
-						this.bone_handles.push(this.#makeBoneHandle(bone))
+						// this.bone_handles.push(this.#makeBoneHandle(bone))
 
 						// That one is NOT updated when the bone moves, for simplicity now
-						this.#hintLine(new THREE.Vector3(0.0, 10.0, 0.0), handlePosition)
+						// this.#hintLine(new THREE.Vector3(0.0, 10.0, 0.0), handlePosition)
 					} else {
 					    // There's a Group in here as well (?)
 					    console.debug("Skipping not bone", grand_child)
@@ -140,43 +140,44 @@ export class Theater {
 
 		if (intersects.length > 0) {
 		// intersects.forEach(intersect => {
-
-			const intersect = intersects[0]
-			console.log("intersecting at", intersect.point, intersect.face)
-
-			// Find the closest bone
-			let closestBone = new THREE.Bone()
-			let closestBoneName = ""
-			let closestBoneDistance = Infinity
-			for (let boneName in this.bones) {
-				const bone = this.bones[boneName]
-				const distance = (bone.getWorldPosition(new THREE.Vector3()).sub(intersect.point)).length()
-				if (distance < closestBoneDistance) {
-					closestBone = bone
-					closestBoneName = boneName
-					closestBoneDistance = distance
-				}
-			}
-			console.info("Selected bone", closestBoneName, closestBone)
-
-			// Experiment with bone
-            if (closestBone.parent) {
-			    closestBone.parent.rotateZ(0.1 * TAU)
-            }
-			// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
-			// closestBone.position.applyAxisAngle(new THREE.Vector3(0., 0., 1.), TAU*0.1)
-			// closestBone.position.add(new THREE.Vector3(0., 2.0, 0.))
-
-			// Could be accessors?
-            // const model_joints = <SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
-            // const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
-
-			// Does not seem like we need this
-            // model_joints.skeleton.update()
-            // model_surface.skeleton.update()
-
+			this.onBoneClicked(intersects[0])
 		// })
 		}
+	}
+
+	onBoneClicked(intersect: THREE.Intersection) {
+		console.log("intersecting at", intersect.point, intersect.face)
+
+		// Find the closest bone
+		let closestBone = new THREE.Bone()
+		let closestBoneName = ""
+		let closestBoneDistance = Infinity
+		for (let boneName in this.bones) {
+			const bone = this.bones[boneName]
+			const distance = (bone.getWorldPosition(new THREE.Vector3()).sub(intersect.point)).length()
+			if (distance < closestBoneDistance) {
+				closestBone = bone
+				closestBoneName = boneName
+				closestBoneDistance = distance
+			}
+		}
+		console.info("Selected bone", closestBoneName, closestBone)
+
+		// Experiment with bone
+		if (closestBone.parent) {
+			closestBone.parent.rotateZ(0.1 * TAU)
+		}
+		// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
+		// closestBone.position.applyAxisAngle(new THREE.Vector3(0., 0., 1.), TAU*0.1)
+		// closestBone.position.add(new THREE.Vector3(0., 2.0, 0.))
+
+		// Could be accessors?
+		// const model_joints = <SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
+		// const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
+
+		// Does not seem like we need this
+		// model_joints.skeleton.update()
+		// model_surface.skeleton.update()
 	}
 
 	addObject(object: THREE.Object3D) {
