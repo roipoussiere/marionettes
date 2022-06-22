@@ -80,7 +80,9 @@ export class Theater {
 				// Lights, Grid helper, etc.
 				//console.debug("Skipping child:", child)
 			}
-		})
+
+
+        })
 
 		// Dump the scene tree
 		this.scene.traverse( obj => {
@@ -158,8 +160,12 @@ export class Theater {
 			console.info("Selected bone", closestBoneName, closestBone)
 
 			// Experiment with bone
+            if (closestBone.parent) {
+			    closestBone.parent.rotateZ(0.1 * TAU)
+            }
 			// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
-			closestBone.position.add(new THREE.Vector3(0., 2.0, 0.))
+			// closestBone.position.applyAxisAngle(new THREE.Vector3(0., 0., 1.), TAU*0.1)
+			// closestBone.position.add(new THREE.Vector3(0., 2.0, 0.))
 
 			// Could be accessors?
             // const model_joints = <SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
