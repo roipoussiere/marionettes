@@ -51,7 +51,7 @@ export class Theater {
 	control: OrbitControls
 	bones: { [id: string] : THREE.Bone }
 	bone_handles: Array<THREE.Object3D>
-	clickedBone: THREE.Bone
+	clickedJoint: THREE.Object3D
 
 	constructor(canvas_id: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
@@ -86,7 +86,7 @@ export class Theater {
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 		this.bones = {}
 		this.bone_handles = []
-		this.clickedBone = new THREE.Bone()
+		this.clickedJoint = new THREE.Object3D()
 	}
 
 	init() {
@@ -125,20 +125,22 @@ export class Theater {
 
         })
 
+		console.log(Object.keys(this.bones))
+
 		// Dump the scene tree
-		this.scene.traverse( obj => {
-			let s = '|___';
-			let obj2 = obj;
-			while ( obj2 !== this.scene ) {
-				s = '\t' + s;
-				if (obj2.parent !== null) {
-					obj2 = obj2.parent;
-				} else {
-					break
-				}
-			}
-			console.log( s + obj.name + ' <' + obj.type + '>' );
-		});
+		// this.scene.traverse( obj => {
+		// 	let s = '|___';
+		// 	let obj2 = obj;
+		// 	while ( obj2 !== this.scene ) {
+		// 		s = '\t' + s;
+		// 		if (obj2.parent !== null) {
+		// 			obj2 = obj2.parent;
+		// 		} else {
+		// 			break
+		// 		}
+		// 	}
+		// 	console.log( s + obj.name + ' <' + obj.type + '>' );
+		// });
 
 		// Neat use of console.group, if we can translate this to ts
 		// (function printGraph( obj ) {
@@ -212,19 +214,18 @@ export class Theater {
 		console.log("intersecting at", intersect.point, intersect.face)
 
 		// Find the closest bone
-		this.clickedBone = new THREE.Bone()
 		let closestBoneName = ""
 		let closestBoneDistance = Infinity
 		for (let boneName in this.bones) {
 			const bone = this.bones[boneName]
 			const distance = (bone.getWorldPosition(new THREE.Vector3()).sub(intersect.point)).length()
-			if (distance < closestBoneDistance) {
-				this.clickedBone = bone
+			if (distance < closestBoneDistance && bone.parent) {
+				this.clickedJoint = bone.parent
 				closestBoneName = boneName
 				closestBoneDistance = distance
 			}
 		}
-		console.info("Selected bone", closestBoneName, this.clickedBone)
+		console.info("Selected joint", closestBoneName, this.clickedJoint)
 
 		// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
 		// closestBone.position.applyAxisAngle(new THREE.Vector3(0., 0., 1.), TAU*0.1)
@@ -244,21 +245,23 @@ export class Theater {
 	}
 
 	render() {
-		if( ! this.control.enabled) {	
-			if (this.clickedBone.parent) {
-				const distance: { [id: string] : number } = {
-					h: this.dragDelta.x * POINTER_SENSIBILITY,
-					v: this.dragDelta.y * POINTER_SENSIBILITY,
-					H: - this.dragDelta.x * POINTER_SENSIBILITY,
-					V: - this.dragDelta.y * POINTER_SENSIBILITY,
-					_: 0
-				}
-				const [x, y, z] = bone_axes[this.clickedBone.parent.name] || '___'
-
-				this.clickedBone.parent.rotateX(distance[x])
-				this.clickedBone.parent.rotateY(distance[y])
-				this.clickedBone.parent.rotateZ(distance[z])
+		let axe = 'x' // todo ui to select axe (x, y or z)
+		if( ! this.control.enabled && this.clickedJoint.parent) {
+			// let cam = this.control.getAzimuthalAngle()
+			const distance: { [id: string] : number } = {
+				h:   this.dragDelta.x * POINTER_SENSIBILITY,
+				v:   this.dragDelta.y * POINTER_SENSIBILITY,
+				H: - this.dragDelta.x * POINTER_SENSIBILITY,
+				V: - this.dragDelta.y * POINTER_SENSIBILITY,
+				_: 0
 			}
+			const [x, y, z] = bone_axes[this.clickedJoint.parent.name] || '___'
+
+			// todo: move according to angle from dragStart to current pos
+			// from the camera point of view
+			this.clickedJoint.parent.rotateX(distance[x])
+			this.clickedJoint.parent.rotateY(distance[y])
+			// this.clickedBone.parent.rotateZ(distance[z])
 		}
 		this.renderer.render(this.scene, this.camera)
 	}
