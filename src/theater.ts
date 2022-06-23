@@ -6,6 +6,38 @@ export const SPINNER_CLASS = 'body-posture-spinner'
 export const POINTER_SENSIBILITY = 0.5
 export const TAU = Math.PI * 2.0
 
+// Set axe orientation and axes constraints for each bone (tbc)
+const bone_axes: { [id: string] : string } = {
+	mixamorigHips: 'vh_',
+	mixamorigNeck: 'v_h',
+
+	mixamorigLeftToeBase: 'v__',
+	mixamorigRightToeBase: 'v__',
+	mixamorigLeftFoot: 'vh_',
+	mixamorigRightFoot: 'vh_',
+	mixamorigLeftLeg: 'v__',
+	mixamorigRightLeg: 'v__',
+	mixamorigLeftUpLeg: 'vh_',
+	mixamorigRightUpLeg: 'vh_',
+
+	mixamorigLeftArm: '_hV',
+	mixamorigRightArm: '_hV',
+	mixamorigLeftForeArm: '__V',
+	mixamorigRightForeArm: '__V',
+
+	mixamorigLeftHand: '_hV',
+	mixamorigRightHand: '_hV',
+	mixamorigLeftHandThumb1: '_hV',
+	mixamorigRightHandThumb1: '_hV',
+	mixamorigLeftHandIndex1: '__V',
+	mixamorigRightHandIndex1: '__V',
+	mixamorigLeftHandMiddle1: '__V',
+	mixamorigRightHandMiddle1: '__V',
+	mixamorigLeftHandRing1: '__V',
+	mixamorigRightHandRing1: '__V',
+	mixamorigLeftHandPinky1: '__V',
+	mixamorigRightHandPinky1: '__V',
+}
 
 export class Theater {
 	canvas: HTMLCanvasElement
@@ -214,8 +246,18 @@ export class Theater {
 	render() {
 		if( ! this.control.enabled) {	
 			if (this.clickedBone.parent) {
-				this.clickedBone.parent.rotateY(this.dragDelta.x * POINTER_SENSIBILITY)
-				this.clickedBone.parent.rotateZ(this.dragDelta.y * POINTER_SENSIBILITY)
+				const distance: { [id: string] : number } = {
+					h: this.dragDelta.x * POINTER_SENSIBILITY,
+					v: this.dragDelta.y * POINTER_SENSIBILITY,
+					H: - this.dragDelta.x * POINTER_SENSIBILITY,
+					V: - this.dragDelta.y * POINTER_SENSIBILITY,
+					_: 0
+				}
+				const [x, y, z] = bone_axes[this.clickedBone.parent.name] || '___'
+
+				this.clickedBone.parent.rotateX(distance[x])
+				this.clickedBone.parent.rotateY(distance[y])
+				this.clickedBone.parent.rotateZ(distance[z])
 			}
 		}
 		this.renderer.render(this.scene, this.camera)
