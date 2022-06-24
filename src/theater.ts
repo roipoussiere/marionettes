@@ -3,86 +3,86 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 
 export const SPINNER_CLASS = 'body-posture-spinner'
-export const POINTER_SENSIBILITY = 0.5
+export const POINTER_SENSIBILITY = 1.0
 export const TAU = Math.PI * 2.0
 
 // Set axe orientation and axes constraints for each bone (tbc)
 const bone_axes: { [id: string] : string } = {
-	mixamorigHips: 'vh_',
-	mixamorigSpine: 'vh_',
-	mixamorigSpine1: 'vh_',
-	mixamorigSpine2: 'vh_',
-	mixamorigNeck: 'v_H',
-	mixamorigHead: 'v_H',
+	mixamorigHips: 'vH_',
+	mixamorigSpine: 'vH_',
+	mixamorigSpine1: 'vH_',
+	mixamorigSpine2: 'vH_',
+	mixamorigNeck: 'v_h',
+	mixamorigHead: 'v_h',
 	mixamorigHeadTop_End: '___',
 	mixamorigLeftEye: '___',
 	mixamorigRightEye: '___',
-	mixamorigLeftShoulder: '_hV',
-	mixamorigLeftArm: '_hV',
+	mixamorigLeftShoulder: '_HV',
+	mixamorigLeftArm: '_HV',
 	mixamorigLeftForeArm: '__V',
-	mixamorigLeftHand: '_hV',
-	mixamorigLeftHandRing1: '_hV',
+	mixamorigLeftHand: '_HV',
+	mixamorigLeftHandRing1: '_HV',
 	mixamorigLeftHandRing2: '__V',
 	mixamorigLeftHandRing3: '__V',
 	mixamorigLeftHandRing4: '___',
-	mixamorigLeftHandIndex1: '_hV',
+	mixamorigLeftHandIndex1: '_HV',
 	mixamorigLeftHandIndex2: '__V',
 	mixamorigLeftHandIndex3: '__V',
 	mixamorigLeftHandIndex4: '___',
-	mixamorigLeftHandThumb1: '_hV',
+	mixamorigLeftHandThumb1: '_HV',
 	mixamorigLeftHandThumb2: '__V',
 	mixamorigLeftHandThumb3: '__V',
 	mixamorigLeftHandThumb4: '___',
-	mixamorigLeftHandMiddle1: '_hV',
+	mixamorigLeftHandMiddle1: '_HV',
 	mixamorigLeftHandMiddle2: '__V',
 	mixamorigLeftHandMiddle3: '__V',
 	mixamorigLeftHandMiddle4: '___',
-	mixamorigLeftHandPinky1: '_hV',
+	mixamorigLeftHandPinky1: '_HV',
 	mixamorigLeftHandPinky2: '__V',
 	mixamorigLeftHandPinky3: '__V',
 	mixamorigLeftHandPinky4: '___',
-	mixamorigRightShoulder: '_hv',
-	mixamorigRightArm: '_hv',
+	mixamorigRightShoulder: '_Hv',
+	mixamorigRightArm: '_Hv',
 	mixamorigRightForeArm: '__v',
-	mixamorigRightHand: '_hv',
-	mixamorigRightHandPinky1: '_hv',
+	mixamorigRightHand: '_Hv',
+	mixamorigRightHandPinky1: '_Hv',
 	mixamorigRightHandPinky2: '__v',
 	mixamorigRightHandPinky3: '__v',
 	mixamorigRightHandPinky4: '___',
-	mixamorigRightHandRing1: '_hv',
+	mixamorigRightHandRing1: '_Hv',
 	mixamorigRightHandRing2: '__v',
 	mixamorigRightHandRing3: '__v',
 	mixamorigRightHandRing4: '___',
-	mixamorigRightHandMiddle1: '_hv',
+	mixamorigRightHandMiddle1: '_Hv',
 	mixamorigRightHandMiddle2: '__v',
 	mixamorigRightHandMiddle3: '__v',
 	mixamorigRightHandMiddle4: '___',
-	mixamorigRightHandIndex1: '_hv',
+	mixamorigRightHandIndex1: '_Hv',
 	mixamorigRightHandIndex2: '__v',
 	mixamorigRightHandIndex3: '__v',
 	mixamorigRightHandIndex4: '___',
-	mixamorigRightHandThumb1: '_hv',
+	mixamorigRightHandThumb1: '_Hv',
 	mixamorigRightHandThumb2: '__v',
 	mixamorigRightHandThumb3: '___',
 	mixamorigRightHandThumb4: '___',
-	mixamorigLeftUpLeg: 'v_h',
+	mixamorigLeftUpLeg: 'v_H',
 	mixamorigLeftLeg: 'v__',
-	mixamorigLeftFoot: 'vh_',
+	mixamorigLeftFoot: 'vH_',
 	mixamorigLeftToeBase: 'v__',
 	mixamorigLeftToe_End: 'v__',
-	mixamorigRightUpLeg: 'v_h',
+	mixamorigRightUpLeg: 'v_H',
 	mixamorigRightLeg: 'v__',
-	mixamorigRightFoot: 'vh_',
+	mixamorigRightFoot: 'vH_',
 	mixamorigRightToeBase: 'v__',
 	mixamorigRightToe_End: 'v__',
 }
 
 export class Theater {
+	pointer: THREE.Vector2 // normalized
+	pointer_delta: THREE.Vector2
 	canvas: HTMLCanvasElement
 	canvas_origin: THREE.Vector2
-	canvas_size: THREE.Vector2  // /!. Stale, see #getCanvasSize()
-	drag_start: THREE.Vector2
-	drag_delta: THREE.Vector2
+	init_joint_rotation: THREE.Euler
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera
 	scene: THREE.Scene
@@ -94,17 +94,20 @@ export class Theater {
 	constructor(canvas_id: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		const canvas_brect = this.canvas.getBoundingClientRect()
-		this.canvas_origin = new THREE.Vector2(canvas_brect.left-1, canvas_brect.top).ceil()
-		this.canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
-		this.drag_start = new THREE.Vector2(0, 0)
-		this.drag_delta = new THREE.Vector2(0, 0)
+		this.canvas_origin = new THREE.Vector2(canvas_brect.left - 1, canvas_brect.top).ceil()
+		this.init_joint_rotation = new THREE.Euler(0, 0, 0)
+		this.pointer = new THREE.Vector2(0, 0)
+		this.pointer_delta = new THREE.Vector2(0, 0)
 
 		this.#addSpinner()
 
-		this.canvas.addEventListener('mousedown', e => this.onPress(e))
-		this.canvas.addEventListener('touchend' , e => this.onPress(e, true))
-		this.canvas.addEventListener('mouseup'  , e => this.onRelease(e))
+		this.canvas.addEventListener('mousedown', () => this.onPress())
+		this.canvas.addEventListener('mouseup'  , () => this.onRelease())
 		this.canvas.addEventListener('mousemove', e => this.onMove(e))
+
+		this.canvas.addEventListener('touchstart', () => this.onPress())
+		this.canvas.addEventListener('touchend' , () => this.onRelease())
+		this.canvas.addEventListener('touchmove', e => this.onMove(e, true))
 
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
@@ -131,9 +134,6 @@ export class Theater {
         // Could be accessors?
         const model_joints = <THREE.SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
         // const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
-        // model_joints.skeleton.bones.forEach(bone => bone.removeFromParent())
-        // model_joints.removeFromParent()
-        // this.scene.remove(model_joints)
 
 		let bone: THREE.Bone
 
@@ -188,36 +188,34 @@ export class Theater {
 		// } ( this.scene ) );
 	}
 
-	onMove(event: MouseEvent) {
+	onMove(event: UIEvent, touch = false) {
+		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
+		this.pointer_delta = this.pointer.clone()
+
+		this.pointer
+			.set(target.clientX, target.clientY)
+			.sub(this.canvas_origin)
+			.divide(this.canvas_size)
+		this.pointer.set(2 * this.pointer.x - 1, -2 * this.pointer.y + 1)
+
+		this.pointer_delta.sub(this.pointer).multiplyScalar(POINTER_SENSIBILITY)
+
 		if ( ! this.control.enabled) {
-			const pointer = new THREE.Vector2(event.clientX, event.clientY)
-			this.drag_delta = this.getPositionOnCanvas(pointer).sub(this.drag_start)
+			this.applyBoneRotation()
 		}
 	}
 
-	getPositionOnCanvas(pointer: THREE.Vector2) {
-		return pointer.sub(this.canvas_origin).divide(this.#getCanvasSize())
-	}
-
-	onPress(event: UIEvent, touch = false) {
-		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
-		const pointer = new THREE.Vector2(target.clientX, target.clientY)
-
-		this.drag_start = this.getPositionOnCanvas(pointer)
-		this.drag_delta.set(0, 0)
+	onPress() {
 		this.raycast()
 	}
 
-	onRelease(event: UIEvent) {
+	onRelease() {
 		this.control.enabled = true
 	}
 
 	raycast() {
 		const raycaster = new THREE.Raycaster()
-		raycaster.setFromCamera({
-			x: 2 * this.drag_start.x - 1,
-			y:-2 * this.drag_start.y + 1},
-		this.camera);
+		raycaster.setFromCamera(this.pointer, this.camera);
 
 		// Bones do not have geometry or volume, and the Raycaster cannot intersect them.
 		// Solution: compare the clicked triangle position with each skeleton joint,
@@ -235,7 +233,6 @@ export class Theater {
 		})
 
 		// console.log('handles:', handles)
-
 		const intersects = raycaster.intersectObjects(handles, true)
 
 		console.log('intersects:', intersects)
@@ -247,24 +244,31 @@ export class Theater {
 		}
 	}
 
-	onBoneClicked(intersect: THREE.Intersection) {
-		this.control.enabled = false
-		console.log("intersecting at", intersect.point, intersect.face)
+	findClosestJoint(point: THREE.Vector3) {
+		let closest_joint = new THREE.Object3D
+		let position = new THREE.Vector3()
+		let closest_bone_distance = Infinity
 
-		// Find the closest bone
-		let closestBoneName = ""
-		let closestBoneDistance = Infinity
 		for (let boneName in this.bones) {
 			const bone = this.bones[boneName]
-			const distance = (bone.getWorldPosition(new THREE.Vector3()).sub(intersect.point)).length()
-			if (distance < closestBoneDistance && bone.parent) {
-				this.clicked_joint = bone.parent
-				closestBoneName = boneName
-				closestBoneDistance = distance
+			const distance = (bone.getWorldPosition(position).sub(point)).length()
+			if (distance < closest_bone_distance && bone.parent) {
+				closest_joint = bone.parent
+				closest_bone_distance = distance
 			}
 		}
-		console.info("Selected joint", closestBoneName, this.clicked_joint)
 
+		return closest_joint
+	}
+
+	onBoneClicked(intersect: THREE.Intersection) {
+		this.control.enabled = false
+		console.log('intersecting at', intersect.point, intersect.face)
+
+		this.clicked_joint = this.findClosestJoint(intersect.point)
+		console.info('Selected joint:', this.clicked_joint)
+
+		this.init_joint_rotation = this.clicked_joint.rotation
 		// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
 		// closestBone.position.applyAxisAngle(new THREE.Vector3(0., 0., 1.), TAU*0.1)
 		// closestBone.position.add(new THREE.Vector3(0., 2.0, 0.))
@@ -282,29 +286,32 @@ export class Theater {
 		this.scene.add(object)
 	}
 
-	render() {
-		let axe = 'x' // todo ui to select axe (x, y or z)
-		if( ! this.control.enabled && this.clicked_joint.parent) {
-			// let cam = this.control.getAzimuthalAngle()
-			const distance: { [id: string] : number } = {
-				h:   this.drag_delta.x * POINTER_SENSIBILITY,
-				v:   this.drag_delta.y * POINTER_SENSIBILITY,
-				H: - this.drag_delta.x * POINTER_SENSIBILITY,
-				V: - this.drag_delta.y * POINTER_SENSIBILITY,
-				_: 0
-			}
-			const [x, y, z] = bone_axes[this.clicked_joint.parent.name] || '___'
+	applyBoneRotation() {
+		// const plane = this.camera.position.clone().normalize()
+		// this.clicked_joint.rotateOnAxis(plane, 0.1)
 
-			// todo: move according to angle from dragStart to current pos
-			// from the camera point of view
-			this.clicked_joint.parent.rotateX(distance[x])
-			this.clicked_joint.parent.rotateY(distance[y])
-			this.clicked_joint.parent.rotateZ(distance[z])
+		const delta: { [id: string] : number } = {
+			h:   this.pointer_delta.x,
+			v:   this.pointer_delta.y,
+			H: - this.pointer_delta.x,
+			V: - this.pointer_delta.y,
+			_: 0
 		}
+		const [x, y, z] = bone_axes[this.clicked_joint.name] || '___'
+
+		// todo: move according to angle from dragStart to current pos
+		// from the camera point of view
+		
+		this.clicked_joint.rotateX(delta[x])
+		this.clicked_joint.rotateY(delta[y])
+		this.clicked_joint.rotateZ(delta[z])
+	}
+
+	render() {
 		this.renderer.render(this.scene, this.camera)
 	}
 
-	#getCanvasSize() {
+	get canvas_size() {
 		return new THREE.Vector2(this.canvas.width, this.canvas.height)
 	}
 
