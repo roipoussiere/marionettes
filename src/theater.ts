@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { Vector2 as V2, Vector3 as V3 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 
@@ -73,10 +74,10 @@ const bone_axes: { [id: string] : string } = {
 }
 
 export class Theater {
-	pointer: THREE.Vector2 // normalized
-	pointer_delta: THREE.Vector2
+	pointer: V2 // normalized
+	pointer_delta: V2
 	canvas: HTMLCanvasElement
-	canvas_origin: THREE.Vector2
+	canvas_origin: V2
 	init_joint_rotation: THREE.Euler
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera
@@ -89,10 +90,10 @@ export class Theater {
 	constructor(canvas_id: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		const canvas_brect = this.canvas.getBoundingClientRect()
-		this.canvas_origin = new THREE.Vector2(canvas_brect.left - 1, canvas_brect.top).ceil()
+		this.canvas_origin = new V2(canvas_brect.left - 1, canvas_brect.top).ceil()
 		this.init_joint_rotation = new THREE.Euler(0, 0, 0)
-		this.pointer = new THREE.Vector2(0, 0)
-		this.pointer_delta = new THREE.Vector2(0, 0)
+		this.pointer = new V2(0, 0)
+		this.pointer_delta = new V2(0, 0)
 
 		this.#addSpinner()
 
@@ -140,11 +141,11 @@ export class Theater {
 						this.bones[grand_child.name] = bone
 						// this.bones[grand_child.id] = bone
 
-                        // const handlePosition = bone.getWorldPosition(new THREE.Vector3())
+                        // const handlePosition = bone.getWorldPosition(new V3())
 						// this.bone_handles.push(this.#makeBoneHandle(bone))
 
 						// That one is NOT updated when the bone moves, for simplicity now
-						// this.#hintLine(new THREE.Vector3(0.0, 10.0, 0.0), handlePosition)
+						// this.#hintLine(new V3(0.0, 10.0, 0.0), handlePosition)
 					} else {
 					    // There's a Group in here as well (?)
 					    console.debug("Skipping not bone", grand_child)
@@ -239,9 +240,9 @@ export class Theater {
 		}
 	}
 
-	findClosestJoint(point: THREE.Vector3) {
+	findClosestJoint(point: V3) {
 		let closest_joint = new THREE.Object3D
-		let position = new THREE.Vector3()
+		let position = new V3()
 		let closest_bone_distance = Infinity
 
 		for (let boneName in this.bones) {
@@ -265,8 +266,8 @@ export class Theater {
 
 		this.init_joint_rotation = this.clicked_joint.rotation
 		// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
-		// closestBone.position.applyAxisAngle(new THREE.Vector3(0., 0., 1.), TAU*0.1)
-		// closestBone.position.add(new THREE.Vector3(0., 2.0, 0.))
+		// closestBone.position.applyAxisAngle(new V3(0., 0., 1.), TAU*0.1)
+		// closestBone.position.add(new V3(0., 2.0, 0.))
 
 		// Could be accessors?
 		// const model_joints = <SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
@@ -308,7 +309,7 @@ export class Theater {
 	}
 
 	get canvas_size() {
-		return new THREE.Vector2(this.canvas.width, this.canvas.height)
+		return new V2(this.canvas.width, this.canvas.height)
 	}
 
 	#makeBoneHandle(bone: THREE.Bone, color: THREE.Color = new THREE.Color(0xff3399)) {
@@ -323,7 +324,7 @@ export class Theater {
 		return sphere
 	}
 
-	#hintPoint(position: THREE.Vector3, color: THREE.Color = new THREE.Color(0xff3399)) {
+	#hintPoint(position: V3, color: THREE.Color = new THREE.Color(0xff3399)) {
 		let sceneGeometry = new THREE.SphereGeometry( 0.03);
 		let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
 		let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
@@ -332,7 +333,7 @@ export class Theater {
 		this.scene.add(sphere)
 	}
 
-	#hintLine(start: THREE.Vector3, end: THREE.Vector3, color: THREE.Color = new THREE.Color(0xff9933)) {
+	#hintLine(start: V3, end: V3, color: THREE.Color = new THREE.Color(0xff9933)) {
 		const line = new THREE.Object3D()
 		const direction = end.clone().sub(start)
 		const cylinderGeometry = new THREE.CylinderGeometry(
