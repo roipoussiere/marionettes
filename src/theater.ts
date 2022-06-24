@@ -81,23 +81,23 @@ export class Theater {
 	canvas: HTMLCanvasElement
 	canvas_origin: THREE.Vector2
 	canvas_size: THREE.Vector2  // /!. Stale, see #getCanvasSize()
-	dragStart: THREE.Vector2
-	dragDelta: THREE.Vector2
+	drag_start: THREE.Vector2
+	drag_delta: THREE.Vector2
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera
 	scene: THREE.Scene
 	control: OrbitControls
 	bones: { [id: string] : THREE.Bone }
 	bone_handles: Array<THREE.Object3D>
-	clickedJoint: THREE.Object3D
+	clicked_joint: THREE.Object3D
 
 	constructor(canvas_id: string) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		const canvas_brect = this.canvas.getBoundingClientRect()
 		this.canvas_origin = new THREE.Vector2(canvas_brect.left-1, canvas_brect.top).ceil()
 		this.canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
-		this.dragStart = new THREE.Vector2(0, 0)
-		this.dragDelta = new THREE.Vector2(0, 0)
+		this.drag_start = new THREE.Vector2(0, 0)
+		this.drag_delta = new THREE.Vector2(0, 0)
 
 		this.#addSpinner()
 
@@ -124,7 +124,7 @@ export class Theater {
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 		this.bones = {}
 		this.bone_handles = []
-		this.clickedJoint = new THREE.Object3D()
+		this.clicked_joint = new THREE.Object3D()
 	}
 
 	init() {
@@ -191,7 +191,7 @@ export class Theater {
 	onMove(event: MouseEvent) {
 		if ( ! this.control.enabled) {
 			const pointer = new THREE.Vector2(event.clientX, event.clientY)
-			this.dragDelta = this.getPositionOnCanvas(pointer).sub(this.dragStart)
+			this.drag_delta = this.getPositionOnCanvas(pointer).sub(this.drag_start)
 		}
 	}
 
@@ -203,8 +203,8 @@ export class Theater {
 		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
 		const pointer = new THREE.Vector2(target.clientX, target.clientY)
 
-		this.dragStart = this.getPositionOnCanvas(pointer)
-		this.dragDelta.set(0, 0)
+		this.drag_start = this.getPositionOnCanvas(pointer)
+		this.drag_delta.set(0, 0)
 		this.raycast()
 	}
 
@@ -215,8 +215,8 @@ export class Theater {
 	raycast() {
 		const raycaster = new THREE.Raycaster()
 		raycaster.setFromCamera({
-			x: 2 * this.dragStart.x - 1,
-			y:-2 * this.dragStart.y + 1},
+			x: 2 * this.drag_start.x - 1,
+			y:-2 * this.drag_start.y + 1},
 		this.camera);
 
 		// Bones do not have geometry or volume, and the Raycaster cannot intersect them.
@@ -258,12 +258,12 @@ export class Theater {
 			const bone = this.bones[boneName]
 			const distance = (bone.getWorldPosition(new THREE.Vector3()).sub(intersect.point)).length()
 			if (distance < closestBoneDistance && bone.parent) {
-				this.clickedJoint = bone.parent
+				this.clicked_joint = bone.parent
 				closestBoneName = boneName
 				closestBoneDistance = distance
 			}
 		}
-		console.info("Selected joint", closestBoneName, this.clickedJoint)
+		console.info("Selected joint", closestBoneName, this.clicked_joint)
 
 		// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
 		// closestBone.position.applyAxisAngle(new THREE.Vector3(0., 0., 1.), TAU*0.1)
@@ -284,22 +284,22 @@ export class Theater {
 
 	render() {
 		let axe = 'x' // todo ui to select axe (x, y or z)
-		if( ! this.control.enabled && this.clickedJoint.parent) {
+		if( ! this.control.enabled && this.clicked_joint.parent) {
 			// let cam = this.control.getAzimuthalAngle()
 			const distance: { [id: string] : number } = {
-				h:   this.dragDelta.x * POINTER_SENSIBILITY,
-				v:   this.dragDelta.y * POINTER_SENSIBILITY,
-				H: - this.dragDelta.x * POINTER_SENSIBILITY,
-				V: - this.dragDelta.y * POINTER_SENSIBILITY,
+				h:   this.drag_delta.x * POINTER_SENSIBILITY,
+				v:   this.drag_delta.y * POINTER_SENSIBILITY,
+				H: - this.drag_delta.x * POINTER_SENSIBILITY,
+				V: - this.drag_delta.y * POINTER_SENSIBILITY,
 				_: 0
 			}
-			const [x, y, z] = bone_axes[this.clickedJoint.parent.name] || '___'
+			const [x, y, z] = bone_axes[this.clicked_joint.parent.name] || '___'
 
 			// todo: move according to angle from dragStart to current pos
 			// from the camera point of view
-			this.clickedJoint.parent.rotateX(distance[x])
-			this.clickedJoint.parent.rotateY(distance[y])
-			this.clickedJoint.parent.rotateZ(distance[z])
+			this.clicked_joint.parent.rotateX(distance[x])
+			this.clicked_joint.parent.rotateY(distance[y])
+			this.clicked_joint.parent.rotateZ(distance[z])
 		}
 		this.renderer.render(this.scene, this.camera)
 	}
