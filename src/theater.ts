@@ -8,64 +8,76 @@ export const POINTER_SENSIBILITY = 1.0
 export const TAU = Math.PI * 2.0
 export const BONES_NAME_PREFIX = 'mixamorig'
 
-// Set axe orientation and axes constraints for each bone (tbc)
-const bone_axes: { [id: string] : string } = {
-	Hips: 'vH_',
-	Spine: 'vH_',
-	Spine1: 'vH_',
-	Spine2: 'vH_',
-	Neck: 'v_h',
-	Head: 'v_h',
+class BoneConfig {
+	axes: string
+	min_angle: V3
+	max_angle: V3
 
-	LeftShoulder: '_HV',
-	LeftArm: '_HV',
-	LeftForeArm: '__V',
-	LeftHand: '_HV',
-	LeftHandRing1: '_HV',
-	LeftHandRing2: '__V',
-	LeftHandRing3: '__V',
-	LeftHandIndex1: '_HV',
-	LeftHandIndex2: '__V',
-	LeftHandIndex3: '__V',
-	LeftHandThumb1: '_HV',
-	LeftHandThumb2: '__V',
-	LeftHandMiddle1: '_HV',
-	LeftHandMiddle2: '__V',
-	LeftHandMiddle3: '__V',
-	LeftHandPinky1: '_HV',
-	LeftHandPinky2: '__V',
-	LeftHandPinky3: '__V',
+	constructor(axes: string, min_angle: V3, max_angle: V3) {
+		this.axes = axes
+		this.min_angle = min_angle
+		this.max_angle = max_angle
+	}
+}
 
-	RightShoulder: '_Hv',
-	RightArm: '_Hv',
-	RightForeArm: '__v',
-	RightHand: '_Hv',
-	RightHandPinky1: '_Hv',
-	RightHandPinky2: '__v',
-	RightHandPinky3: '__v',
-	RightHandRing1: '_Hv',
-	RightHandRing2: '__v',
-	RightHandRing3: '__v',
-	RightHandMiddle1: '_Hv',
-	RightHandMiddle2: '__v',
-	RightHandMiddle3: '__v',
-	RightHandIndex1: '_Hv',
-	RightHandIndex2: '__v',
-	RightHandIndex3: '__v',
-	RightHandThumb1: '_Hv',
-	RightHandThumb2: '__v',
+// Set axe orientation and constraints for each bone
+const bones_config: { [id: string] : BoneConfig } = {
+	Hips:             new BoneConfig('vH_', new V3(), new V3()),
+	Spine:            new BoneConfig('vH_', new V3(), new V3()),
+	Spine1:           new BoneConfig('vH_', new V3(), new V3()),
+	Spine2:           new BoneConfig('vH_', new V3(), new V3()),
+	Neck:             new BoneConfig('v_h', new V3(), new V3()),
+	Head:             new BoneConfig('v_h', new V3(), new V3()),
 
-	LeftUpLeg: 'v_H',
-	LeftLeg: 'v__',
-	LeftFoot: 'vH_',
-	LeftToeBase: 'v__',
-	LeftToe_End: 'v__',
+	LeftShoulder:     new BoneConfig('_HV', new V3(), new V3()),
+	LeftArm:          new BoneConfig('_HV', new V3(), new V3()),
+	LeftForeArm:      new BoneConfig('__V', new V3(), new V3()),
+	LeftHand:         new BoneConfig('_HV', new V3(), new V3()),
+	LeftHandRing1:    new BoneConfig('_HV', new V3(), new V3()),
+	LeftHandRing2:    new BoneConfig('__V', new V3(), new V3()),
+	LeftHandRing3:    new BoneConfig('__V', new V3(), new V3()),
+	LeftHandIndex1:   new BoneConfig('_HV', new V3(), new V3()),
+	LeftHandIndex2:   new BoneConfig('__V', new V3(), new V3()),
+	LeftHandIndex3:   new BoneConfig('__V', new V3(), new V3()),
+	LeftHandThumb1:   new BoneConfig('_HV', new V3(), new V3()),
+	LeftHandThumb2:   new BoneConfig('__V', new V3(), new V3()),
+	LeftHandMiddle1:  new BoneConfig('_HV', new V3(), new V3()),
+	LeftHandMiddle2:  new BoneConfig('__V', new V3(), new V3()),
+	LeftHandMiddle3:  new BoneConfig('__V', new V3(), new V3()),
+	LeftHandPinky1:   new BoneConfig('_HV', new V3(), new V3()),
+	LeftHandPinky2:   new BoneConfig('__V', new V3(), new V3()),
+	LeftHandPinky3:   new BoneConfig('__V', new V3(), new V3()),
 
-	RightUpLeg: 'v_H',
-	RightLeg: 'v__',
-	RightFoot: 'vH_',
-	RightToeBase: 'v__',
-	RightToe_End: 'v__',
+	RightShoulder:    new BoneConfig('_Hv', new V3(), new V3()),
+	RightArm:         new BoneConfig('_Hv', new V3(), new V3()),
+	RightForeArm:     new BoneConfig('__v', new V3(), new V3()),
+	RightHand:        new BoneConfig('_Hv', new V3(), new V3()),
+	RightHandPinky1:  new BoneConfig('_Hv', new V3(), new V3()),
+	RightHandPinky2:  new BoneConfig('__v', new V3(), new V3()),
+	RightHandPinky3:  new BoneConfig('__v', new V3(), new V3()),
+	RightHandRing1:   new BoneConfig('_Hv', new V3(), new V3()),
+	RightHandRing2:   new BoneConfig('__v', new V3(), new V3()),
+	RightHandRing3:   new BoneConfig('__v', new V3(), new V3()),
+	RightHandMiddle1: new BoneConfig('_Hv', new V3(), new V3()),
+	RightHandMiddle2: new BoneConfig('__v', new V3(), new V3()),
+	RightHandMiddle3: new BoneConfig('__v', new V3(), new V3()),
+	RightHandIndex1:  new BoneConfig('_Hv', new V3(), new V3()),
+	RightHandIndex2:  new BoneConfig('__v', new V3(), new V3()),
+	RightHandIndex3:  new BoneConfig('__v', new V3(), new V3()),
+	RightHandThumb1:  new BoneConfig('_Hv', new V3(), new V3()),
+	RightHandThumb2:  new BoneConfig('__v', new V3(), new V3()),
+
+	LeftUpLeg:        new BoneConfig('v_H', new V3(), new V3()),
+	LeftLeg:          new BoneConfig('v__', new V3(), new V3()),
+	LeftFoot:         new BoneConfig('vH_', new V3(), new V3()),
+	LeftToeBase:      new BoneConfig('v__', new V3(), new V3()),
+	LeftToe_End:      new BoneConfig('v__', new V3(), new V3()),
+
+	RightUpLeg:       new BoneConfig('v_H', new V3(), new V3()),
+	RightLeg:         new BoneConfig('v__', new V3(), new V3()),
+	RightFoot:        new BoneConfig('vH_', new V3(), new V3()),
+	RightToeBase:     new BoneConfig('v__', new V3(), new V3()),
+	RightToe_End:     new BoneConfig('v__', new V3(), new V3()),
 
 	// Ignored because not part of the x-bot model:
 	// HeadTop_End,     LeftEye,         RightEye,       LeftHandThumb3,   RightHandThumb3,
@@ -293,15 +305,19 @@ export class Theater {
 			V: - this.pointer_delta.y,
 			_: 0
 		}
+
 		const bone_name = this.clicked_joint.name.substring(BONES_NAME_PREFIX.length)
-		const [x, y, z] = bone_axes[bone_name] || '___'
+		if ( ! (bone_name in bones_config)) {
+			return
+		}
+		const bone_config = bones_config[bone_name]
 
 		// todo: move according to angle from dragStart to current pos
 		// from the camera point of view
 		
-		this.clicked_joint.rotateX(delta[x])
-		this.clicked_joint.rotateY(delta[y])
-		this.clicked_joint.rotateZ(delta[z])
+		this.clicked_joint.rotateX(delta[bone_config.axes[0]])
+		this.clicked_joint.rotateY(delta[bone_config.axes[1]])
+		this.clicked_joint.rotateZ(delta[bone_config.axes[2]])
 	}
 
 	render() {
