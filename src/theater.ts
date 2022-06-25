@@ -17,11 +17,11 @@ class BoneConfig {
 	constructor(
 			axes: string = 'zxy',
 			reverse: boolean = false,
-			min_angle: V3 = new V3(-3, -3, -3),
-			max_angle: V3 = new V3( 3,  3,  3)) {
+			min_angle: V3 = new V3(-180, -180, -180),
+			max_angle: V3 = new V3( 180,  180,  180)) {
 		this.axes = axes
-		this.min_angle = min_angle
-		this.max_angle = max_angle
+		this.min_angle = min_angle.multiplyScalar(THREE.MathUtils.DEG2RAD)
+		this.max_angle = max_angle.multiplyScalar(THREE.MathUtils.DEG2RAD)
 		this.reverse = reverse
 	}
 }
@@ -29,21 +29,21 @@ class BoneConfig {
 // Set axe orientation and constraints for each bone
 const bones_config: { [id: string] : BoneConfig } = {
 	Hips:             new BoneConfig('xyz'),
-	Spine:            new BoneConfig('xyz', false, new V3(-1.5, -.60, -.50), new V3(1.5 ,  .60,  .50)),
-	Spine1:           new BoneConfig('xyz', false, new V3(-.50, -.60, -.50), new V3(1   ,  .60,  .50)),
-	Spine2:           new BoneConfig('xyz', false, new V3(-.50, -.60, -.50), new V3(1   ,  .60,  .50)),
-	Neck:             new BoneConfig('xyz', false, new V3(-.90, -.80, -.70), new V3( .5 ,  .80,  .70)),
-	Head:             new BoneConfig('xyz', false, new V3(-.90, -.80, -.70), new V3( .5 ,  .80,  .70)),
+	Spine:            new BoneConfig('xyz', false, new V3(-85 ,-35 ,-30 ), new V3(85 , 35 , 30 )),
+	Spine1:           new BoneConfig('xyz', false, new V3(-30 ,-35 ,-30 ), new V3(55 , 35 , 30 )),
+	Spine2:           new BoneConfig('xyz', false, new V3(-30 ,-35 ,-30 ), new V3(55 , 35 , 30 )),
+	Neck:             new BoneConfig('xyz', false, new V3(-50 ,-45 ,-40 ), new V3(30 , 45 , 40 )),
+	Head:             new BoneConfig('xyz', false, new V3(-50 ,-45 ,-40 ), new V3(30 , 45 , 40 )),
 
-	LeftUpLeg:        new BoneConfig('xzy', true , new V3(-2.7, -0.5, -.25), new V3(1.5 ,  .50, 2   )),
-	LeftLeg:          new BoneConfig('x__', false, new V3(0   ,  0  ,  0  ), new V3(2.6 , 0   , 0   )),
-	LeftFoot:         new BoneConfig('xy_', false, new V3(-.75, -1.5,  0  ), new V3(1   ,  .70, 0   )),
-	LeftToeBase:      new BoneConfig('x__', false, new V3(-.30,  0  ,  0  ), new V3(1.1 , 0   , 0   )),
+	LeftUpLeg:        new BoneConfig('xzy', true , new V3(-155,-30 ,-15 ), new V3(85 , 30 , 2  )),
+	LeftLeg:          new BoneConfig('x__', false, new V3(0   , 0  , 0  ), new V3(150, 0  , 0  )),
+	LeftFoot:         new BoneConfig('xy_', false, new V3(-45 ,-85 , 0  ), new V3(55 , 40 , 0  )),
+	LeftToeBase:      new BoneConfig('x__', false, new V3(-15 , 0  , 0  ), new V3(65 , 0  , 0  )),
 
-	RightUpLeg:       new BoneConfig('xzy', true , new V3(-2.7, -.50, -.25), new V3(1.5 ,  .50, 2   )),
-	RightLeg:         new BoneConfig('x__', false, new V3(0   ,  0  ,  0  ), new V3(2.6 , 0   , 0   )),
-	RightFoot:        new BoneConfig('xy_', false, new V3(-.75, -1.5,  0  ), new V3(1   ,  .70, 0   )),
-	RightToeBase:     new BoneConfig('x__', false, new V3(-.30,  0  ,  0  ), new V3(1.1 , 0   , 0   )),
+	RightUpLeg:       new BoneConfig('xzy', true , new V3(-155,-30 ,-15 ), new V3(85 , 30 , 2  )),
+	RightLeg:         new BoneConfig('x__', false, new V3(0   , 0  , 0  ), new V3(150, 0  , 0  )),
+	RightFoot:        new BoneConfig('xy_', false, new V3(-45 ,-85 , 0  ), new V3(55 , 40 , 0  )),
+	RightToeBase:     new BoneConfig('x__', false, new V3(-15 , 0  , 0  ), new V3(65 , 0  , 0  )),
 
 	LeftShoulder:     new BoneConfig('zxy', true),
 	LeftArm:          new BoneConfig('zxy', true),
@@ -346,8 +346,12 @@ export class Theater {
 			))
 			.clamp(bone_config.min_angle, bone_config.max_angle)
 
-		console.log(`${this.clicked_joint.name.substring(BONES_NAME_PREFIX.length)}: `
-		    + `(${rotation.x.toFixed(2)}, ${rotation.y.toFixed(2)}, ${rotation.z.toFixed(2)})`)
+		console.log(
+			   `${this.clicked_joint.name.substring(BONES_NAME_PREFIX.length)}: `
+		    + `(${Math.round(rotation.x * THREE.MathUtils.RAD2DEG)}, `
+			+  `${Math.round(rotation.y * THREE.MathUtils.RAD2DEG)}, `
+			+  `${Math.round(rotation.z * THREE.MathUtils.RAD2DEG)})`
+		)
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation)
 		this.clicked_joint.setRotationFromEuler(euler_rotation)
 	}
