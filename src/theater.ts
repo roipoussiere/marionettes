@@ -10,12 +10,18 @@ export const BONES_NAME_PREFIX = 'mixamorig'
 
 class BoneConfig {
 	axes: string
+	min_angle: V3
+	max_angle: V3
 	reverse: boolean
 
 	constructor(
 			axes: string = 'zxy',
-			reverse: boolean = false) {
+			reverse: boolean = false,
+			min_angle: V3 = new V3(-3, -3, -3),
+			max_angle: V3 = new V3( 3,  3,  3)) {
 		this.axes = axes
+		this.min_angle = min_angle
+		this.max_angle = max_angle
 		this.reverse = reverse
 	}
 }
@@ -29,17 +35,15 @@ const bones_config: { [id: string] : BoneConfig } = {
 	Neck:             new BoneConfig('xyz'),
 	Head:             new BoneConfig('xyz'),
 
-	LeftUpLeg:        new BoneConfig('xzy', true),
-	LeftLeg:          new BoneConfig('x__'),
-	LeftFoot:         new BoneConfig('xy_'),
-	LeftToeBase:      new BoneConfig('x__'),
-	LeftToe_End:      new BoneConfig('x__'),
+	LeftUpLeg:        new BoneConfig('xzy', true , new V3(-2.7 , -0.5 , -0.25), new V3(1.5  , 0.5  , 2    )),
+	LeftLeg:          new BoneConfig('x__', false, new V3(0    ,  0   ,  0   ), new V3(2.6  , 0    , 0    )),
+	LeftFoot:         new BoneConfig('xy_', false, new V3(-0.75, -1.5 ,  0   ), new V3(1    , 0.7  , 0    )),
+	LeftToeBase:      new BoneConfig('x__', false, new V3(-0.3 ,  0   ,  0   ), new V3(1.1  , 0    , 0    )),
 
-	RightUpLeg:       new BoneConfig('xzy', true),
-	RightLeg:         new BoneConfig('x__'),
-	RightFoot:        new BoneConfig('xy_'),
-	RightToeBase:     new BoneConfig('x__'),
-	RightToe_End:     new BoneConfig('x__'),
+	RightUpLeg:       new BoneConfig('xzy', true , new V3(-2.7 , -0.5 , -0.25), new V3(1.5  , 0.5  , 2    )),
+	RightLeg:         new BoneConfig('x__', false, new V3(0    ,  0   ,  0   ), new V3(2.6  , 0    , 0    )),
+	RightFoot:        new BoneConfig('xy_', false, new V3(-0.75, -1.5 ,  0   ), new V3(1    , 0.7  , 0    )),
+	RightToeBase:     new BoneConfig('x__', false, new V3(-0.3 ,  0   ,  0   ), new V3(1.1  , 0    , 0    )),
 
 	LeftShoulder:     new BoneConfig('zxy', true),
 	LeftArm:          new BoneConfig('zxy', true),
@@ -84,7 +88,7 @@ const bones_config: { [id: string] : BoneConfig } = {
 	RightHandPinky3:  new BoneConfig('z__', true),
 
 	// Ignored because not part of the x-bot model:
-	// HeadTop_End,     LeftEye,         RightEye,
+	// HeadTop_End,     LeftEye,         RightEye,       LeftToe_End,      RightToe_End
 	// LeftHandThumb4,  LeftHandRing4,   LeftHandIndex4, LeftHandMiddle4,  LeftHandPinky4,
 	// RightHandThumb4, RightHandPinky4, RightHandRing4, RightHandMiddle4, RightHandIndex4,
 }
@@ -340,7 +344,9 @@ export class Theater {
 				axe == 'y' ? delta : 0,
 				axe == 'z' ? delta : 0
 			))
+			.clamp(bone_config.min_angle, bone_config.max_angle)
 
+		console.log(rotation)
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation)
 		this.clicked_joint.setRotationFromEuler(euler_rotation)
 	}
