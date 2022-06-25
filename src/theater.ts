@@ -29,21 +29,21 @@ class BoneConfig {
 // Set axe orientation and constraints for each bone
 const bones_config: { [id: string] : BoneConfig } = {
 	Hips:             new BoneConfig('xyz'),
-	Spine:            new BoneConfig('xyz'),
-	Spine1:           new BoneConfig('xyz'),
-	Spine2:           new BoneConfig('xyz'),
-	Neck:             new BoneConfig('xyz'),
-	Head:             new BoneConfig('xyz'),
+	Spine:            new BoneConfig('xyz', false, new V3(-1.5, -.60, -.50), new V3(1.5 ,  .60,  .50)),
+	Spine1:           new BoneConfig('xyz', false, new V3(-.50, -.60, -.50), new V3(1   ,  .60,  .50)),
+	Spine2:           new BoneConfig('xyz', false, new V3(-.50, -.60, -.50), new V3(1   ,  .60,  .50)),
+	Neck:             new BoneConfig('xyz', false, new V3(-.90, -.80, -.70), new V3( .5 ,  .80,  .70)),
+	Head:             new BoneConfig('xyz', false, new V3(-.90, -.80, -.70), new V3( .5 ,  .80,  .70)),
 
-	LeftUpLeg:        new BoneConfig('xzy', true , new V3(-2.7 , -0.5 , -0.25), new V3(1.5  , 0.5  , 2    )),
-	LeftLeg:          new BoneConfig('x__', false, new V3(0    ,  0   ,  0   ), new V3(2.6  , 0    , 0    )),
-	LeftFoot:         new BoneConfig('xy_', false, new V3(-0.75, -1.5 ,  0   ), new V3(1    , 0.7  , 0    )),
-	LeftToeBase:      new BoneConfig('x__', false, new V3(-0.3 ,  0   ,  0   ), new V3(1.1  , 0    , 0    )),
+	LeftUpLeg:        new BoneConfig('xzy', true , new V3(-2.7, -0.5, -.25), new V3(1.5 ,  .50, 2   )),
+	LeftLeg:          new BoneConfig('x__', false, new V3(0   ,  0  ,  0  ), new V3(2.6 , 0   , 0   )),
+	LeftFoot:         new BoneConfig('xy_', false, new V3(-.75, -1.5,  0  ), new V3(1   ,  .70, 0   )),
+	LeftToeBase:      new BoneConfig('x__', false, new V3(-.30,  0  ,  0  ), new V3(1.1 , 0   , 0   )),
 
-	RightUpLeg:       new BoneConfig('xzy', true , new V3(-2.7 , -0.5 , -0.25), new V3(1.5  , 0.5  , 2    )),
-	RightLeg:         new BoneConfig('x__', false, new V3(0    ,  0   ,  0   ), new V3(2.6  , 0    , 0    )),
-	RightFoot:        new BoneConfig('xy_', false, new V3(-0.75, -1.5 ,  0   ), new V3(1    , 0.7  , 0    )),
-	RightToeBase:     new BoneConfig('x__', false, new V3(-0.3 ,  0   ,  0   ), new V3(1.1  , 0    , 0    )),
+	RightUpLeg:       new BoneConfig('xzy', true , new V3(-2.7, -.50, -.25), new V3(1.5 ,  .50, 2   )),
+	RightLeg:         new BoneConfig('x__', false, new V3(0   ,  0  ,  0  ), new V3(2.6 , 0   , 0   )),
+	RightFoot:        new BoneConfig('xy_', false, new V3(-.75, -1.5,  0  ), new V3(1   ,  .70, 0   )),
+	RightToeBase:     new BoneConfig('x__', false, new V3(-.30,  0  ,  0  ), new V3(1.1 , 0   , 0   )),
 
 	LeftShoulder:     new BoneConfig('zxy', true),
 	LeftArm:          new BoneConfig('zxy', true),
@@ -346,7 +346,8 @@ export class Theater {
 			))
 			.clamp(bone_config.min_angle, bone_config.max_angle)
 
-		console.log(rotation)
+		console.log(`${this.clicked_joint.name.substring(BONES_NAME_PREFIX.length)}: `
+		    + `(${rotation.x.toFixed(2)}, ${rotation.y.toFixed(2)}, ${rotation.z.toFixed(2)})`)
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation)
 		this.clicked_joint.setRotationFromEuler(euler_rotation)
 	}
