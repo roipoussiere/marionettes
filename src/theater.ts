@@ -10,77 +10,81 @@ export const BONES_NAME_PREFIX = 'mixamorig'
 
 class BoneConfig {
 	axes: string
-	min_angle: V3
-	max_angle: V3
+	reverse: boolean
 
-	constructor(axes: string, min_angle: V3, max_angle: V3) {
+	constructor(
+			axes: string = 'zxy',
+			reverse: boolean = false) {
 		this.axes = axes
-		this.min_angle = min_angle
-		this.max_angle = max_angle
+		this.reverse = reverse
 	}
 }
 
 // Set axe orientation and constraints for each bone
 const bones_config: { [id: string] : BoneConfig } = {
-	Hips:             new BoneConfig('vH_', new V3(), new V3()),
-	Spine:            new BoneConfig('vH_', new V3(), new V3()),
-	Spine1:           new BoneConfig('vH_', new V3(), new V3()),
-	Spine2:           new BoneConfig('vH_', new V3(), new V3()),
-	Neck:             new BoneConfig('v_h', new V3(), new V3()),
-	Head:             new BoneConfig('v_h', new V3(), new V3()),
+	Hips:             new BoneConfig('xyz'),
+	Spine:            new BoneConfig('xyz'),
+	Spine1:           new BoneConfig('xyz'),
+	Spine2:           new BoneConfig('xyz'),
+	Neck:             new BoneConfig('xyz'),
+	Head:             new BoneConfig('xyz'),
 
-	LeftShoulder:     new BoneConfig('_HV', new V3(), new V3()),
-	LeftArm:          new BoneConfig('_HV', new V3(), new V3()),
-	LeftForeArm:      new BoneConfig('__V', new V3(), new V3()),
-	LeftHand:         new BoneConfig('_HV', new V3(), new V3()),
-	LeftHandRing1:    new BoneConfig('_HV', new V3(), new V3()),
-	LeftHandRing2:    new BoneConfig('__V', new V3(), new V3()),
-	LeftHandRing3:    new BoneConfig('__V', new V3(), new V3()),
-	LeftHandIndex1:   new BoneConfig('_HV', new V3(), new V3()),
-	LeftHandIndex2:   new BoneConfig('__V', new V3(), new V3()),
-	LeftHandIndex3:   new BoneConfig('__V', new V3(), new V3()),
-	LeftHandThumb1:   new BoneConfig('_HV', new V3(), new V3()),
-	LeftHandThumb2:   new BoneConfig('__V', new V3(), new V3()),
-	LeftHandMiddle1:  new BoneConfig('_HV', new V3(), new V3()),
-	LeftHandMiddle2:  new BoneConfig('__V', new V3(), new V3()),
-	LeftHandMiddle3:  new BoneConfig('__V', new V3(), new V3()),
-	LeftHandPinky1:   new BoneConfig('_HV', new V3(), new V3()),
-	LeftHandPinky2:   new BoneConfig('__V', new V3(), new V3()),
-	LeftHandPinky3:   new BoneConfig('__V', new V3(), new V3()),
+	LeftUpLeg:        new BoneConfig('xzy', true),
+	LeftLeg:          new BoneConfig('x__'),
+	LeftFoot:         new BoneConfig('xy_'),
+	LeftToeBase:      new BoneConfig('x__'),
+	LeftToe_End:      new BoneConfig('x__'),
 
-	RightShoulder:    new BoneConfig('_Hv', new V3(), new V3()),
-	RightArm:         new BoneConfig('_Hv', new V3(), new V3()),
-	RightForeArm:     new BoneConfig('__v', new V3(), new V3()),
-	RightHand:        new BoneConfig('_Hv', new V3(), new V3()),
-	RightHandPinky1:  new BoneConfig('_Hv', new V3(), new V3()),
-	RightHandPinky2:  new BoneConfig('__v', new V3(), new V3()),
-	RightHandPinky3:  new BoneConfig('__v', new V3(), new V3()),
-	RightHandRing1:   new BoneConfig('_Hv', new V3(), new V3()),
-	RightHandRing2:   new BoneConfig('__v', new V3(), new V3()),
-	RightHandRing3:   new BoneConfig('__v', new V3(), new V3()),
-	RightHandMiddle1: new BoneConfig('_Hv', new V3(), new V3()),
-	RightHandMiddle2: new BoneConfig('__v', new V3(), new V3()),
-	RightHandMiddle3: new BoneConfig('__v', new V3(), new V3()),
-	RightHandIndex1:  new BoneConfig('_Hv', new V3(), new V3()),
-	RightHandIndex2:  new BoneConfig('__v', new V3(), new V3()),
-	RightHandIndex3:  new BoneConfig('__v', new V3(), new V3()),
-	RightHandThumb1:  new BoneConfig('_Hv', new V3(), new V3()),
-	RightHandThumb2:  new BoneConfig('__v', new V3(), new V3()),
+	RightUpLeg:       new BoneConfig('xzy', true),
+	RightLeg:         new BoneConfig('x__'),
+	RightFoot:        new BoneConfig('xy_'),
+	RightToeBase:     new BoneConfig('x__'),
+	RightToe_End:     new BoneConfig('x__'),
 
-	LeftUpLeg:        new BoneConfig('v_H', new V3(), new V3()),
-	LeftLeg:          new BoneConfig('v__', new V3(), new V3()),
-	LeftFoot:         new BoneConfig('vH_', new V3(), new V3()),
-	LeftToeBase:      new BoneConfig('v__', new V3(), new V3()),
-	LeftToe_End:      new BoneConfig('v__', new V3(), new V3()),
+	LeftShoulder:     new BoneConfig('zxy', true),
+	LeftArm:          new BoneConfig('zxy', true),
+	LeftForeArm:      new BoneConfig('z__', true),
+	LeftHand:         new BoneConfig('zxy', true),
 
-	RightUpLeg:       new BoneConfig('v_H', new V3(), new V3()),
-	RightLeg:         new BoneConfig('v__', new V3(), new V3()),
-	RightFoot:        new BoneConfig('vH_', new V3(), new V3()),
-	RightToeBase:     new BoneConfig('v__', new V3(), new V3()),
-	RightToe_End:     new BoneConfig('v__', new V3(), new V3()),
+	RightShoulder:    new BoneConfig('zxy'),
+	RightArm:         new BoneConfig('zxy'),
+	RightForeArm:     new BoneConfig('z__'),
+	RightHand:        new BoneConfig('zxy'),
+
+	LeftHandThumb1:   new BoneConfig('yx_', true),
+	LeftHandThumb2:   new BoneConfig('y__', true),
+	LeftHandThumb3:   new BoneConfig('y__', true),
+	LeftHandIndex1:   new BoneConfig('zy_', true),
+	LeftHandIndex2:   new BoneConfig('z__', true),
+	LeftHandIndex3:   new BoneConfig('z__', true),
+	LeftHandMiddle1:  new BoneConfig('zy_', true),
+	LeftHandMiddle2:  new BoneConfig('z__', true),
+	LeftHandMiddle3:  new BoneConfig('z__', true),
+	LeftHandRing1:    new BoneConfig('zy_', true),
+	LeftHandRing2:    new BoneConfig('z__', true),
+	LeftHandRing3:    new BoneConfig('z__', true),
+	LeftHandPinky1:   new BoneConfig('zy_', true),
+	LeftHandPinky2:   new BoneConfig('z__', true),
+	LeftHandPinky3:   new BoneConfig('z__', true),
+
+	RightHandThumb1:  new BoneConfig('yx_', true),
+	RightHandThumb2:  new BoneConfig('y__', true),
+	RightHandThumb3:  new BoneConfig('y__', true),
+	RightHandIndex1:  new BoneConfig('zy_', true),
+	RightHandIndex2:  new BoneConfig('z__', true),
+	RightHandIndex3:  new BoneConfig('z__', true),
+	RightHandMiddle1: new BoneConfig('zy_', true),
+	RightHandMiddle2: new BoneConfig('z__', true),
+	RightHandMiddle3: new BoneConfig('z__', true),
+	RightHandRing1:   new BoneConfig('zy_', true),
+	RightHandRing2:   new BoneConfig('z__', true),
+	RightHandRing3:   new BoneConfig('z__', true),
+	RightHandPinky1:  new BoneConfig('zy_', true),
+	RightHandPinky2:  new BoneConfig('z__', true),
+	RightHandPinky3:  new BoneConfig('z__', true),
 
 	// Ignored because not part of the x-bot model:
-	// HeadTop_End,     LeftEye,         RightEye,       LeftHandThumb3,   RightHandThumb3,
+	// HeadTop_End,     LeftEye,         RightEye,
 	// LeftHandThumb4,  LeftHandRing4,   LeftHandIndex4, LeftHandMiddle4,  LeftHandPinky4,
 	// RightHandThumb4, RightHandPinky4, RightHandRing4, RightHandMiddle4, RightHandIndex4,
 }
@@ -90,6 +94,7 @@ export class Theater {
 	pointer_delta: V2
 	canvas: HTMLCanvasElement
 	canvas_origin: V2
+	axe_modifier_id: number // one in [0, 1, 2]
 	init_joint_rotation: THREE.Euler
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera
@@ -106,16 +111,20 @@ export class Theater {
 		this.init_joint_rotation = new THREE.Euler(0, 0, 0)
 		this.pointer = new V2(0, 0)
 		this.pointer_delta = new V2(0, 0)
+		this.axe_modifier_id = 0
 
 		this.#addSpinner()
 
-		this.canvas.addEventListener('mousedown', () => this.onPress())
-		this.canvas.addEventListener('mouseup'  , () => this.onRelease())
-		this.canvas.addEventListener('mousemove', e => this.onMove(e))
+		this.canvas.addEventListener('mousemove',  e  => this.onPointerMove(e))
+		this.canvas.addEventListener('mousedown',  () => this.onPointerPress())
+		this.canvas.addEventListener('mouseup'  ,  () => this.onPointerRelease())
 
-		this.canvas.addEventListener('touchstart', () => this.onPress())
-		this.canvas.addEventListener('touchend' , () => this.onRelease())
-		this.canvas.addEventListener('touchmove', e => this.onMove(e, true))
+		this.canvas.addEventListener('touchmove',  e  => this.onPointerMove(e, true))
+		this.canvas.addEventListener('touchstart', () => this.onPointerPress())
+		this.canvas.addEventListener('touchend' ,  () => this.onPointerRelease())
+
+		document.addEventListener('keydown',    e  => this.onKeyPress(e))
+		document.addEventListener('keyup',      () => this.onKeyRelease())
 
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
@@ -196,7 +205,7 @@ export class Theater {
 		// } ( this.scene ) );
 	}
 
-	onMove(event: UIEvent, touch = false) {
+	onPointerMove(event: UIEvent, touch = false) {
 		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
 		this.pointer_delta = this.pointer.clone()
 
@@ -213,12 +222,24 @@ export class Theater {
 		}
 	}
 
-	onPress() {
+	onPointerPress() {
 		this.raycast()
 	}
 
-	onRelease() {
+	onPointerRelease() {
 		this.control.enabled = true
+	}
+
+	onKeyPress(event: KeyboardEvent) {
+		if (event.ctrlKey) {
+			this.axe_modifier_id = 1
+		} else if (event.shiftKey) {
+			this.axe_modifier_id = 2
+		}
+	}
+
+	onKeyRelease() {
+		this.axe_modifier_id = 0
 	}
 
 	raycast() {
@@ -295,16 +316,13 @@ export class Theater {
 	}
 
 	applyBoneRotation() {
+		// Rotations are non-commutative, so rotating on both x/y with cursor
+		// will lead to unexpected results (ie. rotation on z)
+		let delta = this.pointer_delta.x + this.pointer_delta.y
+
+		// todo: move according to camera point of view, something like:
 		// const plane = this.camera.position.clone().normalize()
 		// this.clicked_joint.rotateOnAxis(plane, 0.1)
-
-		const delta: { [id: string] : number } = {
-			h:   this.pointer_delta.x,
-			v:   this.pointer_delta.y,
-			H: - this.pointer_delta.x,
-			V: - this.pointer_delta.y,
-			_: 0
-		}
 
 		const bone_name = this.clicked_joint.name.substring(BONES_NAME_PREFIX.length)
 		if ( ! (bone_name in bones_config)) {
@@ -312,12 +330,19 @@ export class Theater {
 		}
 		const bone_config = bones_config[bone_name]
 
-		// todo: move according to angle from dragStart to current pos
-		// from the camera point of view
-		
-		this.clicked_joint.rotateX(delta[bone_config.axes[0]])
-		this.clicked_joint.rotateY(delta[bone_config.axes[1]])
-		this.clicked_joint.rotateZ(delta[bone_config.axes[2]])
+		delta *= bone_config.reverse ? -1 : 1
+		const axe = bone_config.axes[this.axe_modifier_id]
+
+		const rotation = new V3()
+			.setFromEuler(this.clicked_joint.rotation)
+			.add(new V3(
+				axe == 'x' ? delta : 0,
+				axe == 'y' ? delta : 0,
+				axe == 'z' ? delta : 0
+			))
+
+		const euler_rotation = new THREE.Euler().setFromVector3(rotation)
+		this.clicked_joint.setRotationFromEuler(euler_rotation)
 	}
 
 	render() {
