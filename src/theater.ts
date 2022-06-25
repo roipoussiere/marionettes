@@ -35,16 +35,16 @@ export class Theater {
 
 		this.#addSpinner()
 
-		this.canvas.addEventListener('mousemove',  e  => this.onPointerMove(e))
-		this.canvas.addEventListener('mousedown',  () => this.onPointerPress())
-		this.canvas.addEventListener('mouseup'  ,  () => this.onPointerRelease())
+		this.canvas.addEventListener('mousemove',  e  => this.#onPointerMove(e))
+		this.canvas.addEventListener('mousedown',  () => this.#onPointerPress())
+		this.canvas.addEventListener('mouseup'  ,  () => this.#onPointerRelease())
 
-		this.canvas.addEventListener('touchmove',  e  => this.onPointerMove(e, true))
-		this.canvas.addEventListener('touchstart', () => this.onPointerPress())
-		this.canvas.addEventListener('touchend' ,  () => this.onPointerRelease())
+		this.canvas.addEventListener('touchmove',  e  => this.#onPointerMove(e, true))
+		this.canvas.addEventListener('touchstart', () => this.#onPointerPress())
+		this.canvas.addEventListener('touchend' ,  () => this.#onPointerRelease())
 
-		document.addEventListener('keydown',    e  => this.onKeyPress(e))
-		document.addEventListener('keyup',      () => this.onKeyRelease())
+		document.addEventListener('keydown',    e  => this.#onKeyPress(e))
+		document.addEventListener('keyup',      () => this.#onKeyRelease())
 
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
@@ -67,11 +67,11 @@ export class Theater {
 		this.clicked_joint = new THREE.Object3D()
 	}
 
-	init() {
-        // Could be accessors?
-        // const model_joints = <THREE.SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
-        // const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
+	get canvas_size() {
+		return new V2(this.canvas.width, this.canvas.height)
+	}
 
+	init() {
 		let bone: THREE.Bone
 
 		this.scene.children.forEach(child => {
@@ -81,27 +81,23 @@ export class Theater {
 						bone = <THREE.Bone> grand_child
 						this.bones[grand_child.name] = bone
 						// this.bones[grand_child.id] = bone
-
-                        // const handlePosition = bone.getWorldPosition(new V3())
-						// this.bone_handles.push(this.#makeBoneHandle(bone))
-
-						// That one is NOT updated when the bone moves, for simplicity now
-						// this.#hintLine(new V3(0.0, 10.0, 0.0), handlePosition)
-					} else {
-					    // There's a Group in here as well (?)
-					    console.debug("Skipping not bone", grand_child)
-                    }
+					}
 				})
-			} else {
-				// Lights, Grid helper, etc.
-				//console.debug("Skipping child:", child)
 			}
         })
 
 		console.log(Object.keys(this.bones))
 	}
 
-	onPointerMove(event: UIEvent, touch = false) {
+	addObject(object: THREE.Object3D) {
+		this.scene.add(object)
+	}
+
+	render() {
+		this.renderer.render(this.scene, this.camera)
+	}
+
+	#onPointerMove(event: UIEvent, touch = false) {
 		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
 		this.pointer_delta = this.pointer.clone()
 
@@ -114,19 +110,19 @@ export class Theater {
 		this.pointer_delta.sub(this.pointer).multiplyScalar(POINTER_SENSIBILITY)
 
 		if ( ! this.control.enabled) {
-			this.applyBoneRotation()
+			this.#applyBoneRotation()
 		}
 	}
 
-	onPointerPress() {
-		this.raycast()
+	#onPointerPress() {
+		this.#raycast()
 	}
 
-	onPointerRelease() {
+	#onPointerRelease() {
 		this.control.enabled = true
 	}
 
-	onKeyPress(event: KeyboardEvent) {
+	#onKeyPress(event: KeyboardEvent) {
 		if (event.ctrlKey) {
 			this.axe_modifier_id = 1
 		} else if (event.shiftKey) {
@@ -134,15 +130,24 @@ export class Theater {
 		}
 	}
 
-	onKeyRelease() {
+	#onKeyRelease() {
 		this.axe_modifier_id = 0
 	}
 
-	raycast() {
+	#onBoneClicked(intersect: THREE.Intersection) {
+		this.control.enabled = false
+		this.clicked_joint = this.#findClosestJoint(intersect.point)
+		this.init_joint_rotation = this.clicked_joint.rotation
+
+		// console.log('intersecting at', intersect.point, intersect.face)
+		// console.info('Selected joint:', this.clicked_joint)
+	}
+
+	#raycast() {
 		const raycaster = new THREE.Raycaster()
 		raycaster.setFromCamera(this.pointer, this.camera);
 
-		// Bones do not have geometry or volume, and the Raycaster cannot intersect them.
+		// Bones do not have geometry or volume so the Raycaster cannot intersect them.
 		// Solution: compare the clicked triangle position with each skeleton joint,
 		//           get the bone with shorter distance.
 		// if (0 < v1.dot(v2) < v3^2) // is the selected point in zone between v1 and v2?
@@ -157,19 +162,13 @@ export class Theater {
 			}
 		})
 
-		// console.log('handles:', handles)
 		const intersects = raycaster.intersectObjects(handles, true)
-
-		console.log('intersects:', intersects)
-
 		if (intersects.length > 0) {
-		// intersects.forEach(intersect => {
-			this.onBoneClicked(intersects[0])
-		// })
+			this.#onBoneClicked(intersects[0])
 		}
 	}
 
-	findClosestJoint(point: V3) {
+	#findClosestJoint(point: V3) {
 		let closest_joint = new THREE.Object3D
 		let position = new V3()
 		let closest_bone_distance = Infinity
@@ -186,32 +185,7 @@ export class Theater {
 		return closest_joint
 	}
 
-	onBoneClicked(intersect: THREE.Intersection) {
-		this.control.enabled = false
-		console.log('intersecting at', intersect.point, intersect.face)
-
-		this.clicked_joint = this.findClosestJoint(intersect.point)
-		console.info('Selected joint:', this.clicked_joint)
-
-		this.init_joint_rotation = this.clicked_joint.rotation
-		// closestBone.position.applyAxisAngle(raycaster.ray.direction, TAU*0.1)
-		// closestBone.position.applyAxisAngle(new V3(0., 0., 1.), TAU*0.1)
-		// closestBone.position.add(new V3(0., 2.0, 0.))
-
-		// Could be accessors?
-		// const model_joints = <SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
-		// const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
-
-		// Does not seem like we need this
-		// model_joints.skeleton.update()
-		// model_surface.skeleton.update()
-	}
-
-	addObject(object: THREE.Object3D) {
-		this.scene.add(object)
-	}
-
-	applyBoneRotation() {
+	#applyBoneRotation() {
 		// Rotations are non-commutative, so rotating on both x/y with cursor
 		// will lead to unexpected results (ie. rotation on z)
 		let delta = this.pointer_delta.x + this.pointer_delta.y
@@ -246,14 +220,6 @@ export class Theater {
 		)
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation)
 		this.clicked_joint.setRotationFromEuler(euler_rotation)
-	}
-
-	render() {
-		this.renderer.render(this.scene, this.camera)
-	}
-
-	get canvas_size() {
-		return new V2(this.canvas.width, this.canvas.height)
 	}
 
 	#addSpinner() {
