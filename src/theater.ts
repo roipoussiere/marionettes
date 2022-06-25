@@ -69,7 +69,7 @@ export class Theater {
 
 	init() {
         // Could be accessors?
-        const model_joints = <THREE.SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
+        // const model_joints = <THREE.SkinnedMesh> this.scene.getObjectByName("Beta_Joints")
         // const model_surface = <SkinnedMesh> this.scene.getObjectByName("Beta_Surface")
 
 		let bone: THREE.Bone
@@ -96,33 +96,9 @@ export class Theater {
 				// Lights, Grid helper, etc.
 				//console.debug("Skipping child:", child)
 			}
-
-
         })
 
 		console.log(Object.keys(this.bones))
-
-		// Dump the scene tree
-		// this.scene.traverse( obj => {
-		// 	let s = '|___';
-		// 	let obj2 = obj;
-		// 	while ( obj2 !== this.scene ) {
-		// 		s = '\t' + s;
-		// 		if (obj2.parent !== null) {
-		// 			obj2 = obj2.parent;
-		// 		} else {
-		// 			break
-		// 		}
-		// 	}
-		// 	console.log( s + obj.name + ' <' + obj.type + '>' );
-		// });
-
-		// Neat use of console.group, if we can translate this to ts
-		// (function printGraph( obj ) {
-		// 	console.group( ' <%o> ' + obj.name, obj );
-		// 	obj.children.forEach( printGraph );
-		// 	console.groupEnd();
-		// } ( this.scene ) );
 	}
 
 	onPointerMove(event: UIEvent, touch = false) {
@@ -278,50 +254,6 @@ export class Theater {
 
 	get canvas_size() {
 		return new V2(this.canvas.width, this.canvas.height)
-	}
-
-	#makeBoneHandle(bone: THREE.Bone, color: THREE.Color = new THREE.Color(0xff3399)) {
-		let sceneGeometry = new THREE.SphereGeometry( 2.00);
-		let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
-		let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
-		sphere.name = "BoneHandle"
-		// Careful, the bone is submitted to intense scaling, it appears.
-		// Why isn't the scale normalized ?  WTF   Perhaps we should normalize our models first.
-		bone.add(sphere)
-
-		return sphere
-	}
-
-	#hintPoint(position: V3, color: THREE.Color = new THREE.Color(0xff3399)) {
-		let sceneGeometry = new THREE.SphereGeometry( 0.03);
-		let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
-		let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
-		sphere.position.add(position)
-		sphere.name = "PointHint"
-		this.scene.add(sphere)
-	}
-
-	#hintLine(start: V3, end: V3, color: THREE.Color = new THREE.Color(0xff9933)) {
-		const line = new THREE.Object3D()
-		const direction = end.clone().sub(start)
-		const cylinderGeometry = new THREE.CylinderGeometry(
-			0.001,
-			0.001,
-			direction.length(),
-			6
-		)
-		const cylinderMaterial = new THREE.MeshBasicMaterial({color})
-		const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial)
-
-		cylinder.translateZ(direction.length() * 0.5)
-		cylinder.rotateX(TAU / 4.0)
-
-		line.name = "LineHint"
-		line.add(cylinder)
-		line.lookAt(direction)
-        line.position.add(start)
-
-		this.scene.add(line)
 	}
 
 	#addSpinner() {
