@@ -3,7 +3,8 @@ import { Vector3 } from 'three'
 import { bones_config } from './bones_config'
 
 
-const BONES_NAME_PREFIX = 'mixamorig'
+export const BONES_NAME_PREFIX = 'mixamorig'
+export const MODEL_NAME_PREFIX = 'model_'
 
 
 export class Marionette {
@@ -20,15 +21,18 @@ export class Marionette {
 	}
 
 	setModel(model: THREE.Group) {
+		console.log(`model for ${ this.name }:`, model)
+		// console.log('model scale:', model.scale)
 		this.model = model
-		this.model.name = `model_${ this.name }`
+		// this.model.copy(model)
+		// this.model.scale.setScalar(0.001)
+		// console.log('model scale:', model.scale)
+		this.model.name = MODEL_NAME_PREFIX + this.name
 
-		let bone: THREE.Bone
 		model.traverse(child => {
 			if (child instanceof THREE.Bone) {
-				bone = <THREE.Bone> child
-				this.bones[child.name] = bone
-				// this.bones[grand_child.id] = bone
+				this.bones[child.name] = <THREE.Bone> child
+				// this.bones[grand_child.id] = <THREE.Bone> child
 			}
 		})
 		// console.log(this.name + ' bones:', Object.keys(this.bones))
@@ -40,7 +44,7 @@ export class Marionette {
 		// console.info('Selected joint:', this.clicked_joint)
 	}
 
-	applyBoneRotation(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
+	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
 		// Rotations are non-commutative, so rotating on both x/y with cursor
 		// will lead to unexpected results (ie. rotation on z)
 		let delta = pointer_delta.x + pointer_delta.y

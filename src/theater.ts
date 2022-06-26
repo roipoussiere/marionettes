@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { Vector2 as V2 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { Marionette } from './marionette'
+import { Marionette, MODEL_NAME_PREFIX } from './marionette'
 
 
 export const POINTER_SENSIBILITY = 1.0
@@ -19,17 +19,25 @@ export class Theater {
 	camera: THREE.Camera
 	scene: THREE.Scene
 	control: OrbitControls
-	marionette: Marionette
-	objects: THREE.Object3D[]
+	marionettes: { [id: string] : Marionette }
+	meshes: THREE.SkinnedMesh[]
+	clicked_marionette: string
 
-	constructor(canvas_id: string, marionette: Marionette) {
+	constructor(canvas_id: string, marionettes: Marionette[]) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		const canvas_brect = this.canvas.getBoundingClientRect()
 		this.canvas_origin = new V2(canvas_brect.left - 1, canvas_brect.top).ceil()
 		this.pointer = new V2(0, 0)
 		this.pointer_delta = new V2(0, 0)
 		this.axe_modifier_id = 0
-		this.marionette = marionette
+		this.clicked_marionette = ''
+
+		this.marionettes = {}
+		marionettes.forEach(marionette => {
+			this.marionettes[marionette.name] = marionette
+		})
+
+		this.meshes = []
 
 		this.#addSpinner()
 
@@ -58,7 +66,6 @@ export class Theater {
 		this.camera.position.set(0, 2, 5)
 
 		this.scene = new THREE.Scene()
-		this.objects = []
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 	}
 
@@ -74,9 +81,11 @@ export class Theater {
 	}
 
 	onModelLoaded(model: THREE.Group) {
-		this.marionette.setModel(model)
-		this.scene.add(this.marionette.model)
-		this.objects = this.#getObjects()
+		Object.values(this.marionettes).forEach(marionette => {
+			marionette.setModel(model)
+			this.scene.add(marionette.model)
+			this.#fillMeshes()
+		})
 		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
 			spinner.remove()
 		})
@@ -101,7 +110,8 @@ export class Theater {
 		this.pointer_delta.sub(this.pointer).multiplyScalar(POINTER_SENSIBILITY)
 
 		if ( ! this.control.enabled) {
-			this.marionette.applyBoneRotation(this.pointer_delta, this.axe_modifier_id)
+			this.marionettes[this.clicked_marionette]
+				.rotateBone(this.pointer_delta, this.axe_modifier_id)
 		}
 	}
 
@@ -111,6 +121,7 @@ export class Theater {
 
 	#onPointerRelease() {
 		this.control.enabled = true
+		this.clicked_marionette = ''
 	}
 
 	#onKeyPress(event: KeyboardEvent) {
@@ -125,18 +136,16 @@ export class Theater {
 		this.axe_modifier_id = 0
 	}
 
-	#getObjects(): THREE.Object3D[] {
-		let objects: THREE.Object3D[] = []
+	#fillMeshes() {
 		this.scene.children.forEach(child => {
 			if (child instanceof THREE.Group) {
-				child.children.forEach(grandChild => {
-					objects.push(<THREE.Object3D> grandChild)
+				child.children.forEach(grand_child => {
+					if(grand_child instanceof THREE.SkinnedMesh) {
+						this.meshes.push(<THREE.SkinnedMesh> grand_child)
+					}
 				})
 			}
 		})
-
-		console.log('model objects:', objects)
-		return objects
 	}
 
 	#raycast() {
@@ -149,10 +158,12 @@ export class Theater {
 		// if (0 < v1.dot(v2) < v3^2) // is the selected point in zone between v1 and v2?
 		// sin(v1.angle(v2))*len
 
-		const intersects = raycaster.intersectObjects(this.objects, true)
-		if (intersects.length > 0) {
+		const intersects = raycaster.intersectObjects(this.meshes, true)
+		if (intersects.length > 0 && intersects[0].object.parent) {
 			this.control.enabled = false
-			this.marionette.onBoneClicked(intersects[0])
+			this.clicked_marionette = intersects[0].object.parent.name
+				.substring(MODEL_NAME_PREFIX.length)
+			this.marionettes[this.clicked_marionette].onBoneClicked(intersects[0])
 		}
 	}
 
