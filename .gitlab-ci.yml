@@ -2,6 +2,9 @@ image: node:lts
 
 before_script:
   - yarn install
+  - touch foobar1
+  - ls
+  - echo 'hello1'
   - pwd && cat 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
   - wget 'https://raw.githubusercontent.com/three-types/three-ts-types/6829af2cc5b91731f28a0d3e85a52b46581f4781/types/three/examples/jsm/utils/SkeletonUtils.d.ts' -O 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
   - pwd && cat 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
@@ -9,6 +12,10 @@ before_script:
 pages:
 
   script:
+    - touch foobar2
+    - ls
+    - echo 'hello2'
+    - wget 'https://raw.githubusercontent.com/three-types/three-ts-types/6829af2cc5b91731f28a0d3e85a52b46581f4781/types/three/examples/jsm/utils/SkeletonUtils.d.ts' -O 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
     - pwd && cat 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
     - yarn run build
     - mkdir public
