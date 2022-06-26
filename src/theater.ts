@@ -1,12 +1,12 @@
 import * as THREE from 'three'
-import { Vector2 as V2, Vector3 as V3 } from 'three'
+import { Vector2 as V2 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { bones_config } from './bones_config'
+import { Marionette } from './marionette'
 
-export const SPINNER_CLASS = 'body-posture-spinner'
+
 export const POINTER_SENSIBILITY = 1.0
 export const TAU = Math.PI * 2.0
-export const BONES_NAME_PREFIX = 'mixamorig'
+export const SPINNER_CLASS = 'body-posture-spinner'
 
 
 export class Theater {
@@ -15,23 +15,21 @@ export class Theater {
 	canvas: HTMLCanvasElement
 	canvas_origin: V2
 	axe_modifier_id: number // one in [0, 1, 2]
-	init_joint_rotation: THREE.Euler
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera
 	scene: THREE.Scene
 	control: OrbitControls
-	bones: { [id: string] : THREE.Bone }
-	bone_handles: Array<THREE.Object3D>
-	clicked_joint: THREE.Object3D
+	marionette: Marionette
+	objects: THREE.Object3D[]
 
-	constructor(canvas_id: string) {
+	constructor(canvas_id: string, marionette: Marionette) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		const canvas_brect = this.canvas.getBoundingClientRect()
 		this.canvas_origin = new V2(canvas_brect.left - 1, canvas_brect.top).ceil()
-		this.init_joint_rotation = new THREE.Euler(0, 0, 0)
 		this.pointer = new V2(0, 0)
 		this.pointer_delta = new V2(0, 0)
 		this.axe_modifier_id = 0
+		this.marionette = marionette
 
 		this.#addSpinner()
 
@@ -43,8 +41,8 @@ export class Theater {
 		this.canvas.addEventListener('touchstart', () => this.#onPointerPress())
 		this.canvas.addEventListener('touchend' ,  () => this.#onPointerRelease())
 
-		document.addEventListener('keydown',    e  => this.#onKeyPress(e))
-		document.addEventListener('keyup',      () => this.#onKeyRelease())
+		document.addEventListener('keydown',       e  => this.#onKeyPress(e))
+		document.addEventListener('keyup',         () => this.#onKeyRelease())
 
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
@@ -60,11 +58,8 @@ export class Theater {
 		this.camera.position.set(0, 2, 5)
 
 		this.scene = new THREE.Scene()
-
+		this.objects = []
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
-		this.bones = {}
-		this.bone_handles = []
-		this.clicked_joint = new THREE.Object3D()
 	}
 
 	get canvas_size() {
@@ -72,25 +67,21 @@ export class Theater {
 	}
 
 	init() {
-		let bone: THREE.Bone
-
-		this.scene.children.forEach(child => {
-			if (child instanceof THREE.Group) {
-				child.traverse(grand_child => {
-					if (grand_child instanceof THREE.Bone) {
-						bone = <THREE.Bone> grand_child
-						this.bones[grand_child.name] = bone
-						// this.bones[grand_child.id] = bone
-					}
-				})
-			}
-        })
-
-		console.log(Object.keys(this.bones))
+		this.#addGrid()
+		this.#addFloor()
+		this.#addLights()
+		// this.scene.add(new THREE.AxesHelper())
 	}
 
-	addObject(object: THREE.Object3D) {
-		this.scene.add(object)
+	onModelLoaded(model: THREE.Group) {
+		this.marionette.setModel(model)
+		this.scene.add(this.marionette.model)
+		this.objects = this.#getObjects()
+		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
+			spinner.remove()
+		})
+
+		// this.scene.add(new THREE.SkeletonHelper( model ));
 	}
 
 	render() {
@@ -110,7 +101,7 @@ export class Theater {
 		this.pointer_delta.sub(this.pointer).multiplyScalar(POINTER_SENSIBILITY)
 
 		if ( ! this.control.enabled) {
-			this.#applyBoneRotation()
+			this.marionette.applyBoneRotation(this.pointer_delta, this.axe_modifier_id)
 		}
 	}
 
@@ -134,13 +125,18 @@ export class Theater {
 		this.axe_modifier_id = 0
 	}
 
-	#onBoneClicked(intersect: THREE.Intersection) {
-		this.control.enabled = false
-		this.clicked_joint = this.#findClosestJoint(intersect.point)
-		this.init_joint_rotation = this.clicked_joint.rotation
+	#getObjects(): THREE.Object3D[] {
+		let objects: THREE.Object3D[] = []
+		this.scene.children.forEach(child => {
+			if (child instanceof THREE.Group) {
+				child.children.forEach(grandChild => {
+					objects.push(<THREE.Object3D> grandChild)
+				})
+			}
+		})
 
-		// console.log('intersecting at', intersect.point, intersect.face)
-		// console.info('Selected joint:', this.clicked_joint)
+		console.log('model objects:', objects)
+		return objects
 	}
 
 	#raycast() {
@@ -153,73 +149,11 @@ export class Theater {
 		// if (0 < v1.dot(v2) < v3^2) // is the selected point in zone between v1 and v2?
 		// sin(v1.angle(v2))*len
 
-		let handles: Array<THREE.Object3D> = []
-		this.scene.children.forEach(child => {
-			if (child instanceof THREE.Group) {
-				child.children.forEach(grandChild => {
-					handles.push(<THREE.Object3D> grandChild)
-				})
-			}
-		})
-
-		const intersects = raycaster.intersectObjects(handles, true)
+		const intersects = raycaster.intersectObjects(this.objects, true)
 		if (intersects.length > 0) {
-			this.#onBoneClicked(intersects[0])
+			this.control.enabled = false
+			this.marionette.onBoneClicked(intersects[0])
 		}
-	}
-
-	#findClosestJoint(point: V3) {
-		let closest_joint = new THREE.Object3D
-		let position = new V3()
-		let closest_bone_distance = Infinity
-
-		for (let boneName in this.bones) {
-			const bone = this.bones[boneName]
-			const distance = (bone.getWorldPosition(position).sub(point)).length()
-			if (distance < closest_bone_distance && bone.parent) {
-				closest_joint = bone.parent
-				closest_bone_distance = distance
-			}
-		}
-
-		return closest_joint
-	}
-
-	#applyBoneRotation() {
-		// Rotations are non-commutative, so rotating on both x/y with cursor
-		// will lead to unexpected results (ie. rotation on z)
-		let delta = this.pointer_delta.x + this.pointer_delta.y
-
-		// todo: move according to camera point of view, something like:
-		// const plane = this.camera.position.clone().normalize()
-		// this.clicked_joint.rotateOnAxis(plane, 0.1)
-
-		const bone_name = this.clicked_joint.name.substring(BONES_NAME_PREFIX.length)
-		if ( ! (bone_name in bones_config)) {
-			return
-		}
-		const bone_config = bones_config[bone_name]
-
-		delta *= bone_config.reverse ? -1 : 1
-		const axe = bone_config.axes[this.axe_modifier_id]
-
-		const rotation = new V3()
-			.setFromEuler(this.clicked_joint.rotation)
-			.add(new V3(
-				axe == 'x' ? delta : 0,
-				axe == 'y' ? delta : 0,
-				axe == 'z' ? delta : 0
-			))
-			.clamp(bone_config.min_angle, bone_config.max_angle)
-
-		console.log(
-			   `${this.clicked_joint.name.substring(BONES_NAME_PREFIX.length)}: `
-		    + `(${Math.round(rotation.x * THREE.MathUtils.RAD2DEG)}, `
-			+  `${Math.round(rotation.y * THREE.MathUtils.RAD2DEG)}, `
-			+  `${Math.round(rotation.z * THREE.MathUtils.RAD2DEG)})`
-		)
-		const euler_rotation = new THREE.Euler().setFromVector3(rotation)
-		this.clicked_joint.setRotationFromEuler(euler_rotation)
 	}
 
 	#addSpinner() {
@@ -233,5 +167,36 @@ export class Theater {
 		spinner.style.cssText = `width: ${ size }px; height: ${ size  }px;`
 		                      + `left: ${  left }px; top: ${    right }px;`;
 		document.body.appendChild(spinner);
+	}
+
+	#addGrid() {
+		let grid = new THREE.GridHelper( 4, 20 )
+		grid.name = 'grid'
+		grid.position.y = 0.01
+		this.scene.add(grid)
+	}
+
+	#addFloor() {
+		let floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
+		let floorMaterial = new THREE.MeshPhongMaterial({
+			color: 0xeeeeee,
+			shininess: 0
+		});
+
+		let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+		floor.name = 'floor'
+		floor.rotation.x = -0.5 * Math.PI;
+		floor.receiveShadow = true;
+		floor.position.y = 0;
+		this.scene.add(floor)
+	}
+		
+	#addLights() {
+		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.5)
+		this.scene.add(ambientLight)
+
+		const light = new THREE.PointLight(new THREE.Color(0xffffff), 0.5)
+		light.position.set(10, 10, 0)
+		this.scene.add(light)
 	}
 }
