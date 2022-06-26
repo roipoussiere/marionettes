@@ -2,11 +2,14 @@ image: node:lts
 
 before_script:
   - yarn install
+  - pwd && cat 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
   - wget 'https://raw.githubusercontent.com/three-types/three-ts-types/6829af2cc5b91731f28a0d3e85a52b46581f4781/types/three/examples/jsm/utils/SkeletonUtils.d.ts' -O 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
+  - pwd && cat 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
 
 pages:
 
   script:
+    - pwd && cat 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
     - yarn run build
     - mkdir public
     - mv demo/* public
