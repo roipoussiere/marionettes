@@ -1,10 +1,20 @@
 import * as THREE from 'three'
-import { Vector3 } from 'three'
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 import { bones_config } from './bones_config'
 
 
 export const BONES_NAME_PREFIX = 'mixamorig'
 export const MODEL_NAME_PREFIX = 'model_'
+
+
+/*
+IMPORTANT NOTE:
+A modification on the file @types/three/examples/jsm/utils/SkeletonUtils.d.ts
+is needed. See this PR:
+https://github.com/three-types/three-ts-types/pull/230/
+Bug report: https://github.com/mrdoob/three.js/issues/23923
+See .gitlab-ci.yml
+*/
 
 
 export class Marionette {
@@ -22,12 +32,14 @@ export class Marionette {
 
 	setModel(model: THREE.Group) {
 		console.log(`model for ${ this.name }:`, model)
-		// console.log('model scale:', model.scale)
-		this.model = model
-		// this.model.copy(model)
-		// this.model.scale.setScalar(0.001)
-		// console.log('model scale:', model.scale)
+		this.model = <THREE.Group> SkeletonUtils.clone(model)
 		this.model.name = MODEL_NAME_PREFIX + this.name
+
+		if (this.name == 'base') {
+			this.model.position.setX(1)
+		} else {
+			this.model.position.setX(-1)
+		}
 
 		model.traverse(child => {
 			if (child instanceof THREE.Bone) {

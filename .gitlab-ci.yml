@@ -12,6 +12,7 @@ pages:
     - mv dist/* public
     - mv assets/* public
     - wget 'https://github.com/mrdoob/three.js/blob/dev/examples/models/gltf/Xbot.glb?raw=true' -O public/xbot-three.glb
+    - wget 'https://raw.githubusercontent.com/three-types/three-ts-types/6829af2cc5b91731f28a0d3e85a52b46581f4781/types/three/examples/jsm/utils/SkeletonUtils.d.ts' -O 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'
 
   artifacts:
     paths:
