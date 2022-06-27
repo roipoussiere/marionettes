@@ -16,12 +16,14 @@ export class Marionette {
 	skeleton: THREE.Skeleton
 	clicked_bone: THREE.Bone
 	model: THREE.Group
+	handles: THREE.Group
 
 	constructor(name: string) {
         this.name = name
 		this.skeleton = new THREE.Skeleton([])
 		this.clicked_bone = new THREE.Bone()
 		this.model = new THREE.Group()
+		this.handles = new THREE.Group()
 	}
 
 	setModel(model: THREE.Group) {
@@ -41,6 +43,31 @@ export class Marionette {
 		} else {
 			this.model.position.setX(-1)
 		}
+	}
+
+	initHandles() {
+		this.handles.name = `handles_${ this.name }`
+		const handle_material = new THREE.MeshBasicMaterial({
+			color: 0xffffff,
+			depthTest: false,
+			opacity: 0.5,
+			transparent: true
+		})
+		const handle_geometry = new THREE.SphereGeometry(0.02, 6, 4)
+
+		this.skeleton.bones.forEach(bone => {
+			const handle = new THREE.Mesh( handle_geometry, handle_material )
+			handle.name = `handle_${bone.name.substring(BONES_NAME_PREFIX.length)}`
+			this.handles.add(handle)
+		})
+		this.updateHandles()
+	}
+
+	updateHandles() {
+		this.skeleton.bones.forEach( (bone, bone_id) => {
+			const handle_position = bone.getWorldPosition(new THREE.Vector3())
+			this.handles.children[bone_id].position.copy(handle_position)
+		})
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
@@ -93,7 +120,7 @@ export class Marionette {
 			}
 		})
 
-		// console.info('clicked bone:', this.clicked_bone)
 		this.clicked_bone = closest_bone
+		// console.info('clicked bone:', this.clicked_bone)
 	}
 }

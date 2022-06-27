@@ -22,6 +22,7 @@ export class Theater {
 	marionettes: { [id: string] : Marionette }
 	meshes: THREE.SkinnedMesh[]
 	clicked_marionette: string
+	handles: THREE.Group
 
 	constructor(canvas_id: string, marionettes: Marionette[]) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
@@ -67,6 +68,8 @@ export class Theater {
 
 		this.scene = new THREE.Scene()
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
+
+		this.handles = new THREE.Group()
 	}
 
 	get canvas_size() {
@@ -74,6 +77,7 @@ export class Theater {
 	}
 
 	init() {
+		this.#addHandles()
 		this.#addGrid()
 		this.#addFloor()
 		this.#addLights()
@@ -83,9 +87,13 @@ export class Theater {
 	onModelLoaded(model: THREE.Group) {
 		Object.values(this.marionettes).forEach(marionette => {
 			marionette.setModel(model)
+			marionette.initHandles()
+
 			this.scene.add(marionette.model)
-			this.#indexObjects()
+			this.handles.add(marionette.handles)
 			// this.scene.add( new THREE.SkeletonHelper( marionette.model ))
+
+			this.#indexObjects()
 		})
 
 		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
@@ -110,8 +118,9 @@ export class Theater {
 		this.pointer_delta.sub(this.pointer).multiplyScalar(POINTER_SENSIBILITY)
 
 		if ( ! this.control.enabled) {
-			this.marionettes[this.clicked_marionette]
-				.rotateBone(this.pointer_delta, this.axe_modifier_id)
+			const marionette = this.marionettes[this.clicked_marionette]
+			marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
+			marionette.updateHandles()
 		}
 	}
 
@@ -129,6 +138,11 @@ export class Theater {
 			this.axe_modifier_id = 1
 		} else if (event.shiftKey) {
 			this.axe_modifier_id = 2
+		} else if (event.code == 'KeyH') {
+			const handles = this.scene.getObjectByName('handles')
+			if (handles) {
+				handles.visible = ! handles.visible
+			}
 		}
 	}
 
@@ -179,6 +193,12 @@ export class Theater {
 		spinner.style.cssText = `width: ${ size }px; height: ${ size  }px;`
 		                      + `left: ${  left }px; top: ${    right }px;`;
 		document.body.appendChild(spinner);
+	}
+
+	#addHandles() {
+		this.handles.name = 'handles'
+		this.handles.visible = false
+		this.scene.add(this.handles)
 	}
 
 	#addGrid() {
