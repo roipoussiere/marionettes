@@ -80,10 +80,10 @@ export class Marionette {
 		// this.clicked_joint.rotateOnAxis(plane, 0.1)
 
 		const bone_name = this.clicked_bone.name.substring(BONES_NAME_PREFIX.length)
-		if ( ! (bone_name in bones_config)) {
-			return
+		const bone_config = bones_config.find(config => config.name == bone_name)
+		if ( ! bone_config) {
+			throw(`Bone name ${ bone_name } not found in bone config.`)
 		}
-		const bone_config = bones_config[bone_name]
 
 		delta *= bone_config.reverse ? -1 : 1
 		const axe = bone_config.axes[axe_modifier_id]
