@@ -1,59 +1,46 @@
 import * as THREE from 'three'
+import { Skeleton } from 'three'
+// Note: SkeletonUtils is broken and has been patched in this PR:
+// https://github.com/three-types/three-ts-types/pull/230/
+// Which is included in the project. See postinstall script in package.json
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 import { bones_config } from './bones_config'
 
 
 export const BONES_NAME_PREFIX = 'mixamorig'
 export const MODEL_NAME_PREFIX = 'model_'
-
-
-/*
-IMPORTANT NOTE:
-A modification on the file @types/three/examples/jsm/utils/SkeletonUtils.d.ts
-is needed. See this PR:
-https://github.com/three-types/three-ts-types/pull/230/
-Bug report: https://github.com/mrdoob/three.js/issues/23923
-See .gitlab-ci.yml
-*/
-
+export const SKINNED_MESH_NAME = 'Beta_Surface'
 
 export class Marionette {
     name: string
-	bones: { [id: string] : THREE.Bone }
-	clicked_joint: THREE.Object3D
+	skeleton: THREE.Skeleton
+	clicked_bone: THREE.Bone
 	model: THREE.Group
 
 	constructor(name: string) {
         this.name = name
-		this.bones = {}
-		this.clicked_joint = new THREE.Object3D()
+		this.skeleton = new THREE.Skeleton([])
+		this.clicked_bone = new THREE.Bone()
 		this.model = new THREE.Group()
 	}
 
 	setModel(model: THREE.Group) {
 		console.log(`model for ${ this.name }:`, model)
+		// this.model = model
 		this.model = <THREE.Group> SkeletonUtils.clone(model)
 		this.model.name = MODEL_NAME_PREFIX + this.name
+
+		const surface = <THREE.SkinnedMesh> this.model.getObjectByName(SKINNED_MESH_NAME)
+		if ( ! surface) {
+			throw(`Skinned mesh ${SKINNED_MESH_NAME} not found in the model.`)
+		}
+		this.skeleton = surface.skeleton
 
 		if (this.name == 'base') {
 			this.model.position.setX(1)
 		} else {
 			this.model.position.setX(-1)
 		}
-
-		model.traverse(child => {
-			if (child instanceof THREE.Bone) {
-				this.bones[child.name] = <THREE.Bone> child
-				// this.bones[grand_child.id] = <THREE.Bone> child
-			}
-		})
-		// console.log(this.name + ' bones:', Object.keys(this.bones))
-	}
-
-	onBoneClicked(intersect: THREE.Intersection) {
-		this.clicked_joint = this.#findClosestJoint(intersect.point)
-		// console.log('intersecting at', intersect.point, intersect.face)
-		// console.info('Selected joint:', this.clicked_joint)
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
@@ -65,7 +52,7 @@ export class Marionette {
 		// const plane = this.camera.position.clone().normalize()
 		// this.clicked_joint.rotateOnAxis(plane, 0.1)
 
-		const bone_name = this.clicked_joint.name.substring(BONES_NAME_PREFIX.length)
+		const bone_name = this.clicked_bone.name.substring(BONES_NAME_PREFIX.length)
 		if ( ! (bone_name in bones_config)) {
 			return
 		}
@@ -75,7 +62,7 @@ export class Marionette {
 		const axe = bone_config.axes[axe_modifier_id]
 
 		const rotation = new THREE.Vector3()
-			.setFromEuler(this.clicked_joint.rotation)
+			.setFromEuler(this.clicked_bone.rotation)
 			.add(new THREE.Vector3(
 				axe == 'x' ? delta : 0,
 				axe == 'y' ? delta : 0,
@@ -90,23 +77,23 @@ export class Marionette {
 		// 	+  `${Math.round(rotation.z * THREE.MathUtils.RAD2DEG)})`
 		// )
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation)
-		this.clicked_joint.setRotationFromEuler(euler_rotation)
+		this.clicked_bone.setRotationFromEuler(euler_rotation)
 	}
 
-	#findClosestJoint(point: THREE.Vector3) {
-		let closest_joint = new THREE.Object3D
+	updateClickedBone(point: THREE.Vector3) {
+		let closest_bone = new THREE.Bone
 		let position = new THREE.Vector3()
-		let closest_bone_distance = Infinity
+		let closest_distance = Infinity
 
-		for (let boneName in this.bones) {
-			const bone = this.bones[boneName]
+		this.skeleton.bones.forEach(bone => {
 			const distance = (bone.getWorldPosition(position).sub(point)).length()
-			if (distance < closest_bone_distance && bone.parent) {
-				closest_joint = bone.parent
-				closest_bone_distance = distance
+			if (distance < closest_distance) {
+				closest_bone = bone
+				closest_distance = distance
 			}
-		}
+		})
 
-		return closest_joint
+		// console.info('clicked bone:', this.clicked_bone)
+		this.clicked_bone = closest_bone
 	}
 }

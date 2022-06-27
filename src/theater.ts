@@ -84,13 +84,13 @@ export class Theater {
 		Object.values(this.marionettes).forEach(marionette => {
 			marionette.setModel(model)
 			this.scene.add(marionette.model)
-			this.#fillMeshes()
+			this.#indexObjects()
+			// this.scene.add( new THREE.SkeletonHelper( marionette.model ))
 		})
+
 		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
 			spinner.remove()
 		})
-
-		// this.scene.add(new THREE.SkeletonHelper( model ));
 	}
 
 	render() {
@@ -136,7 +136,7 @@ export class Theater {
 		this.axe_modifier_id = 0
 	}
 
-	#fillMeshes() {
+	#indexObjects() {
 		this.scene.children.forEach(child => {
 			if (child instanceof THREE.Group) {
 				child.children.forEach(grand_child => {
@@ -160,10 +160,11 @@ export class Theater {
 
 		const intersects = raycaster.intersectObjects(this.meshes, true)
 		if (intersects.length > 0 && intersects[0].object.parent) {
+			// console.log('intersect:', intersect)
 			this.control.enabled = false
 			this.clicked_marionette = intersects[0].object.parent.name
 				.substring(MODEL_NAME_PREFIX.length)
-			this.marionettes[this.clicked_marionette].onBoneClicked(intersects[0])
+			this.marionettes[this.clicked_marionette].updateClickedBone(intersects[0].point)
 		}
 	}
 
