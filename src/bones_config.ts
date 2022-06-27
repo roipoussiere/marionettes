@@ -2,6 +2,9 @@ import * as THREE from 'three'
 import { Vector3 as V3 } from 'three'
 
 
+export const BONES_NAME_PREFIX = 'mixamorig'
+
+
 class BoneConfig {
 	name: string
 	axes: string

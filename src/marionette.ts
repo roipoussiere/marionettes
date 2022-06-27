@@ -1,15 +1,15 @@
 import * as THREE from 'three'
-import { Skeleton } from 'three'
 // Note: SkeletonUtils is broken and has been patched in this PR:
 // https://github.com/three-types/three-ts-types/pull/230/
 // Which is included in the project. See postinstall script in package.json
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
-import { bones_config } from './bones_config'
+import { bones_config, BONES_NAME_PREFIX } from './bones_config'
+import { toString } from './skeleton_serializer'
 
 
-export const BONES_NAME_PREFIX = 'mixamorig'
 export const MODEL_NAME_PREFIX = 'model_'
 export const SKINNED_MESH_NAME = 'Beta_Surface'
+
 
 export class Marionette {
     name: string
@@ -122,5 +122,6 @@ export class Marionette {
 
 		this.clicked_bone = closest_bone
 		// console.info('clicked bone:', this.clicked_bone)
+		console.log(toString(this.skeleton))
 	}
 }
