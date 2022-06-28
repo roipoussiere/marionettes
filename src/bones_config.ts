@@ -51,9 +51,9 @@ export const bones_config: BoneConfig[] = [
 	new BoneConfig('LeftHand',         'zyx', true , new V3(-20 ,-35 ,-90 ), new V3(180, 40 , 90 )),
 
 	new BoneConfig('RightShoulder',    'zyx', false, new V3(-40 ,-60 ,-40 ), new V3(40 , 50 , 40 )),
-	new BoneConfig('RightArm',         'zyx', false, new V3(-180,-90 ,-40 ), new V3(0  , 90 , 105)),
-	new BoneConfig('RightForeArm',     'z__', false, new V3( 0  , 0  ,-160), new V3(0  , 0  , 0  )),
-	new BoneConfig('RightHand',        'zyx', false, new V3(-20 ,-40 ,-90 ), new V3(180, 35 , 90 )),
+	new BoneConfig('RightArm',         'zyx', false, new V3( 0  ,-90 ,-40 ), new V3(180, 90 , 105)),
+	new BoneConfig('RightForeArm',     'z__', false, new V3( 0  , 0  , 0  ), new V3(0  , 0  , 160)),
+	new BoneConfig('RightHand',        'zyx', false, new V3(-180 ,-35 ,-90), new V3(20,  40 , 90 )),
 
 	new BoneConfig('LeftHandThumb1',   'yx_', true , new V3(-60 ,-40 , 0  ), new V3(20 , 20 , 0  )),
 	new BoneConfig('LeftHandThumb2',   'y__', true , new V3( 0  ,-10 , 0  ), new V3(0  , 80 , 0  )),
@@ -71,21 +71,21 @@ export const bones_config: BoneConfig[] = [
 	new BoneConfig('LeftHandPinky2',   'z__', true , new V3( 0  ,  0 ,-110), new V3(0  , 0  , 0  )),
 	new BoneConfig('LeftHandPinky3',   'z__', true , new V3( 0  ,  0 ,-80 ), new V3(0  , 0  , 0  )),
 
-	new BoneConfig('RightHandThumb1',  'yx_', true , new V3(-60 ,-40 , 0  ), new V3(20 , 20 , 0  )),
-	new BoneConfig('RightHandThumb2',  'y__', true , new V3( 0  ,-10 , 0  ), new V3(0  , 80 , 0  )),
-	new BoneConfig('RightHandThumb3',  'y__', true , new V3( 0  ,-50 , 0  ), new V3(0  , 90 , 0  )),
-	new BoneConfig('RightHandIndex1',  'zy_', true , new V3( 0  ,-30 ,-90 ), new V3(30 , 15 , 20 )),
-	new BoneConfig('RightHandIndex2',  'z__', true , new V3( 0  ,  0 ,-110), new V3(0  , 0  , 0  )),
-	new BoneConfig('RightHandIndex3',  'z__', true , new V3( 0  ,  0 ,-80 ), new V3(0  , 0  , 0  )),
-	new BoneConfig('RightHandMiddle1', 'zy_', true , new V3( 0  ,-30 ,-90 ), new V3(0  , 15 , 20 )),
-	new BoneConfig('RightHandMiddle2', 'z__', true , new V3( 0  ,  0 ,-110), new V3(0  , 0  , 0  )),
-	new BoneConfig('RightHandMiddle3', 'z__', true , new V3( 0  ,  0 ,-80 ), new V3(0  , 0  , 0  )),
-	new BoneConfig('RightHandRing1',   'zy_', true , new V3( 0  ,-15 ,-90 ), new V3(0  , 30 , 20 )),
-	new BoneConfig('RightHandRing2',   'z__', true , new V3( 0  ,  0 ,-110), new V3(0  , 0  , 0  )),
-	new BoneConfig('RightHandRing3',   'z__', true , new V3( 0  ,  0 ,-80 ), new V3(0  , 0  , 0  )),
-	new BoneConfig('RightHandPinky1',  'zy_', true , new V3( 0  ,-15 ,-90 ), new V3(0  , 30 , 20 )),
-	new BoneConfig('RightHandPinky2',  'z__', true , new V3( 0  ,  0 ,-110), new V3(0  , 0  , 0  )),
-	new BoneConfig('RightHandPinky3',  'z__', true , new V3( 0  ,  0 ,-80 ), new V3(0  , 0  , 0  ))
+	new BoneConfig('RightHandThumb1',  'yx_', true , new V3(-20 ,-20 , 0  ), new V3(60 , 40 , 0  )),
+	new BoneConfig('RightHandThumb2',  'y__', true , new V3( 0  ,-80 , 0  ), new V3(0  , 10 , 0  )),
+	new BoneConfig('RightHandThumb3',  'y__', true , new V3( 0  ,-90 , 0  ), new V3(0  , 50 , 0  )),
+	new BoneConfig('RightHandIndex1',  'zy_', true , new V3(-30 ,-15 ,-20 ), new V3(0  , 30 , 90 )),
+	new BoneConfig('RightHandIndex2',  'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 110)),
+	new BoneConfig('RightHandIndex3',  'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 80 )),
+	new BoneConfig('RightHandMiddle1', 'zy_', true , new V3( 0  ,-15 ,-20 ), new V3(0  , 30 , 90 )),
+	new BoneConfig('RightHandMiddle2', 'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 110)),
+	new BoneConfig('RightHandMiddle3', 'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 80 )),
+	new BoneConfig('RightHandRing1',   'zy_', true , new V3( 0  ,-30 ,-20 ), new V3(0  , 15 , 90 )),
+	new BoneConfig('RightHandRing2',   'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 110)),
+	new BoneConfig('RightHandRing3',   'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 80 )),
+	new BoneConfig('RightHandPinky1',  'zy_', true , new V3( 0  ,-30 ,-20 ), new V3(0  , 15 , 90 )),
+	new BoneConfig('RightHandPinky2',  'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 110)),
+	new BoneConfig('RightHandPinky3',  'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 80 ))
 
 	// Ignored because not part of the x-bot model:
 	// HeadTop_End,     LeftEye,         RightEye,       LeftToe_End,      RightToe_End
