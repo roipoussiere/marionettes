@@ -1,81 +1,75 @@
 import * as THREE from 'three'
 import { bones_config, BONES_NAME_PREFIX } from './bones_config'
-import { Skeleton } from 'three'
 
 
-export const BASE = 60
-export const BASE60 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567'
-export const ROOT_BONE = 'Hips'
+const TAU = Math.PI * 2.0
+const BASE = 60 // must be a multiple of 2
+const BASE60 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567'
 
 
-export function toString(skeleton: Skeleton): string {
-	let bones_values: number[] = []
-	bones_config.forEach(bone_config => {
-		const bone = skeleton.getBoneByName(BONES_NAME_PREFIX + bone_config.name)
-		if ( ! bone ) {
-			throw(`Bone ${bone_config.name} not found in skeleton.`)
+export class SkeletonSerializer {
+
+	discretized_bones_rot: { [id: string] : THREE.Vector3 }
+
+	constructor() {
+		this.discretized_bones_rot = {}
+		bones_config.forEach(bone_config => {
+			this.discretized_bones_rot[bone_config.name] = new THREE.Vector3().addScalar(BASE / 2)
+		})
+	}
+
+	skeletonToString(): string {
+		let str = ''
+		bones_config.forEach(bone_config => {
+			const rotation = this.discretized_bones_rot[bone_config.name]
+			str += this.boneRotationToString(rotation, bone_config.axes)
+		})
+
+		return str
+	}
+
+	boneRotationToString(rotation: THREE.Vector3, axes: string): string {
+		let str = ''
+
+		if (axes[0] != '_') {
+			str += this.#valueToStr(rotation.x)
 		}
-		bones_values = bones_values.concat(getBoneValues(bone, bone_config.axes))
-	})
-
-	bones_values = bones_values.concat(skeletonPositionToValues(skeleton))
-
-	return valuesToStr(bones_values)
-}
-
-function getBoneValues(bone: THREE.Bone, axes: string): number[] {
-	const values: number[] = []
-	const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
-	rotation.copy(discretizeVector(rotation))
-
-	if (axes[0] != '_') {
-		values.push(rotation.x)
-	}
-	if (axes[1] != '_') {
-		values.push(rotation.y)
-	}
-	if (axes[2] != '_') {
-		values.push(rotation.z)
-	}
-	return values
-}
-
-function skeletonPositionToValues(skeleton: Skeleton): number[] {
-	const values: number[] = []
-
-	const root_bone = skeleton.getBoneByName(BONES_NAME_PREFIX + ROOT_BONE)
-	if ( ! root_bone ) {
-		throw(`Root bone (${ ROOT_BONE }) not found in skeleton.`)
+		if (axes[1] != '_') {
+			str += this.#valueToStr(rotation.y)
+		}
+		if (axes[2] != '_') {
+			str += this.#valueToStr(rotation.z)
+		}
+		return str
 	}
 
-	const position = root_bone.getWorldPosition(new THREE.Vector3())
-	position.copy(discretizeVector(position, BASE * BASE)) // double precision
+	#valueToStr(value: number): string {
+		return BASE60.charAt(value)
+	}
 
-	values.push(Math.floor(position.x / BASE), position.x % BASE)
-	values.push(Math.floor(position.y / BASE), position.y % BASE)
-	values.push(Math.floor(position.z / BASE), position.z % BASE)
-	return values
-}
+	discretizeVector(rotation: THREE.Vector3, range: number = BASE) {
+		rotation
+			.multiplyScalar(range)
+			.divideScalar(TAU)
+			.addScalar(range / 2)
+			.round()
+	}
 
-function valuesToStr(values: number[]): string {
-	let values_str = ''
-	values.forEach(value => {
-		values_str += BASE60.charAt(value)
-	})
-	return values_str
-}
+	continuousVector(rotation: THREE.Vector3, range: number = BASE) {
+		rotation
+			.subScalar(range / 2)
+			.multiplyScalar(TAU)
+			.divideScalar(range)
+	}
 
-function discretizeVector(rotation: THREE.Vector3, base: number = BASE) {
-	return rotation
-		.addScalar(Math.PI)
-		.divideScalar(2 * Math.PI)
-		.multiplyScalar(base)
-		.round()
-}
+	getRoundedBoneRotation(bone: THREE.Bone): THREE.Euler {
+		const bone_name = bone.name.substring(BONES_NAME_PREFIX.length)
+		const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
 
-function continuousVector(rotation: THREE.Vector3, base: number = BASE) {
-	return rotation
-		.divideScalar(base)
-		.multiplyScalar(2 * Math.PI)
-		.subScalar(Math.PI)
+		this.discretizeVector(rotation)
+		this.discretized_bones_rot[bone_name].copy(rotation)
+		this.continuousVector(rotation)
+
+		return new THREE.Euler().setFromVector3(rotation)
+	}
 }

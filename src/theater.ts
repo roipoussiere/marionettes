@@ -4,9 +4,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Marionette, MODEL_NAME_PREFIX } from './marionette'
 
 
-export const POINTER_SENSIBILITY = 1.0
-export const TAU = Math.PI * 2.0
 export const SPINNER_CLASS = 'body-posture-spinner'
+
+const POINTER_SENSIBILITY = 1.0
 
 
 export class Theater {
@@ -118,9 +118,9 @@ export class Theater {
 		this.pointer_delta.sub(this.pointer).multiplyScalar(POINTER_SENSIBILITY)
 
 		if ( ! this.control.enabled) {
-			const marionette = this.marionettes[this.clicked_marionette]
-			marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
-			marionette.updateHandles()
+			const moving_marionette = this.marionettes[this.clicked_marionette]
+			moving_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
+			moving_marionette.updateHandles()
 		}
 	}
 
@@ -129,6 +129,14 @@ export class Theater {
 	}
 
 	#onPointerRelease() {
+		if (this.clicked_marionette) {
+			const moving_marionette = this.marionettes[this.clicked_marionette]
+			moving_marionette.roundMovedBone()
+			Object.values(this.marionettes).forEach(marionette => {
+				console.log(`${marionette.name}: ${marionette.serializer.skeletonToString()}`)
+			})
+		}
+
 		this.control.enabled = true
 		this.clicked_marionette = ''
 	}

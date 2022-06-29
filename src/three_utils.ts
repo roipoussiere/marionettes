@@ -1,8 +1,9 @@
 import * as THREE from 'three'
-import { Vector3 as V3 } from 'three'
+import { BONES_NAME_PREFIX } from './bones_config'
 
+const DEFAULT_COLOR = new THREE.Color(0xff3399)
 
-export function makeBoneHandle(bone: THREE.Bone, color: THREE.Color = new THREE.Color(0xff3399)) {
+export function makeBoneHandle(bone: THREE.Bone, color = DEFAULT_COLOR) {
 	let sceneGeometry = new THREE.SphereGeometry( 2.00);
 	let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
 	let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
@@ -14,7 +15,7 @@ export function makeBoneHandle(bone: THREE.Bone, color: THREE.Color = new THREE.
 	return sphere
 }
 
-export function hintPoint(position: V3, color: THREE.Color = new THREE.Color(0xff3399)) {
+export function hintPoint(position: THREE.Vector3, color = DEFAULT_COLOR) {
 	let sceneGeometry = new THREE.SphereGeometry( 0.03);
 	let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
 	let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
@@ -23,7 +24,7 @@ export function hintPoint(position: V3, color: THREE.Color = new THREE.Color(0xf
 	return sphere
 }
 
-export function hintLine(start: V3, end: V3, color: THREE.Color = new THREE.Color(0xff9933)) {
+export function hintLine(start: THREE.Vector3, end: THREE.Vector3, color = DEFAULT_COLOR) {
 	const line = new THREE.Object3D()
 	const direction = end.clone().sub(start)
 	const cylinderGeometry = new THREE.CylinderGeometry(
@@ -60,4 +61,14 @@ export function dump_scene(scene: THREE.Scene) {
         }
         console.log( s + obj.name + ' <' + obj.type + '>' );
     });
+}
+
+export function dump_bone(bone: THREE.Bone) {
+	const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
+	console.log(
+		`${bone.name.substring(BONES_NAME_PREFIX.length)}: `
+		+ `(${Math.round(rotation.x * THREE.MathUtils.RAD2DEG)}, `
+		+  `${Math.round(rotation.y * THREE.MathUtils.RAD2DEG)}, `
+		+  `${Math.round(rotation.z * THREE.MathUtils.RAD2DEG)})`
+	)
 }
