@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { Vector2 as V2 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Marionette, MODEL_NAME_PREFIX } from './marionette'
 
@@ -10,10 +9,9 @@ const POINTER_SENSIBILITY = 1.0
 
 
 export class Theater {
-	pointer: V2 // normalized
-	pointer_delta: V2
 	canvas: HTMLCanvasElement
-	canvas_origin: V2
+	pointer: THREE.Vector2
+	last_pointer: THREE.Vector2
 	axe_modifier_id: number // one in [0, 1, 2]
 	renderer: THREE.WebGLRenderer
 	camera: THREE.Camera
@@ -21,17 +19,17 @@ export class Theater {
 	control: OrbitControls
 	marionettes: { [id: string] : Marionette }
 	meshes: THREE.SkinnedMesh[]
-	clicked_marionette: string
+	clicked_marionette: Marionette | null
 	handles: THREE.Group
 
 	constructor(canvas_id: string, marionettes: Marionette[]) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
-		const canvas_brect = this.canvas.getBoundingClientRect()
-		this.canvas_origin = new V2(canvas_brect.left - 1, canvas_brect.top).ceil()
-		this.pointer = new V2(0, 0)
-		this.pointer_delta = new V2(0, 0)
+		this.#addSpinner()
+
+		this.pointer = new THREE.Vector2(0, 0)
+		this.last_pointer = new THREE.Vector2(0, 0)
 		this.axe_modifier_id = 0
-		this.clicked_marionette = ''
+		this.clicked_marionette = null
 
 		this.marionettes = {}
 		marionettes.forEach(marionette => {
@@ -39,8 +37,6 @@ export class Theater {
 		})
 
 		this.meshes = []
-
-		this.#addSpinner()
 
 		this.canvas.addEventListener('mousemove',  e  => this.#onPointerMove(e))
 		this.canvas.addEventListener('mousedown',  () => this.#onPointerPress())
@@ -69,8 +65,13 @@ export class Theater {
 		this.handles = new THREE.Group()
 	}
 
+	get canvas_origin(): THREE.Vector2 {
+		const canvas_brect = this.canvas.getBoundingClientRect()
+		return new THREE.Vector2(canvas_brect.left - 1, canvas_brect.top).ceil()
+	}
+
 	get canvas_size() {
-		return new V2(this.canvas.width, this.canvas.height)
+		return new THREE.Vector2(this.canvas.width, this.canvas.height)
 	}
 
 	get handles_visibility(): boolean {
@@ -110,22 +111,36 @@ export class Theater {
 		this.renderer.render(this.scene, this.camera)
 	}
 
+	get normalized_pointer(): THREE.Vector2 {
+		const pointer = this.pointer.clone()
+		this.#normalizePointer(pointer)
+		return pointer
+	}
+
+	get pointer_delta(): THREE.Vector2 {
+		const pointer_delta = this.last_pointer.clone()
+		this.#normalizePointer(pointer_delta)
+
+		pointer_delta
+			.sub(this.normalized_pointer)
+			.multiplyScalar(POINTER_SENSIBILITY)
+		return pointer_delta
+	}
+
+	#normalizePointer(pointer: THREE.Vector2) {
+		pointer.sub(this.canvas_origin)
+			.divide(this.canvas_size)
+		pointer.set(2 * pointer.x - 1, -2 * pointer.y + 1)
+	}
+
 	#onPointerMove(event: UIEvent, touch = false) {
 		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
-		this.pointer_delta = this.pointer.clone()
+		this.last_pointer.copy(this.pointer)
+		this.pointer.set(target.clientX, target.clientY)
 
-		this.pointer
-			.set(target.clientX, target.clientY)
-			.sub(this.canvas_origin)
-			.divide(this.canvas_size)
-		this.pointer.set(2 * this.pointer.x - 1, -2 * this.pointer.y + 1)
-
-		this.pointer_delta.sub(this.pointer).multiplyScalar(POINTER_SENSIBILITY)
-
-		if ( ! this.control.enabled) {
-			const moving_marionette = this.marionettes[this.clicked_marionette]
-			moving_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
-			moving_marionette.updateHandles()
+		if ( ! this.control.enabled && this.clicked_marionette) {
+			this.clicked_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
+			this.clicked_marionette.updateHandles()
 		}
 	}
 
@@ -135,15 +150,14 @@ export class Theater {
 
 	#onPointerRelease() {
 		if (this.clicked_marionette) {
-			const moving_marionette = this.marionettes[this.clicked_marionette]
-			moving_marionette.roundMovedBone()
+			this.clicked_marionette.roundMovedBone()
 			Object.values(this.marionettes).forEach(marionette => {
 				console.log(`${marionette.name}: ${marionette.serializer.skeletonToString()}`)
 			})
 		}
 
 		this.control.enabled = true
-		this.clicked_marionette = ''
+		this.clicked_marionette = null
 	}
 
 	#indexObjects() {
@@ -160,7 +174,7 @@ export class Theater {
 
 	#raycast() {
 		const raycaster = new THREE.Raycaster()
-		raycaster.setFromCamera(this.pointer, this.camera);
+		raycaster.setFromCamera(this.normalized_pointer, this.camera);
 
 		// Bones do not have geometry or volume so the Raycaster cannot intersect them.
 		// Solution: compare the clicked triangle position with each skeleton joint,
@@ -170,11 +184,12 @@ export class Theater {
 
 		const intersects = raycaster.intersectObjects(this.meshes, true)
 		if (intersects.length > 0 && intersects[0].object.parent) {
-			// console.log('intersect:', intersect)
+			// console.log('intersect:', intersects[0])
 			this.control.enabled = false
-			this.clicked_marionette = intersects[0].object.parent.name
+			const clicked_marionette_name = intersects[0].object.parent.name
 				.substring(MODEL_NAME_PREFIX.length)
-			this.marionettes[this.clicked_marionette].updateClickedBone(intersects[0].point)
+			this.clicked_marionette = this.marionettes[clicked_marionette_name]
+			this.clicked_marionette.updateClickedBone(intersects[0].point)
 		}
 	}
 
