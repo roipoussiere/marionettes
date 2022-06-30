@@ -50,9 +50,6 @@ export class Theater {
 		this.canvas.addEventListener('touchstart', () => this.#onPointerPress())
 		this.canvas.addEventListener('touchend' ,  () => this.#onPointerRelease())
 
-		document.addEventListener('keydown',       e  => this.#onKeyPress(e))
-		document.addEventListener('keyup',         () => this.#onKeyRelease())
-
 		this.renderer = new THREE.WebGLRenderer({
 			canvas: this.canvas,
 			antialias: true
@@ -74,6 +71,14 @@ export class Theater {
 
 	get canvas_size() {
 		return new V2(this.canvas.width, this.canvas.height)
+	}
+
+	get handles_visibility(): boolean {
+		return this.handles.visible
+	}
+
+	set handles_visibility(handles_visibility: boolean) {
+		this.handles.visible = handles_visibility
 	}
 
 	init() {
@@ -139,23 +144,6 @@ export class Theater {
 
 		this.control.enabled = true
 		this.clicked_marionette = ''
-	}
-
-	#onKeyPress(event: KeyboardEvent) {
-		if (event.ctrlKey) {
-			this.axe_modifier_id = 1
-		} else if (event.shiftKey) {
-			this.axe_modifier_id = 2
-		} else if (event.code == 'KeyH') {
-			const handles = this.scene.getObjectByName('handles')
-			if (handles) {
-				handles.visible = ! handles.visible
-			}
-		}
-	}
-
-	#onKeyRelease() {
-		this.axe_modifier_id = 0
 	}
 
 	#indexObjects() {
