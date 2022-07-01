@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { Euler, Vector3 } from 'three'
 import { bones_config, BONES_NAME_PREFIX, MIN_POSITION, MAX_POSITION } from './bones_config'
 
 
@@ -37,6 +38,28 @@ export class SkeletonSerializer {
 		return str
 	}
 
+	static stringToBonesRotations(str: string): { [id: string] : THREE.Euler } {
+		const values: number[] = []
+		for (const c of str) {
+			values.push(BASE60.indexOf(c))
+		}
+
+		const bones_rotations: { [id: string] : THREE.Euler } = {}
+		let cursor = 0
+
+		bones_config.forEach(bone_config => {
+			const rotation = new Vector3(
+				bone_config.axes[0] == '_' ? 0 : values[cursor++],
+				bone_config.axes[1] == '_' ? 0 : values[cursor++],
+				bone_config.axes[2] == '_' ? 0 : values[cursor++],
+			)
+			SkeletonSerializer.continuousRotation(rotation)
+			bones_rotations[bone_config.name] = new Euler().setFromVector3(rotation)
+		})
+
+		return bones_rotations
+	}
+
 	boneRotationToString(rotation: THREE.Vector3, axes: string): string {
 		let str = ''
 
@@ -52,7 +75,7 @@ export class SkeletonSerializer {
 		return str
 	}
 
-	discretizeRotation(rotation: THREE.Vector3) {
+	static discretizeRotation(rotation: THREE.Vector3) {
 		rotation
 			.multiplyScalar(BASE)
 			.divideScalar(TAU)
@@ -60,7 +83,7 @@ export class SkeletonSerializer {
 			.round()
 	}
 
-	continuousRotation(rotation: THREE.Vector3) {
+	static continuousRotation(rotation: THREE.Vector3) {
 		rotation
 			.subScalar(BASE / 2)
 			.multiplyScalar(TAU)
@@ -71,9 +94,9 @@ export class SkeletonSerializer {
 		const bone_name = bone.name.substring(BONES_NAME_PREFIX.length)
 		const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
 
-		this.discretizeRotation(rotation)
+		SkeletonSerializer.discretizeRotation(rotation)
 		this.discretized_bones_rot[bone_name].copy(rotation)
-		this.continuousRotation(rotation)
+		SkeletonSerializer.continuousRotation(rotation)
 
 		return new THREE.Euler().setFromVector3(rotation)
 	}

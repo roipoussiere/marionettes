@@ -49,6 +49,9 @@ export class Marionette {
 		} else {
 			this.model.position.setX(-1)
 		}
+
+		// const str_pos = 'eeeeeeeeeeeeeeeeeeeeeeeeeReeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+		// this.loadFromString(str_pos)
 	}
 
 	initHandles() {
@@ -74,6 +77,19 @@ export class Marionette {
 			const handle_position = bone.getWorldPosition(this.handles.children[bone_id].position)
 			this.handles.children[bone_id].position.copy(handle_position)
 		})
+	}
+
+	loadFromString(str: string) {
+		const bones_rotations = SkeletonSerializer.stringToBonesRotations(str)
+
+		for (const [bone_name, bone_rotation] of Object.entries(bones_rotations)) {
+			const bone = this.skeleton.getBoneByName(BONES_NAME_PREFIX + bone_name)
+			if (bone) {
+				bone.rotation.copy(bone_rotation)
+			} else {
+				throw(`Can not find bone: ${ bone_name }`)
+			}
+		}
 	}
 
 	translate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
