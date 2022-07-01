@@ -24,6 +24,8 @@ document.addEventListener('keydown', event  => {
 		theater.axe_modifier_id = 2
 	} else if (event.code == 'KeyH') {
 		theater.handles_visibility = ! theater.handles_visibility
+	} else if (event.code == 'KeyT') {
+		theater.translate_mode = ! theater.translate_mode
 	}
 })
 

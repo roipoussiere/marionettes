@@ -21,6 +21,7 @@ export class Theater {
 	meshes: THREE.SkinnedMesh[]
 	clicked_marionette: Marionette | null
 	handles: THREE.Group
+	translate_mode: boolean
 
 	constructor(canvas_id: string, marionettes: Marionette[]) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
@@ -30,6 +31,7 @@ export class Theater {
 		this.last_pointer = new THREE.Vector2(0, 0)
 		this.axe_modifier_id = 0
 		this.clicked_marionette = null
+		this.translate_mode = false
 
 		this.marionettes = {}
 		marionettes.forEach(marionette => {
@@ -82,6 +84,22 @@ export class Theater {
 		this.handles.visible = handles_visibility
 	}
 
+	get normalized_pointer(): THREE.Vector2 {
+		const pointer = this.pointer.clone()
+		this.#normalizePointer(pointer)
+		return pointer
+	}
+
+	get pointer_delta(): THREE.Vector2 {
+		const pointer_delta = this.last_pointer.clone()
+		this.#normalizePointer(pointer_delta)
+
+		pointer_delta
+			.sub(this.normalized_pointer)
+			.multiplyScalar(POINTER_SENSIBILITY)
+		return pointer_delta
+	}
+
 	init() {
 		this.#addHandles()
 		this.#addGrid()
@@ -111,22 +129,6 @@ export class Theater {
 		this.renderer.render(this.scene, this.camera)
 	}
 
-	get normalized_pointer(): THREE.Vector2 {
-		const pointer = this.pointer.clone()
-		this.#normalizePointer(pointer)
-		return pointer
-	}
-
-	get pointer_delta(): THREE.Vector2 {
-		const pointer_delta = this.last_pointer.clone()
-		this.#normalizePointer(pointer_delta)
-
-		pointer_delta
-			.sub(this.normalized_pointer)
-			.multiplyScalar(POINTER_SENSIBILITY)
-		return pointer_delta
-	}
-
 	#normalizePointer(pointer: THREE.Vector2) {
 		pointer.sub(this.canvas_origin)
 			.divide(this.canvas_size)
@@ -139,7 +141,11 @@ export class Theater {
 		this.pointer.set(target.clientX, target.clientY)
 
 		if ( ! this.control.enabled && this.clicked_marionette) {
-			this.clicked_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
+			if (this.translate_mode) {
+				this.clicked_marionette.translate(this.pointer_delta, this.axe_modifier_id)
+			} else {
+				this.clicked_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
+			}
 			this.clicked_marionette.updateHandles()
 		}
 	}

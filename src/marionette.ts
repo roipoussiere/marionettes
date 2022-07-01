@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 import { bones_config, BONES_NAME_PREFIX } from './bones_config'
 import { SkeletonSerializer } from './skeleton_serializer'
-import { dump_bone } from './three_utils'
+// import { dump_bone } from './three_utils'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
@@ -76,6 +76,14 @@ export class Marionette {
 		})
 	}
 
+	translate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
+		this.model.position.add(new THREE.Vector3(
+			axe_modifier_id == 1 ? 0 : - pointer_delta.x,
+			axe_modifier_id == 1 ?  - (pointer_delta.x + pointer_delta.y) : 0,
+			axe_modifier_id == 1 ? 0 : pointer_delta.y
+		))
+	}
+
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
 		const bone_name = this.clicked_bone.name.substring(BONES_NAME_PREFIX.length)
 		const bone_config = bones_config.find(config => config.name == bone_name)
@@ -115,7 +123,7 @@ export class Marionette {
 		})
 
 		this.clicked_bone = closest_bone
-		// console.info('clicked bone:', this.clicked_bone)
+		// dump_bone(this.clicked_bone)
 		// console.log(toString(this.skeleton))
 	}
 
