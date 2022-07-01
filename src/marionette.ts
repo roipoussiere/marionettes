@@ -50,8 +50,6 @@ export class Marionette {
 			this.model.position.setX(-1)
 		}
 
-		// const str_pos = 'eeeeeeeeeeeeeeeeeeeeeeeeeReeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-		// this.loadFromString(str_pos)
 	}
 
 	initHandles() {

@@ -49,9 +49,9 @@ export class SkeletonSerializer {
 
 		bones_config.forEach(bone_config => {
 			const rotation = new Vector3(
-				bone_config.axes[0] == '_' ? 0 : values[cursor++],
-				bone_config.axes[1] == '_' ? 0 : values[cursor++],
-				bone_config.axes[2] == '_' ? 0 : values[cursor++],
+				bone_config.axes[0] == '_' ? BASE / 2 : values[cursor++],
+				bone_config.axes[1] == '_' ? BASE / 2 : values[cursor++],
+				bone_config.axes[2] == '_' ? BASE / 2 : values[cursor++],
 			)
 			SkeletonSerializer.continuousRotation(rotation)
 			bones_rotations[bone_config.name] = new Euler().setFromVector3(rotation)
