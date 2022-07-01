@@ -156,7 +156,12 @@ export class Theater {
 
 	#onPointerRelease() {
 		if (this.clicked_marionette) {
-			this.clicked_marionette.roundMovedBone()
+			if (this.translate_mode) {
+				this.clicked_marionette.roundPosition()
+			} else {
+				this.clicked_marionette.roundMovedBone()
+			}
+
 			Object.values(this.marionettes).forEach(marionette => {
 				console.log(`${marionette.name}: ${marionette.serializer.skeletonToString()}`)
 			})

@@ -3,15 +3,15 @@ import * as THREE from 'three'
 // https://github.com/three-types/three-ts-types/pull/230/
 // Which is included in the project. See postinstall script in package.json
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
-import { bones_config, BONES_NAME_PREFIX } from './bones_config'
+import { bones_config, BONES_NAME_PREFIX, MIN_POSITION, MAX_POSITION } from './bones_config'
 import { SkeletonSerializer } from './skeleton_serializer'
 // import { dump_bone } from './three_utils'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
+// export const BONES_NAME_PREFIX = 'mixamorig' // TODO
 
 const SKINNED_MESH_NAME = 'Beta_Surface'
-// const DELAYED_TASK_DELAY = 1000
 
 
 export class Marionette {
@@ -79,9 +79,9 @@ export class Marionette {
 	translate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
 		this.model.position.add(new THREE.Vector3(
 			axe_modifier_id == 1 ? 0 : - pointer_delta.x,
-			axe_modifier_id == 1 ?  - (pointer_delta.x + pointer_delta.y) : 0,
+			axe_modifier_id == 1 ? - (pointer_delta.x + pointer_delta.y) : 0,
 			axe_modifier_id == 1 ? 0 : pointer_delta.y
-		))
+		)).clamp(MIN_POSITION, MAX_POSITION)
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
@@ -125,6 +125,10 @@ export class Marionette {
 		this.clicked_bone = closest_bone
 		// dump_bone(this.clicked_bone)
 		// console.log(toString(this.skeleton))
+	}
+
+	roundPosition() {
+		this.model.position.copy(this.serializer.getRoundedPosition(this.model.position))
 	}
 
 	roundMovedBone() {

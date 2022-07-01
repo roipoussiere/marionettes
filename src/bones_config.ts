@@ -3,6 +3,8 @@ import { Vector3 as V3 } from 'three'
 
 
 export const BONES_NAME_PREFIX = 'mixamorig'
+export const MIN_POSITION = new THREE.Vector3(-2, -1, -2)
+export const MAX_POSITION = new THREE.Vector3(2, 3, 2)
 
 
 class BoneConfig {
