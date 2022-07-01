@@ -98,14 +98,23 @@ export class SkeletonSerializer {
 		return [ high_order_pos, low_order_pos ]
 	}
 
+	continuousPosition(high_order_pos: THREE.Vector3, low_order_pos: THREE.Vector3): THREE.Vector3 {
+		const pos = new THREE.Vector3()
+			.copy(high_order_pos)
+			.divideScalar(BASE)
+			.add(low_order_pos.clone().divideScalar(BASE * BASE))
+			.multiplyScalar(- MIN_POSITION.x + MAX_POSITION.x)
+			.add(MIN_POSITION)
+
+		return pos
+	}
+
 	getRoundedPosition(position: THREE.Vector3): THREE.Vector3 {
 		const [ high_order_pos, low_order_pos ] = this.discretizePosition(position)
-		console.log(high_order_pos, low_order_pos)
 
 		this.discretized_position[0] = high_order_pos
 		this.discretized_position[1] = low_order_pos
-		// return this.continuousPosition(high_order_pos, low_order_pos)
-		return position
+		return this.continuousPosition(high_order_pos, low_order_pos)
 	}
 
 	#valueToStr(value: number): string {
