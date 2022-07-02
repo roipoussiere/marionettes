@@ -8,6 +8,9 @@ export const SPINNER_CLASS = 'body-posture-spinner'
 const POINTER_SENSIBILITY = 1.0
 
 
+type OnChange = (marionette: Marionette) => void;
+
+
 export class Theater {
 	canvas: HTMLCanvasElement
 	pointer: THREE.Vector2
@@ -22,10 +25,12 @@ export class Theater {
 	clicked_marionette: Marionette | null
 	handles: THREE.Group
 	translate_mode: boolean
+	on_change: CallableFunction
 
-	constructor(canvas_id: string, marionettes: Marionette[]) {
+	constructor(canvas_id: string, marionettes: Marionette[], on_change: OnChange = () => {}) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
 		this.#addSpinner()
+		this.on_change = on_change
 
 		this.pointer = new THREE.Vector2(0, 0)
 		this.last_pointer = new THREE.Vector2(0, 0)
@@ -162,9 +167,7 @@ export class Theater {
 				this.clicked_marionette.roundMovedBone()
 			}
 
-			Object.values(this.marionettes).forEach(marionette => {
-				console.log(`${marionette.name}: ${marionette.serializer.skeletonToString()}`)
-			})
+			this.on_change(this.clicked_marionette)
 		}
 
 		this.control.enabled = true

@@ -13,7 +13,9 @@ const model_loader = new ModelLoader('./xbot-light.fbx', () => {
 	flyer.loadFromString('eeeeeeeeeeeeeeeeeeeeeeeeeQeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeRP0iAx')
 })
 
-const theater = new Theater('cv1', [ base, flyer ])
+const theater = new Theater('cv1', [ base, flyer ], (marionette: Marionette) => {
+	console.log(`${marionette.name}: ${marionette.serializer.skeletonToString()}`)
+})
 const main = new Main(model_loader, [ theater ])
 
 main.init()
