@@ -4,7 +4,7 @@ import * as THREE from 'three'
 // Which is included in the project. See postinstall script in package.json
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 import { bones_config, BONES_NAME_PREFIX, MIN_POSITION, MAX_POSITION } from './bones_config'
-import { SkeletonSerializer } from './skeleton_serializer'
+import { SkeletonSerializer, NB_BONE_VALUES } from './skeleton_serializer'
 // import { dump_bone } from './three_utils'
 
 
@@ -49,7 +49,6 @@ export class Marionette {
 		} else {
 			this.model.position.setX(-1)
 		}
-
 	}
 
 	initHandles() {
@@ -78,7 +77,7 @@ export class Marionette {
 	}
 
 	loadFromString(str: string) {
-		const bones_rotations = SkeletonSerializer.stringToBonesRotations(str)
+		const bones_rotations = SkeletonSerializer.stringToBonesRotations(str.substring(0, NB_BONE_VALUES))
 
 		for (const [bone_name, bone_rotation] of Object.entries(bones_rotations)) {
 			const bone = this.skeleton.getBoneByName(BONES_NAME_PREFIX + bone_name)
@@ -88,6 +87,9 @@ export class Marionette {
 				throw(`Can not find bone: ${ bone_name }`)
 			}
 		}
+
+		const position = SkeletonSerializer.stringToPosition(str.substring(NB_BONE_VALUES))
+		this.model.position.copy(position)
 	}
 
 	translate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {

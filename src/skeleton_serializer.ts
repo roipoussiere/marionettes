@@ -3,6 +3,13 @@ import { Euler, Vector3 } from 'three'
 import { bones_config, BONES_NAME_PREFIX, MIN_POSITION, MAX_POSITION } from './bones_config'
 
 
+export const NB_BONE_VALUES = bones_config
+	.map(bone_config => bone_config.axes)
+	.join('')
+	.split('_')
+	.join('')
+	.length
+
 const TAU = Math.PI * 2.0
 const BASE = 60 // must be a multiple of 2
 const BASE60 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567'
@@ -58,6 +65,22 @@ export class SkeletonSerializer {
 		})
 
 		return bones_rotations
+	}
+
+	static stringToPosition(str: string): THREE.Vector3 {
+		const high_order_pos = new THREE.Vector3(
+			BASE60.indexOf(str[0]),
+			BASE60.indexOf(str[1]),
+			BASE60.indexOf(str[2])
+		)
+
+		const low_order_pos = new THREE.Vector3(
+			BASE60.indexOf(str[3]),
+			BASE60.indexOf(str[4]),
+			BASE60.indexOf(str[5])
+		)
+
+		return SkeletonSerializer.continuousPosition(high_order_pos, low_order_pos)
 	}
 
 	boneRotationToString(rotation: THREE.Vector3, axes: string): string {
@@ -121,7 +144,7 @@ export class SkeletonSerializer {
 		return [ high_order_pos, low_order_pos ]
 	}
 
-	continuousPosition(high_order_pos: THREE.Vector3, low_order_pos: THREE.Vector3): THREE.Vector3 {
+	static continuousPosition(high_order_pos: THREE.Vector3, low_order_pos: THREE.Vector3): THREE.Vector3 {
 		const pos = new THREE.Vector3()
 			.copy(high_order_pos)
 			.divideScalar(BASE)
@@ -137,7 +160,7 @@ export class SkeletonSerializer {
 
 		this.discretized_position[0] = high_order_pos
 		this.discretized_position[1] = low_order_pos
-		return this.continuousPosition(high_order_pos, low_order_pos)
+		return SkeletonSerializer.continuousPosition(high_order_pos, low_order_pos)
 	}
 
 	#valueToStr(value: number): string {
