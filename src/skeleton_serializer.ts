@@ -140,10 +140,11 @@ export class SkeletonSerializer {
 	}
 
 	getRoundedPosition(position: THREE.Vector3): THREE.Vector3 {
-		const [ high_order_pos, low_order_pos ] = this.discretizePosition(position)
+		const [ high_order_pos, low_order_pos ] = this.discretizePosition(position.clone())
 
-		this.discretized_position[0] = high_order_pos
-		this.discretized_position[1] = low_order_pos
+		this.discretized_position[0].copy(high_order_pos)
+		this.discretized_position[1].copy(low_order_pos)
+
 		return SkeletonSerializer.continuousPosition(high_order_pos, low_order_pos)
 	}
 

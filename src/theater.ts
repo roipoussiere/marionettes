@@ -105,6 +105,14 @@ export class Theater {
 		return pointer_delta
 	}
 
+	getPoseAsUrlString(): string {
+		let str: string[] = []
+		Object.values(this.marionettes).forEach(marionette => {
+			str.push(marionette.name + '=' + marionette.toString())
+		})
+		return str.join('&')
+	}
+
 	init() {
 		this.#addHandles()
 		this.#addGrid()
@@ -164,7 +172,7 @@ export class Theater {
 			if (this.translate_mode) {
 				this.clicked_marionette.roundPosition()
 			} else {
-				this.clicked_marionette.roundMovedBone()
+				this.clicked_marionette.roundBone(this.clicked_marionette.clicked_bone)
 			}
 
 			this.on_change(this.clicked_marionette)

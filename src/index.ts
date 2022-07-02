@@ -9,12 +9,21 @@ const flyer = new Marionette('flyer')
 
 // const model_loader = new ModelLoader('./xbot-three.glb'), () => {
 const model_loader = new ModelLoader('./xbot-light.fbx', () => {
+	const string_url = window.location.search.substring(1)
+	const params = new URLSearchParams(string_url).entries()
+
 	base .loadFromString('QeeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeesRdeeefeeetreeeeceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A')
 	flyer.loadFromString('teAeeeeeeeeeWeeXeeeeeeeeeeeeeeeeeeePPeeeeeeeePteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedPe3WE')
+	for(const [param_key, param_value] of params) {
+		if(param_key in theater.marionettes) {
+			theater.marionettes[param_key].loadFromString(param_value)
+		}
+	}
 })
 
-const theater = new Theater('cv1', [ base, flyer ], (marionette: Marionette) => {
-	console.log(`${marionette.name}: ${marionette.serializer.skeletonToString()}`)
+const theater = new Theater('cv1', [ base, flyer ], marionette => {
+	let new_url = window.location.pathname + '?' + theater.getPoseAsUrlString()
+	window.history.pushState({}, '', new_url)
 })
 const main = new Main(model_loader, [ theater ])
 

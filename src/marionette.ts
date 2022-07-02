@@ -85,6 +85,13 @@ export class Marionette {
 
 		const position = SkeletonSerializer.stringToPosition(str.substring(NB_BONE_VALUES))
 		this.model.position.copy(position)
+		this.updateHandles()
+	}
+
+	toString(): string {
+		this.roundPosition()
+		this.roundAllBones() // need optimization
+		return this.serializer.skeletonToString()
 	}
 
 	translate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
@@ -140,10 +147,14 @@ export class Marionette {
 		this.model.position.copy(this.serializer.getRoundedPosition(this.model.position))
 	}
 
-	roundMovedBone() {
-		const rounded_rotation = this.serializer.getRoundedBoneRotation(this.clicked_bone)
-		this.clicked_bone.rotation.copy(rounded_rotation)
-		Utils.dump_bone(this.clicked_bone)
+	roundAllBones() {
+		this.skeleton.bones.forEach(bone => this.roundBone(bone))
+	}
+
+	roundBone(bone: THREE.Bone) {
+		const rounded_rotation = this.serializer.getRoundedBoneRotation(bone)
+		bone.rotation.copy(rounded_rotation)
+		Utils.dump_bone(bone)
 	}
 
 }
