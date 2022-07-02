@@ -9,8 +9,8 @@ const flyer = new Marionette('flyer')
 
 // const model_loader = new ModelLoader('./xbot-three.glb'), () => {
 const model_loader = new ModelLoader('./xbot-light.fbx', () => {
-	base.loadFromString('eeeeeejkeeheeeeheeOeeoeeeeeeeeeeeeeeeXeeeeeeeeeleeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeegPwXAW')
-	flyer.loadFromString('eeeeeeeeeeeeeeeeeeeeeeeeeQeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeRP0iAx')
+	base .loadFromString('QeeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeesRdeeefeeetreeeeceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A')
+	flyer.loadFromString('teAeeeeeeeeeWeeXeeeeeeeeeeeeeeeeeeePPeeeeeeeePteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedPe3WE')
 })
 
 const theater = new Theater('cv1', [ base, flyer ], (marionette: Marionette) => {
