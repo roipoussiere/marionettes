@@ -34,7 +34,6 @@ export class Marionette {
 	}
 
 	setModel(model: THREE.Group) {
-		console.log(`model for ${ this.name }:`, model)
 		this.model = <THREE.Group> SkeletonUtils.clone(model)
 		this.model.name = MODEL_NAME_PREFIX + this.name
 
@@ -43,12 +42,6 @@ export class Marionette {
 			throw(`Skinned mesh ${SKINNED_MESH_NAME} not found in the model.`)
 		}
 		this.skeleton = surface.skeleton
-
-		if (this.name == 'base') {
-			this.model.position.setX(1)
-		} else {
-			this.model.position.setX(-1)
-		}
 	}
 
 	initHandles() {
@@ -140,7 +133,6 @@ export class Marionette {
 
 		this.clicked_bone = closest_bone
 		// dump_bone(this.clicked_bone)
-		// console.log(toString(this.skeleton))
 	}
 
 	roundPosition() {
