@@ -1,8 +1,10 @@
 import * as THREE from 'three'
 import { Vector3 as V3 } from 'three'
+import * as VectorUtils from './vector_utils'
 
 
-export const BONES_NAME_PREFIX = 'mixamorig'
+export const BASE = 60 // must be a multiple of 2
+export const NAME_PREFIX = 'mixamorig'
 export const MIN_POSITION = new THREE.Vector3(-2, -1, -2)
 export const MAX_POSITION = new THREE.Vector3(2, 3, 2)
 
@@ -22,14 +24,14 @@ class BoneConfig {
 			max_angle = new V3( 360,  360,  360)) {
 		this.name = name
 		this.axes = axes
-		this.min_angle = min_angle.multiplyScalar(THREE.MathUtils.DEG2RAD)
-		this.max_angle = max_angle.multiplyScalar(THREE.MathUtils.DEG2RAD)
+		this.min_angle = VectorUtils.roundRotation(min_angle.multiplyScalar(THREE.MathUtils.DEG2RAD), BASE)
+		this.max_angle = VectorUtils.roundRotation(max_angle.multiplyScalar(THREE.MathUtils.DEG2RAD), BASE)
 		this.reverse = reverse
 	}
 }
 
 // Set axe orientation and constraints for each bone
-export const bones_config: BoneConfig[] = [
+export const bones: BoneConfig[] = [
 	new BoneConfig('Hips',             'xyz'),
 	new BoneConfig('Spine',            'xyz', false, new V3(-85 ,-35 ,-30 ), new V3(85 , 35 , 30 )),
 	new BoneConfig('Spine1',           'xyz', false, new V3(-30 ,-35 ,-30 ), new V3(55 , 35 , 30 )),
@@ -48,14 +50,14 @@ export const bones_config: BoneConfig[] = [
 	new BoneConfig('RightToeBase',     'x__', false, new V3(-15 , 0  , 0  ), new V3(65 , 0  , 0  )),
 
 	new BoneConfig('LeftShoulder',     'zyx', false, new V3(-40 ,-60 ,-40 ), new V3(40 , 50 , 40 )),
-	new BoneConfig('LeftArm',          'zyx', true , new V3(-180,-90 ,-105), new V3(0  , 90 , 40 )),
+	new BoneConfig('LeftArm',          'zyx', true , new V3(-90 ,-90 ,-105), new V3(90 , 90 , 40 )),
 	new BoneConfig('LeftForeArm',      'z__', true , new V3( 0  , 0  , 0  ), new V3(0  , 0  , 160)),
 	new BoneConfig('LeftHand',         'zyx', true , new V3(-20 ,-35 ,-90 ), new V3(180, 40 , 90 )),
 
 	new BoneConfig('RightShoulder',    'zyx', false, new V3(-40 ,-60 ,-40 ), new V3(40 , 50 , 40 )),
-	new BoneConfig('RightArm',         'zyx', false, new V3( 0  ,-90 ,-40 ), new V3(180, 90 , 105)),
-	new BoneConfig('RightForeArm',     'z__', false, new V3( 0  , 0  , 0  ), new V3(0  , 0  , 160)),
-	new BoneConfig('RightHand',        'zyx', false, new V3(-180 ,-35 ,-90), new V3(20,  40 , 90 )),
+	new BoneConfig('RightArm',         'zyx', false, new V3(-90 ,-90 ,-40 ), new V3(90 , 90 , 105)),
+	new BoneConfig('RightForeArm',     'z__', false, new V3( 0  , 0  ,-160), new V3(0  , 0  , 0  )),
+	new BoneConfig('RightHand',        'zyx', false, new V3(-180,-35 ,-90 ), new V3(20,  40 , 90 )),
 
 	new BoneConfig('LeftHandThumb1',   'yx_', true , new V3(-60 ,-40 , 0  ), new V3(20 , 20 , 0  )),
 	new BoneConfig('LeftHandThumb2',   'y__', true , new V3( 0  ,-10 , 0  ), new V3(0  , 80 , 0  )),

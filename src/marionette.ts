@@ -1,11 +1,13 @@
 import * as THREE from 'three'
+
 // Note: SkeletonUtils is broken and has been patched in this PR:
 // https://github.com/three-types/three-ts-types/pull/230/
 // Which is included in the project. See postinstall script in package.json
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
-import { bones_config, BONES_NAME_PREFIX, MIN_POSITION, MAX_POSITION } from './bones_config'
+
+import * as BonesConfig from './bones_config'
 import { SkeletonSerializer, NB_BONE_VALUES } from './skeleton_serializer'
-// import { dump_bone } from './three_utils'
+import * as Utils from './three_utils'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
@@ -56,7 +58,7 @@ export class Marionette {
 
 		this.skeleton.bones.forEach(bone => {
 			const handle = new THREE.Mesh( handle_geometry, handle_material )
-			handle.name = `handle_${bone.name.substring(BONES_NAME_PREFIX.length)}`
+			handle.name = `handle_${bone.name.substring(BonesConfig.NAME_PREFIX.length)}`
 			this.handles.add(handle)
 		})
 		this.updateHandles()
@@ -73,7 +75,7 @@ export class Marionette {
 		const bones_rotations = SkeletonSerializer.stringToBonesRotations(str.substring(0, NB_BONE_VALUES))
 
 		for (const [bone_name, bone_rotation] of Object.entries(bones_rotations)) {
-			const bone = this.skeleton.getBoneByName(BONES_NAME_PREFIX + bone_name)
+			const bone = this.skeleton.getBoneByName(BonesConfig.NAME_PREFIX + bone_name)
 			if (bone) {
 				bone.rotation.copy(bone_rotation)
 			} else {
@@ -90,12 +92,12 @@ export class Marionette {
 			axe_modifier_id == 1 ? 0 : - pointer_delta.x,
 			axe_modifier_id == 1 ? - (pointer_delta.x + pointer_delta.y) : 0,
 			axe_modifier_id == 1 ? 0 : pointer_delta.y
-		)).clamp(MIN_POSITION, MAX_POSITION)
+		)).clamp(BonesConfig.MIN_POSITION, BonesConfig.MAX_POSITION)
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
-		const bone_name = this.clicked_bone.name.substring(BONES_NAME_PREFIX.length)
-		const bone_config = bones_config.find(config => config.name == bone_name)
+		const bone_name = this.clicked_bone.name.substring(BonesConfig.NAME_PREFIX.length)
+		const bone_config = BonesConfig.bones.find(config => config.name == bone_name)
 		if ( ! bone_config) {
 			throw(`Bone name ${ bone_name } not found in bone config.`)
 		}
@@ -132,7 +134,6 @@ export class Marionette {
 		})
 
 		this.clicked_bone = closest_bone
-		// dump_bone(this.clicked_bone)
 	}
 
 	roundPosition() {
@@ -142,7 +143,7 @@ export class Marionette {
 	roundMovedBone() {
 		const rounded_rotation = this.serializer.getRoundedBoneRotation(this.clicked_bone)
 		this.clicked_bone.rotation.copy(rounded_rotation)
-		// dump_bone(this.clicked_bone)
+		Utils.dump_bone(this.clicked_bone)
 	}
 
 }
