@@ -24,6 +24,7 @@ export class Theater {
 	meshes: THREE.SkinnedMesh[]
 	clicked_marionette: Marionette | null
 	handles: THREE.Group
+	models: THREE.Group
 	translate_mode: boolean
 	on_change: CallableFunction
 
@@ -70,6 +71,7 @@ export class Theater {
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 
 		this.handles = new THREE.Group()
+		this.models = new THREE.Group()
 	}
 
 	get canvas_origin(): THREE.Vector2 {
@@ -124,14 +126,18 @@ export class Theater {
 	onModelLoaded(model: THREE.Group) {
 		Object.values(this.marionettes).forEach(marionette => {
 			marionette.setModel(model)
+			marionette.model.children.forEach(grand_child => {
+				if(grand_child instanceof THREE.SkinnedMesh) {
+					this.meshes.push(<THREE.SkinnedMesh> grand_child)
+				}
+			})
+			this.models.add(marionette.model)
+
 			marionette.initHandles()
-
-			this.scene.add(marionette.model)
 			this.handles.add(marionette.handles)
-			// this.scene.add( new THREE.SkeletonHelper( marionette.model ))
-
-			this.#indexObjects()
+			// this.handles.add( new THREE.SkeletonHelper( marionette.model ))
 		})
+		this.scene.add(this.models)
 
 		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
 			spinner.remove()
@@ -143,8 +149,7 @@ export class Theater {
 	}
 
 	#normalizePointer(pointer: THREE.Vector2) {
-		pointer.sub(this.canvas_origin)
-			.divide(this.canvas_size)
+		pointer.sub(this.canvas_origin).divide(this.canvas_size)
 		pointer.set(2 * pointer.x - 1, -2 * pointer.y + 1)
 	}
 
@@ -180,18 +185,6 @@ export class Theater {
 
 		this.control.enabled = true
 		this.clicked_marionette = null
-	}
-
-	#indexObjects() {
-		this.scene.children.forEach(child => {
-			if (child instanceof THREE.Group) {
-				child.children.forEach(grand_child => {
-					if(grand_child instanceof THREE.SkinnedMesh) {
-						this.meshes.push(<THREE.SkinnedMesh> grand_child)
-					}
-				})
-			}
-		})
 	}
 
 	#raycast() {
