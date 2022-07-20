@@ -7,7 +7,10 @@ import { Theater } from './theater'
 const base = new Marionette('base')
 const flyer = new Marionette('flyer')
 
-// const model_loader = new ModelLoader('./xbot-three.glb', () => {
+// const model_loader = new ModelLoader('./mannequin.fbx', () => {
+// const model_loader = new ModelLoader('./xbot-light.fbx', () => {
+// const model_loader = new ModelLoader('./xbot.fbx', () => {
+// const model_loader = new ModelLoader('./ybot.fbx', () => {
 const model_loader = new ModelLoader('./xbot-light.fbx', () => {
 	const string_url = window.location.search.substring(1)
 	const params = new URLSearchParams(string_url).entries()

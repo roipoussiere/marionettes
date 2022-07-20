@@ -7,13 +7,11 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 
 import * as BonesConfig from './bones_config'
 import { SkeletonSerializer, NB_BONE_VALUES } from './skeleton_serializer'
-import * as Utils from './three_utils'
+// import * as Utils from './three_utils'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
 // export const BONES_NAME_PREFIX = 'mixamorig' // TODO
-
-const SKINNED_MESH_NAME = 'Beta_Surface'
 
 
 export class Marionette {
@@ -39,11 +37,15 @@ export class Marionette {
 		this.model = <THREE.Group> SkeletonUtils.clone(model)
 		this.model.name = MODEL_NAME_PREFIX + this.name
 
-		const surface = <THREE.SkinnedMesh> this.model.getObjectByName(SKINNED_MESH_NAME)
-		if ( ! surface) {
-			throw(`Skinned mesh ${SKINNED_MESH_NAME} not found in the model.`)
+		this.model.children.forEach(child => {
+			if (child instanceof THREE.SkinnedMesh) {
+				this.skeleton = (<THREE.SkinnedMesh> child).skeleton
+			}
+		})
+
+		if ( this.skeleton.bones.length == 0 ) {
+			throw(`Skeleton not found in the model.`)
 		}
-		this.skeleton = surface.skeleton
 	}
 
 	initHandles() {
@@ -139,6 +141,7 @@ export class Marionette {
 				closest_distance = distance
 			}
 		})
+		console.log(`clicked on ${ this.name }'s ${ closest_bone.name }`)
 
 		this.clicked_bone = closest_bone
 	}
@@ -152,9 +155,12 @@ export class Marionette {
 	}
 
 	roundBone(bone: THREE.Bone) {
-		const rounded_rotation = this.serializer.getRoundedBoneRotation(bone)
-		bone.rotation.copy(rounded_rotation)
-		Utils.dump_bone(bone)
+		try {
+			bone.rotation.copy(this.serializer.getRoundedBoneRotation(bone))
+			// Utils.dump_bone(bone)
+		} catch(ReferenceError) {
+			console.warn(`Bone ${ bone.name } is not listed in bones config, passing...`)
+		}
 	}
 
 }

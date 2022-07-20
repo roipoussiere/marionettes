@@ -99,6 +99,10 @@ export class SkeletonSerializer {
 
 	getRoundedBoneRotation(bone: THREE.Bone): THREE.Euler {
 		const bone_name = bone.name.substring(BonesConfig.NAME_PREFIX.length)
+		if ( ! ( bone_name in this.discretized_bones_rot)) {
+			throw new ReferenceError()
+		}
+
 		const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
 
 		VectorUtils.discretizeRotation(rotation, BonesConfig.BASE)
