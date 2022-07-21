@@ -1,27 +1,28 @@
+import * as THREE from 'three'
 import { Main } from './main'
 import { Marionette } from './marionette'
 import { ModelLoader } from './model_loader'
 import { Theater } from './theater'
 
 
+const DEFAULT_POSE_BASE  = 'QeeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeesRdeeefeeetreeeeceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A'
+const DEFAULT_POSE_FLYER = 'teAeeeeeeeeeWeeXeeeeeeeeeeeeeeeeeeePPeeeeeeeePteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedPe3WE'
+
+const MODEL_PATH = './xbot-light.fbx'
+// const MODEL_PATH = './xbot.fbx'
+// const MODEL_PATH = './ybot.fbx'
+// const MODEL_PATH = './mannequin.fbx'
+
 const base = new Marionette('base')
 const flyer = new Marionette('flyer')
 
-// const model_loader = new ModelLoader('./mannequin.fbx', () => {
-// const model_loader = new ModelLoader('./xbot-light.fbx', () => {
-// const model_loader = new ModelLoader('./xbot.fbx', () => {
-// const model_loader = new ModelLoader('./ybot.fbx', () => {
-const model_loader = new ModelLoader('./xbot-light.fbx', () => {
-	const string_url = window.location.search.substring(1)
-	const params = new URLSearchParams(string_url).entries()
+const model_loader = new ModelLoader(MODEL_PATH, model => {
+	console.log('Loaded model:', model)
 
-	base .loadFromString('QeeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeesRdeeefeeetreeeeceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A')
-	flyer.loadFromString('teAeeeeeeeeeWeeXeeeeeeeeeeeeeeeeeeePPeeeeeeeePteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedPe3WE')
-	for(const [param_key, param_value] of params) {
-		if(param_key in theater.marionettes) {
-			theater.marionettes[param_key].loadFromString(param_value)
-		}
-	}
+	const params = new URLSearchParams(window.location.search.substring(1))
+	
+	base .loadFromString(params.get('base' ) || DEFAULT_POSE_BASE)
+	flyer.loadFromString(params.get('flyer') || DEFAULT_POSE_FLYER)
 })
 
 const theater = new Theater('cv1', [ base, flyer ], marionette => {
