@@ -91,7 +91,7 @@ export const bones: BoneConfig[] = [
 	new BoneConfig('RightHandPinky2',  'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 110)),
 	new BoneConfig('RightHandPinky3',  'z__', true , new V3( 0  ,  0 , 0  ), new V3(0  , 0  , 80 ))
 
-	// Ignored because not part of the x-bot model:
+	// Not used:
 	// HeadTop_End,     LeftEye,         RightEye,       LeftToe_End,      RightToe_End
 	// LeftHandThumb4,  LeftHandRing4,   LeftHandIndex4, LeftHandMiddle4,  LeftHandPinky4,
 	// RightHandThumb4, RightHandPinky4, RightHandRing4, RightHandMiddle4, RightHandIndex4,
