@@ -94,11 +94,13 @@ export class Marionette {
 	}
 
 	translate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
-		this.model.position.add(new THREE.Vector3(
-			axe_modifier_id == 1 ? 0 : - pointer_delta.x,
-			axe_modifier_id == 1 ? - (pointer_delta.x + pointer_delta.y) : 0,
-			axe_modifier_id == 1 ? 0 : pointer_delta.y
-		)).clamp(BonesConfig.MIN_POSITION, BonesConfig.MAX_POSITION)
+		if (axe_modifier_id == 0) {
+			this.model.translateZ(pointer_delta.x + pointer_delta.y)
+		} else if (axe_modifier_id == 1) {
+			this.model.translateX(- pointer_delta.x - pointer_delta.y)
+		} else if (axe_modifier_id == 2) {
+			this.model.translateY(- pointer_delta.x - pointer_delta.y)
+		}
 		this.roundPosition()
 	}
 
