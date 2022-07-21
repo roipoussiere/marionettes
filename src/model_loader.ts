@@ -3,16 +3,16 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 
-type OnChange = (model: THREE.Group) => void;
+type OnModelLoaded = (model: THREE.Group) => void;
 
 
 export class ModelLoader {
 	model_path: string
 	model_ext: string
 	loader: GLTFLoader | FBXLoader
-	on_loaded: OnChange
+	on_loaded: OnModelLoaded
 
-	constructor(model_path: string, on_loaded: OnChange = () => {}) {
+	constructor(model_path: string, on_loaded: OnModelLoaded = () => {}) {
 		this.model_path = model_path
 		this.on_loaded = on_loaded
 
@@ -27,35 +27,34 @@ export class ModelLoader {
 		}
 	}
 
-	loadModel(on_model_loaded: OnChange) {
+	loadModel(on_loaded: OnModelLoaded) {
 		if (this.model_ext == 'fbx') {
-			this.#loadFbxModel(this.model_path, on_model_loaded)
+			this.#loadFbxModel(this.model_path, on_loaded)
 		} else {
-			this.#loadGltfModel(this.model_path, on_model_loaded)
+			this.#loadGltfModel(this.model_path, on_loaded)
 		}
 	}
 
-	#loadFbxModel(model_path: string, callback: OnChange) {
+	#loadFbxModel(model_path: string, on_loaded: OnModelLoaded) {
 		this.loader = <FBXLoader> this.loader
 		this.loader.load(
 			model_path,
 			model => {
-				model.scale.setScalar(0.01)
-				callback(model)
 				this.on_loaded(model)
+				on_loaded(model)
 			},
 			xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
 			error => console.error(error)
 		)
 	}
 
-	#loadGltfModel(model_path: string, callback: OnChange) {
+	#loadGltfModel(model_path: string, on_loaded: OnModelLoaded) {
 		this.loader = <GLTFLoader> this.loader
 		this.loader.load(
 			model_path,
 			gltf => {
-				callback(gltf.scene)
 				this.on_loaded(gltf.scene)
+				on_loaded(gltf.scene)
 			},
 			xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
 			error => console.error(error)

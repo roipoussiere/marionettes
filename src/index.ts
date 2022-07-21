@@ -12,16 +12,22 @@ const MODEL_PATH = './xbot.fbx'
 // const MODEL_PATH = './ybot.fbx'
 // const MODEL_PATH = './mannequin.fbx'
 
-const base = new Marionette('base')
-const flyer = new Marionette('flyer')
+const BONES_PREFIX = 'mixamorig'
+// const BONES_PREFIX = 'mixamorig1'
+
+const params = new URLSearchParams(window.location.search.substring(1))
+const base  = new Marionette('base' , params.get('base' ) || DEFAULT_POSE_BASE)
+const flyer = new Marionette('flyer', params.get('flyer') || DEFAULT_POSE_FLYER)
 
 const model_loader = new ModelLoader(MODEL_PATH, model => {
 	console.log('Loaded model:', model)
+	model.scale.setScalar(0.01)
 
-	const params = new URLSearchParams(window.location.search.substring(1))
-	
-	base .loadFromString(params.get('base' ) || DEFAULT_POSE_BASE)
-	flyer.loadFromString(params.get('flyer') || DEFAULT_POSE_FLYER)
+	model.children.find(child => child instanceof THREE.Bone)?.traverse(bone => {
+		bone.name = bone.name.substring(BONES_PREFIX.length)
+	})
+
+	console.log('Post-processed model:', model)
 })
 
 const theater = new Theater('cv1', [ base, flyer ], marionette => {

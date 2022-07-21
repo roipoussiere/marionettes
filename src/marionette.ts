@@ -4,16 +4,18 @@ import * as THREE from 'three'
 // https://github.com/three-types/three-ts-types/pull/230/
 // Which is included in the project. See postinstall script in package.json
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
-
 import * as BonesConfig from './bones_config'
 import { SkeletonSerializer, NB_BONE_VALUES } from './skeleton_serializer'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
+export const HANDLES_NAME_PREFIX = 'handles_'
+export const HANDLE_NAME_PREFIX = 'handle_'
 
 
 export class Marionette {
     name: string
+	default_pose: string
 	skeleton: THREE.Skeleton
 	clicked_bone: THREE.Bone
 	model: THREE.Group
@@ -21,8 +23,9 @@ export class Marionette {
 	doing_something: boolean
 	serializer: SkeletonSerializer
 
-	constructor(name: string) {
+	constructor(name: string, default_pose: string) {
         this.name = name
+		this.default_pose = default_pose
 		this.skeleton = new THREE.Skeleton([])
 		this.clicked_bone = new THREE.Bone()
 		this.model = new THREE.Group()
@@ -43,10 +46,12 @@ export class Marionette {
 		if ( this.skeleton.bones.length == 0 ) {
 			throw(`Skeleton not found in the model.`)
 		}
+
+		this.loadFromString(this.default_pose)
 	}
 
 	initHandles() {
-		this.handles.name = `handles_${ this.name }`
+		this.handles.name = HANDLES_NAME_PREFIX + this.name
 		const handle_material = new THREE.MeshBasicMaterial({
 			color: 0xffffff,
 			depthTest: false,
@@ -57,16 +62,18 @@ export class Marionette {
 
 		this.skeleton.bones.forEach(bone => {
 			const handle = new THREE.Mesh( handle_geometry, handle_material )
-			handle.name = `handle_${bone.name.substring(BonesConfig.NAME_PREFIX.length)}`
+			handle.name = HANDLE_NAME_PREFIX  + bone.name
 			this.handles.add(handle)
 		})
 		this.updateHandles()
 	}
 
 	updateHandles() {
-		this.skeleton.bones.forEach( (bone, bone_id) => {
-			const handle_position = bone.getWorldPosition(this.handles.children[bone_id].position)
-			this.handles.children[bone_id].position.copy(handle_position)
+		this.skeleton.bones.forEach( bone => {
+			const handle = this.handles.getObjectByName(HANDLE_NAME_PREFIX + bone.name)
+			if (handle) {
+				handle.position.copy(bone.getWorldPosition(handle.position))
+			}
 		})
 	}
 
@@ -75,7 +82,7 @@ export class Marionette {
 		const bones_rotations = this.serializer.getRotations()
 
 		for (const [bone_name, bone_rotation] of Object.entries(bones_rotations)) {
-			const bone = this.skeleton.getBoneByName(BonesConfig.NAME_PREFIX + bone_name)
+			const bone = this.skeleton.getBoneByName(bone_name)
 			if (bone) {
 				bone.rotation.copy(bone_rotation)
 			} else {
@@ -117,10 +124,9 @@ export class Marionette {
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
-		const bone_name = this.clicked_bone.name.substring(BonesConfig.NAME_PREFIX.length)
-		const bone_config = BonesConfig.bones.find(config => config.name == bone_name)
+		const bone_config = BonesConfig.bones.find(config => config.name == this.clicked_bone.name)
 		if ( ! bone_config) {
-			throw(`Bone name ${ bone_name } not found in bone config.`)
+			throw(`Bone name ${ this.clicked_bone.name } not found in bone config.`)
 		}
 		const axe = bone_config.axes[axe_modifier_id]
 

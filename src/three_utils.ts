@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { NAME_PREFIX } from './bones_config'
+
 
 const DEFAULT_COLOR = new THREE.Color(0xff3399)
 
@@ -66,9 +66,9 @@ export function dump_scene(scene: THREE.Scene) {
 export function dump_bone(bone: THREE.Bone) {
 	const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
 	console.log(
-		`${bone.name.substring(NAME_PREFIX.length)}: `
-		+ `(${Math.round(rotation.x * THREE.MathUtils.RAD2DEG)}, `
-		+  `${Math.round(rotation.y * THREE.MathUtils.RAD2DEG)}, `
-		+  `${Math.round(rotation.z * THREE.MathUtils.RAD2DEG)})`
+		`${ bone.name }: `
+		+ `(${ Math.round(rotation.x * THREE.MathUtils.RAD2DEG) }, `
+		+  `${ Math.round(rotation.y * THREE.MathUtils.RAD2DEG) }, `
+		+  `${ Math.round(rotation.z * THREE.MathUtils.RAD2DEG) })`
 	)
 }

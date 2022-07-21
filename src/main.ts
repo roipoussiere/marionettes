@@ -17,13 +17,10 @@ export class Main {
 		this.theaters.forEach(theater => {
 			theater.init()
 		})
-        this.model_loader.loadModel((model: THREE.Group) => {
-            this.theaters.forEach(theater => {                
-                theater.onModelLoaded(model)
-            })
-            Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
-                spinner.remove()
-            })
+        this.model_loader.loadModel(model => {
+            this.theaters.forEach(theater => theater.onModelLoaded(model))
+			const spinners = Array.from(document.getElementsByClassName(SPINNER_CLASS))
+            spinners.forEach(spinner => spinner.remove())
         })
         
     }

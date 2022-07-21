@@ -4,7 +4,6 @@ import * as VectorUtils from './vector_utils'
 
 
 export const BASE = 60 // must be a multiple of 2
-export const NAME_PREFIX = 'mixamorig'
 export const MIN_POSITION = new THREE.Vector3(-2, -1, -2)
 export const MAX_POSITION = new THREE.Vector3(2, 3, 2)
 
