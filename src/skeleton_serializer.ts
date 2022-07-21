@@ -31,10 +31,10 @@ export class SkeletonSerializer {
 		})
 	}
 
-	skeletonToString(): string {
+	toString(): string {
 		let str = ''
 		BonesConfig.bones.forEach(bone_config => {
-			const rotation = this.discretized_bones_rot[bone_config.name]
+			const rotation = this.discretized_bones_rot[bone_config.name].clone()
 			str += this.boneRotationToString(rotation, bone_config.axes)
 		})
 
@@ -44,25 +44,30 @@ export class SkeletonSerializer {
 		return str
 	}
 
-	static stringToBonesRotations(str: string): { [id: string] : THREE.Euler } {
+	loadFromString(str: string): void {
 		const values: number[] = []
 		for (const c of str) {
 			values.push(BASE60.indexOf(c))
 		}
 
-		const bones_rotations: { [id: string] : THREE.Euler } = {}
 		let cursor = 0
-
 		BonesConfig.bones.forEach(bone_config => {
 			const rotation = new THREE.Vector3(
 				bone_config.axes[0] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
 				bone_config.axes[1] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
 				bone_config.axes[2] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
 			)
+			this.discretized_bones_rot[bone_config.name].copy(rotation)
+		})
+	}
+
+	getRotations(): { [id: string] : THREE.Euler } {
+		const bones_rotations: { [id: string] : THREE.Euler } = {}
+		BonesConfig.bones.forEach(bone_config => {
+			const rotation = this.discretized_bones_rot[bone_config.name].clone()
 			VectorUtils.continuousRotation(rotation, BonesConfig.BASE)
 			bones_rotations[bone_config.name] = new THREE.Euler().setFromVector3(rotation)
 		})
-
 		return bones_rotations
 	}
 
@@ -118,7 +123,7 @@ export class SkeletonSerializer {
 			.sub(BonesConfig.MIN_POSITION)
 			.divideScalar(- BonesConfig.MIN_POSITION.x + BonesConfig.MAX_POSITION.x)
 			.multiplyScalar(BonesConfig.BASE)
-			
+
 		const high_order_pos = base_normalized_position
 			.clone()
 			.floor()

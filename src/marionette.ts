@@ -7,11 +7,9 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 
 import * as BonesConfig from './bones_config'
 import { SkeletonSerializer, NB_BONE_VALUES } from './skeleton_serializer'
-// import * as Utils from './three_utils'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
-// export const BONES_NAME_PREFIX = 'mixamorig' // TODO
 
 
 export class Marionette {
@@ -37,10 +35,9 @@ export class Marionette {
 		this.model = <THREE.Group> SkeletonUtils.clone(model)
 		this.model.name = MODEL_NAME_PREFIX + this.name
 
-		this.model.children.forEach(child => {
-			if (child instanceof THREE.SkinnedMesh) {
-				this.skeleton = (<THREE.SkinnedMesh> child).skeleton
-			}
+		const root_bone = <THREE.Bone> this.model.children.find(child => child instanceof THREE.Bone)
+		root_bone.traverse(bone => {
+			this.skeleton.bones.push(<THREE.Bone> bone)
 		})
 
 		if ( this.skeleton.bones.length == 0 ) {
@@ -74,7 +71,8 @@ export class Marionette {
 	}
 
 	loadFromString(str: string) {
-		const bones_rotations = SkeletonSerializer.stringToBonesRotations(str.substring(0, NB_BONE_VALUES))
+		this.serializer.loadFromString(str.substring(0, NB_BONE_VALUES))
+		const bones_rotations = this.serializer.getRotations()
 
 		for (const [bone_name, bone_rotation] of Object.entries(bones_rotations)) {
 			const bone = this.skeleton.getBoneByName(BonesConfig.NAME_PREFIX + bone_name)
@@ -92,8 +90,7 @@ export class Marionette {
 
 	toString(): string {
 		this.roundPosition()
-		this.roundAllBones() // need optimization
-		return this.serializer.skeletonToString()
+		return this.serializer.toString()
 	}
 
 	translate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
@@ -102,10 +99,11 @@ export class Marionette {
 			axe_modifier_id == 1 ? - (pointer_delta.x + pointer_delta.y) : 0,
 			axe_modifier_id == 1 ? 0 : pointer_delta.y
 		)).clamp(BonesConfig.MIN_POSITION, BonesConfig.MAX_POSITION)
+		this.roundPosition()
 	}
 
 	rotate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
-		const root_bone = this.model.children.filter(child => child instanceof THREE.Bone)[0]
+		const root_bone = <THREE.Bone> this.model.children.find(child => child instanceof THREE.Bone)
 
 		if (axe_modifier_id == 0) {
 			root_bone.rotateX(pointer_delta.x + pointer_delta.y)
@@ -162,14 +160,9 @@ export class Marionette {
 		this.model.position.copy(this.serializer.getRoundedPosition(this.model.position))
 	}
 
-	roundAllBones() {
-		this.skeleton.bones.forEach(bone => this.roundBone(bone))
-	}
-
 	roundBone(bone: THREE.Bone) {
 		try {
 			bone.rotation.copy(this.serializer.getRoundedBoneRotation(bone))
-			// Utils.dump_bone(bone)
 		} catch(ReferenceError) {
 			console.warn(`Bone ${ bone.name } is not listed in bones config, passing...`)
 		}
