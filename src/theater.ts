@@ -26,6 +26,7 @@ export class Theater {
 	handles: THREE.Group
 	models: THREE.Group
 	translate_mode: boolean
+	rotate_mode: boolean
 	on_change: CallableFunction
 
 	constructor(canvas_id: string, marionettes: Marionette[], on_change: OnChange = () => {}) {
@@ -38,6 +39,7 @@ export class Theater {
 		this.axe_modifier_id = 0
 		this.clicked_marionette = null
 		this.translate_mode = false
+		this.rotate_mode = false
 
 		this.marionettes = {}
 		marionettes.forEach(marionette => {
@@ -161,6 +163,8 @@ export class Theater {
 		if ( ! this.control.enabled && this.clicked_marionette) {
 			if (this.translate_mode) {
 				this.clicked_marionette.translate(this.pointer_delta, this.axe_modifier_id)
+			} else if (this.rotate_mode) {
+				this.clicked_marionette.rotate(this.pointer_delta, this.axe_modifier_id)
 			} else {
 				this.clicked_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
 			}

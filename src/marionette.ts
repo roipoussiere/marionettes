@@ -104,6 +104,18 @@ export class Marionette {
 		)).clamp(BonesConfig.MIN_POSITION, BonesConfig.MAX_POSITION)
 	}
 
+	rotate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
+		const root_bone = this.model.children.filter(child => child instanceof THREE.Bone)[0]
+
+		if (axe_modifier_id == 0) {
+			root_bone.rotateX(pointer_delta.x + pointer_delta.y)
+		} else if (axe_modifier_id == 1) {
+			root_bone.rotateY(pointer_delta.x + pointer_delta.y)
+		} else if (axe_modifier_id == 2) {
+			root_bone.rotateZ(pointer_delta.x + pointer_delta.y)
+		}
+	}
+
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
 		const bone_name = this.clicked_bone.name.substring(BonesConfig.NAME_PREFIX.length)
 		const bone_config = BonesConfig.bones.find(config => config.name == bone_name)
