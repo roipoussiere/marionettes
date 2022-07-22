@@ -84,7 +84,13 @@ export class SkeletonSerializer {
 			BASE60.indexOf(str[5])
 		)
 
-		return SkeletonSerializer.continuousPosition(high_order_pos, low_order_pos)
+		return VectorUtils.continuousPosition(
+			high_order_pos,
+			low_order_pos,
+			BonesConfig.MIN_POSITION,
+			BonesConfig.MAX_POSITION,
+			BonesConfig.BASE
+		)
 	}
 
 	boneRotationToString(rotation: THREE.Vector3, axes: string): string {
@@ -116,44 +122,24 @@ export class SkeletonSerializer {
 		return new THREE.Euler().setFromVector3(rotation)
 	}
 
-	discretizePosition(position: THREE.Vector3): THREE.Vector3[] {
-		const base_normalized_position = position
-			.clone()
-			.sub(BonesConfig.MIN_POSITION)
-			.divideScalar(- BonesConfig.MIN_POSITION.x + BonesConfig.MAX_POSITION.x)
-			.multiplyScalar(BonesConfig.BASE)
-
-		const high_order_pos = base_normalized_position
-			.clone()
-			.floor()
-
-		const low_order_pos = base_normalized_position
-			.clone()
-			.sub(high_order_pos)
-			.multiplyScalar(BonesConfig.BASE)
-			.round()
-
-		return [ high_order_pos, low_order_pos ]
-	}
-
-	static continuousPosition(high_order_pos: THREE.Vector3, low_order_pos: THREE.Vector3): THREE.Vector3 {
-		const pos = new THREE.Vector3()
-			.copy(high_order_pos)
-			.divideScalar(BonesConfig.BASE)
-			.add(low_order_pos.clone().divideScalar(BonesConfig.BASE * BonesConfig.BASE))
-			.multiplyScalar(- BonesConfig.MIN_POSITION.x + BonesConfig.MAX_POSITION.x)
-			.add(BonesConfig.MIN_POSITION)
-
-		return pos
-	}
-
 	getRoundedPosition(position: THREE.Vector3): THREE.Vector3 {
-		const [ high_order_pos, low_order_pos ] = this.discretizePosition(position.clone())
+		const [ high_order_pos, low_order_pos ] = VectorUtils.discretizePosition(
+			position.clone(),
+			BonesConfig.MIN_POSITION,
+			BonesConfig.MAX_POSITION,
+			BonesConfig.BASE
+		)
 
 		this.discretized_position[0].copy(high_order_pos)
 		this.discretized_position[1].copy(low_order_pos)
 
-		return SkeletonSerializer.continuousPosition(high_order_pos, low_order_pos)
+		return VectorUtils.continuousPosition(
+			high_order_pos,
+			low_order_pos,
+			BonesConfig.MIN_POSITION,
+			BonesConfig.MAX_POSITION,
+			BonesConfig.BASE
+		)
 	}
 
 	#valueToStr(value: number): string {
