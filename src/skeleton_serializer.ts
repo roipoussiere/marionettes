@@ -31,20 +31,7 @@ export class SkeletonSerializer {
 		})
 	}
 
-	toString(): string {
-		let str = ''
-		BonesConfig.bones.forEach(bone_config => {
-			const rotation = this.discretized_bones_rot[bone_config.name].clone()
-			str += this.boneRotationToString(rotation, bone_config.axes)
-		})
-
-		str += this.#vectorToStr(this.discretized_position[0])
-		str += this.#vectorToStr(this.discretized_position[1])
-
-		return str
-	}
-
-	loadFromString(str: string): void {
+	fromString(str: string): void {
 		const values: number[] = []
 		for (const c of str) {
 			values.push(BASE60.indexOf(c))
@@ -61,14 +48,62 @@ export class SkeletonSerializer {
 		})
 	}
 
-	getRotations(): { [id: string] : THREE.Euler } {
-		const bones_rotations: { [id: string] : THREE.Euler } = {}
+	toString(): string {
+		let str = ''
 		BonesConfig.bones.forEach(bone_config => {
 			const rotation = this.discretized_bones_rot[bone_config.name].clone()
-			VectorUtils.continuousRotation(rotation, BonesConfig.BASE)
-			bones_rotations[bone_config.name] = new THREE.Euler().setFromVector3(rotation)
+			str += this.#boneRotationToString(rotation, bone_config.axes)
+		})
+
+		str += this.#vectorToStr(this.discretized_position[0])
+		str += this.#vectorToStr(this.discretized_position[1])
+
+		return str
+	}
+
+	loadBoneRotation(bone: THREE.Bone): void {
+		if ( ! ( bone.name in this.discretized_bones_rot)) {
+			throw new ReferenceError()
+		}
+
+		const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
+
+		VectorUtils.discretizeRotation(rotation, BonesConfig.BASE)
+		this.discretized_bones_rot[bone.name].copy(rotation)
+	}
+
+	getBoneRotation(bone_name: string): THREE.Euler {
+		const rotation = this.discretized_bones_rot[bone_name].clone()
+		VectorUtils.continuousRotation(rotation, BonesConfig.BASE)
+		return new THREE.Euler().setFromVector3(rotation)
+	}
+
+	getBonesRotation(): { [id: string] : THREE.Euler } {
+		const bones_rotations: { [id: string] : THREE.Euler } = {}
+		BonesConfig.bones.forEach(bone_config => {
+			bones_rotations[bone_config.name] = this.getBoneRotation(bone_config.name)
 		})
 		return bones_rotations
+	}
+
+	loadModelPosition(position: THREE.Vector3): THREE.Vector3 {
+		const [ high_order_pos, low_order_pos ] = VectorUtils.discretizePosition(
+			position.clone(),
+			BonesConfig.MIN_POSITION,
+			BonesConfig.MAX_POSITION,
+			BonesConfig.BASE
+		)
+
+		this.discretized_position[0].copy(high_order_pos)
+		this.discretized_position[1].copy(low_order_pos)
+
+		return VectorUtils.continuousPosition(
+			high_order_pos,
+			low_order_pos,
+			BonesConfig.MIN_POSITION,
+			BonesConfig.MAX_POSITION,
+			BonesConfig.BASE
+		)
 	}
 
 	static stringToPosition(str: string): THREE.Vector3 {
@@ -93,7 +128,7 @@ export class SkeletonSerializer {
 		)
 	}
 
-	boneRotationToString(rotation: THREE.Vector3, axes: string): string {
+	#boneRotationToString(rotation: THREE.Vector3, axes: string): string {
 		const get_rot = (id: number) => rotation.toArray()['xyz'.indexOf(axes[id])]
 		let str = ''
 
@@ -107,40 +142,6 @@ export class SkeletonSerializer {
 			str += this.#valueToStr(get_rot(2))
 		}
 		return str
-	}
-
-	getRoundedBoneRotation(bone: THREE.Bone): THREE.Euler {
-		if ( ! ( bone.name in this.discretized_bones_rot)) {
-			throw new ReferenceError()
-		}
-
-		const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
-
-		VectorUtils.discretizeRotation(rotation, BonesConfig.BASE)
-		this.discretized_bones_rot[bone.name].copy(rotation)
-		VectorUtils.continuousRotation(rotation, BonesConfig.BASE)
-
-		return new THREE.Euler().setFromVector3(rotation)
-	}
-
-	getRoundedPosition(position: THREE.Vector3): THREE.Vector3 {
-		const [ high_order_pos, low_order_pos ] = VectorUtils.discretizePosition(
-			position.clone(),
-			BonesConfig.MIN_POSITION,
-			BonesConfig.MAX_POSITION,
-			BonesConfig.BASE
-		)
-
-		this.discretized_position[0].copy(high_order_pos)
-		this.discretized_position[1].copy(low_order_pos)
-
-		return VectorUtils.continuousPosition(
-			high_order_pos,
-			low_order_pos,
-			BonesConfig.MIN_POSITION,
-			BonesConfig.MAX_POSITION,
-			BonesConfig.BASE
-		)
 	}
 
 	#valueToStr(value: number): string {

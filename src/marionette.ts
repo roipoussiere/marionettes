@@ -78,8 +78,8 @@ export class Marionette {
 	}
 
 	loadFromString(str: string) {
-		this.serializer.loadFromString(str.substring(0, NB_BONE_VALUES))
-		const bones_rotations = this.serializer.getRotations()
+		this.serializer.fromString(str.substring(0, NB_BONE_VALUES))
+		const bones_rotations = this.serializer.getBonesRotation()
 
 		for (const [bone_name, bone_rotation] of Object.entries(bones_rotations)) {
 			const bone = this.skeleton.getBoneByName(bone_name)
@@ -165,12 +165,13 @@ export class Marionette {
 	}
 
 	roundPosition() {
-		this.model.position.copy(this.serializer.getRoundedPosition(this.model.position))
+		this.model.position.copy(this.serializer.loadModelPosition(this.model.position))
 	}
 
 	roundBone(bone: THREE.Bone) {
 		try {
-			bone.rotation.copy(this.serializer.getRoundedBoneRotation(bone))
+			this.serializer.loadBoneRotation(bone)
+			bone.rotation.copy(this.serializer.getBoneRotation(bone.name))
 		} catch(ReferenceError) {
 			console.warn(`Bone ${ bone.name } is not listed in bones config, passing...`)
 		}
