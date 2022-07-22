@@ -165,7 +165,8 @@ export class Marionette {
 	}
 
 	roundPosition() {
-		this.model.position.copy(this.serializer.loadModelPosition(this.model.position))
+		this.serializer.loadModelPosition(this.model.position)
+		this.model.position.copy(this.serializer.getModelPosition())
 	}
 
 	roundBone(bone: THREE.Bone) {

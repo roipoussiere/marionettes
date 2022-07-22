@@ -86,7 +86,7 @@ export class SkeletonSerializer {
 		return bones_rotations
 	}
 
-	loadModelPosition(position: THREE.Vector3): THREE.Vector3 {
+	loadModelPosition(position: THREE.Vector3): void {
 		const [ high_order_pos, low_order_pos ] = VectorUtils.discretizePosition(
 			position.clone(),
 			BonesConfig.MIN_POSITION,
@@ -96,10 +96,12 @@ export class SkeletonSerializer {
 
 		this.discretized_position[0].copy(high_order_pos)
 		this.discretized_position[1].copy(low_order_pos)
+	}
 
+	getModelPosition(): THREE.Vector3 {
 		return VectorUtils.continuousPosition(
-			high_order_pos,
-			low_order_pos,
+			this.discretized_position[0],
+			this.discretized_position[1],
 			BonesConfig.MIN_POSITION,
 			BonesConfig.MAX_POSITION,
 			BonesConfig.BASE
