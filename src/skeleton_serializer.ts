@@ -1,15 +1,16 @@
 import * as THREE from 'three'
+import { Vector3 } from 'three'
 import * as BonesConfig from './bones_config'
 import * as VectorUtils from './vector_utils'
 
 
-export const NB_BONE_VALUES = BonesConfig.bones
+const NB_BONE_VALUES = BonesConfig.bones
 	.map(bone_config => bone_config.axes)
 	.join('')
 	.split('_')
 	.join('')
 	.length
-
+const EXPECTED_STRING_LENGTH = NB_BONE_VALUES + 6
 const BASE60 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567'
 
 
@@ -32,20 +33,18 @@ export class SkeletonSerializer {
 	}
 
 	fromString(str: string): void {
+		if (str.length != EXPECTED_STRING_LENGTH) {
+			throw(`Can not load model from string "${ str }": `
+			+ `string length should be ${ EXPECTED_STRING_LENGTH } but is ${ str.length }.`)
+		}
+
 		const values: number[] = []
 		for (const c of str) {
 			values.push(this.#strToValue(c))
 		}
 
-		let cursor = 0
-		BonesConfig.bones.forEach(bone_config => {
-			const rotation = new THREE.Vector3(
-				bone_config.axes[0] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
-				bone_config.axes[1] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
-				bone_config.axes[2] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
-			)
-			this.discretized_bones_rot[bone_config.name].copy(rotation)
-		})
+		this.#loadBonesRotationValues(values.slice(0, NB_BONE_VALUES - 1))
+		this.#loadModelPositionValues(values.slice(NB_BONE_VALUES, NB_BONE_VALUES + 6))
 	}
 
 	toString(): string {
@@ -119,6 +118,25 @@ export class SkeletonSerializer {
 			BonesConfig.MAX_POSITION,
 			BonesConfig.BASE
 		)
+	}
+
+	#loadBonesRotationValues(values: number[]): void {
+		let cursor = 0
+		BonesConfig.bones.forEach(bone_config => {
+			const rotation = new THREE.Vector3(
+				bone_config.axes[0] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
+				bone_config.axes[1] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
+				bone_config.axes[2] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
+			)
+			this.discretized_bones_rot[bone_config.name].copy(rotation)
+		})
+	}
+
+	#loadModelPositionValues(values: number[]): void {
+		this.discretized_position = [
+			new Vector3().fromArray(values.slice(0, 3)),
+			new Vector3().fromArray(values.slice(3, 6))
+		]
 	}
 
 	#boneRotationToString(rotation: THREE.Vector3, axes: string): string {
