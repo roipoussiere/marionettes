@@ -69,9 +69,12 @@ export class Theater {
         )
 		this.camera.position.set(0, 2, 5)
 
-		this.scene = new THREE.Scene()
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
+		this.control.maxPolarAngle = Math.PI / 2
+		this.control.minDistance = 1
+		this.control.maxDistance = 5
 
+		this.scene = new THREE.Scene()
 		this.handles = new THREE.Group()
 		this.models = new THREE.Group()
 	}
