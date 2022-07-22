@@ -90,7 +90,7 @@ export class Marionette {
 			}
 		}
 
-		const position = SkeletonSerializer.stringToPosition(str.substring(NB_BONE_VALUES))
+		const position = this.serializer.stringToPosition(str.substring(NB_BONE_VALUES))
 		this.model.position.copy(position)
 		this.updateHandles()
 	}

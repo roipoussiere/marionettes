@@ -34,7 +34,7 @@ export class SkeletonSerializer {
 	fromString(str: string): void {
 		const values: number[] = []
 		for (const c of str) {
-			values.push(BASE60.indexOf(c))
+			values.push(this.#strToValue(c))
 		}
 
 		let cursor = 0
@@ -108,18 +108,9 @@ export class SkeletonSerializer {
 		)
 	}
 
-	static stringToPosition(str: string): THREE.Vector3 {
-		const high_order_pos = new THREE.Vector3(
-			BASE60.indexOf(str[0]),
-			BASE60.indexOf(str[1]),
-			BASE60.indexOf(str[2])
-		)
-
-		const low_order_pos = new THREE.Vector3(
-			BASE60.indexOf(str[3]),
-			BASE60.indexOf(str[4]),
-			BASE60.indexOf(str[5])
-		)
+	stringToPosition(str: string): THREE.Vector3 {
+		const high_order_pos = this.#strToVector(str.substring(0, 3))
+		const low_order_pos  = this.#strToVector(str.substring(3, 6))
 
 		return VectorUtils.continuousPosition(
 			high_order_pos,
@@ -150,10 +141,22 @@ export class SkeletonSerializer {
 		return BASE60.charAt(value)
 	}
 
+	#strToValue(str: string): number {
+		return BASE60.indexOf(str)
+	}
+
 	#vectorToStr(vector: THREE.Vector3): string {
-		return BASE60.charAt(vector.x)
-		     + BASE60.charAt(vector.y)
-			 + BASE60.charAt(vector.z)
+		return this.#valueToStr(vector.x)
+		     + this.#valueToStr(vector.y)
+			 + this.#valueToStr(vector.z)
+	}
+
+	#strToVector(str: string): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.#strToValue(str[0]),
+			this.#strToValue(str[1]),
+			this.#strToValue(str[2])
+		)
 	}
 
 }
