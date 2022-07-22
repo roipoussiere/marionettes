@@ -94,16 +94,17 @@ export class SkeletonSerializer {
 	}
 
 	boneRotationToString(rotation: THREE.Vector3, axes: string): string {
+		const get_rot = (id: number) => rotation.toArray()['xyz'.indexOf(axes[id])]
 		let str = ''
 
 		if (axes[0] != '_') {
-			str += this.#valueToStr(rotation.x)
+			str += this.#valueToStr(get_rot(0))
 		}
 		if (axes[1] != '_') {
-			str += this.#valueToStr(rotation.y)
+			str += this.#valueToStr(get_rot(1))
 		}
 		if (axes[2] != '_') {
-			str += this.#valueToStr(rotation.z)
+			str += this.#valueToStr(get_rot(2))
 		}
 		return str
 	}
