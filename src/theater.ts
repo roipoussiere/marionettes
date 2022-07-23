@@ -20,7 +20,7 @@ export class Theater {
 	last_pointer: THREE.Vector2
 	axe_modifier_id: number // one in [0, 1, 2]
 	renderer: THREE.WebGLRenderer
-	camera: THREE.Camera
+	camera: THREE.PerspectiveCamera
 	scene: THREE.Scene
 	control: OrbitControls
 	marionettes: { [id: string] : Marionette }
@@ -85,6 +85,16 @@ export class Theater {
 		this.models.name = 'models'
 
 		this.scene = new THREE.Scene()
+	}
+
+	set fullscreen(fullscreen: boolean) {
+		const fullscreen_style = 'width:100%; height:100%; position:fixed; top:0; left:0;'
+		const width = fullscreen ? window.innerWidth : this.canvas.width
+		const height = fullscreen ? window.innerHeight : this.canvas.height
+
+		this.camera.aspect = width / height
+		this.renderer.setSize(width, height)
+		this.renderer.domElement.setAttribute('style', fullscreen ? fullscreen_style : '')
 	}
 
 	get canvas_origin(): THREE.Vector2 {

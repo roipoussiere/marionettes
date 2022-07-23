@@ -51,6 +51,8 @@ document.addEventListener('keydown', event  => {
 		theater.rotate_mode = ! theater.rotate_mode
 	} else if (event.code == 'KeyT') {
 		theater.translate_mode = ! theater.translate_mode
+	} else if (event.code == 'KeyF') {
+		theater.fullscreen = ! theater.fullscreen
 	}
 })
 
