@@ -77,12 +77,14 @@ export class Theater {
 		this.control.minDistance = 1
 		this.control.maxDistance = 5
 
-		this.scene = new THREE.Scene()
-		this.scene.background = new THREE.Color(SKY_COLOR);
-		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
-
 		this.handles = new THREE.Group()
+		this.handles.name = 'handles'
+		this.handles.visible = false
+
 		this.models = new THREE.Group()
+		this.models.name = 'models'
+
+		this.scene = new THREE.Scene()
 	}
 
 	get canvas_origin(): THREE.Vector2 {
@@ -127,11 +129,15 @@ export class Theater {
 	}
 
 	init() {
-		this.#addHandles()
-		this.#addGrid()
-		this.#addFloor()
-		this.#addLights()
-		// this.scene.add(new THREE.AxesHelper())
+		this.scene.background = new THREE.Color(SKY_COLOR);
+		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
+
+		this.scene.add(
+			// new THREE.AxesHelper(),
+			this.#buildGrid(),
+			this.#buildFloor(),
+			this.#buildLights()
+		)
 	}
 
 	onModelLoaded(model: THREE.Group) {
@@ -149,6 +155,7 @@ export class Theater {
 			// this.handles.add( new THREE.SkeletonHelper( marionette.model ))
 		})
 		this.scene.add(this.models)
+		this.scene.add(this.handles)
 
 		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
 			spinner.remove()
@@ -222,10 +229,10 @@ export class Theater {
 	}
 
 	#addSpinner() {
-		const canvasBRect = this.canvas.getBoundingClientRect();
-		const size = Math.round(0.3 * Math.min(canvasBRect.width, canvasBRect.height))
-		const left = Math.round(canvasBRect.left + canvasBRect.width  / 2 - size / 2)
-		const right = Math.round(canvasBRect.top  + canvasBRect.height / 2 - size / 2)
+		const canvas_brect = this.canvas.getBoundingClientRect();
+		const size = Math.round(0.3 * Math.min(canvas_brect.width, canvas_brect.height))
+		const left = Math.round(canvas_brect.left + canvas_brect.width  / 2 - size / 2)
+		const right = Math.round(canvas_brect.top  + canvas_brect.height / 2 - size / 2)
 
 		const spinner = document.createElement('div');
 		spinner.classList.add(SPINNER_CLASS)
@@ -234,42 +241,46 @@ export class Theater {
 		document.body.appendChild(spinner);
 	}
 
-	#addHandles() {
-		this.handles.name = 'handles'
-		this.handles.visible = false
-		this.scene.add(this.handles)
-	}
-
-	#addGrid() {
-		let grid = new THREE.GridHelper( 4, 20 )
+	#buildGrid(): THREE.GridHelper {
+		const grid = new THREE.GridHelper( 4, 20 )
 		grid.name = 'grid'
 		grid.position.y = 0.01
-		this.scene.add(grid)
+
+		return grid
 	}
 
-	#addFloor() {
-		let floorGeometry = new THREE.PlaneGeometry(100, 100, 1, 1);
-		let floorMaterial = new THREE.MeshPhongMaterial({
+	#buildFloor(): THREE.Mesh {
+		const floor_geometry = new THREE.PlaneGeometry(100, 100, 1, 1);
+		const floor_material = new THREE.MeshPhongMaterial({
 			color: GROUND_COLOR,
 			shininess: 0
 		});
 
-		let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+		const floor = new THREE.Mesh(floor_geometry, floor_material);
 		floor.name = 'floor'
 		floor.rotation.x = -0.5 * Math.PI;
-		this.scene.add(floor)
+		floor.receiveShadow = true
+
+		return floor
 	}
 		
-	#addLights() {
-		const ambientLight = new THREE.AmbientLight(new THREE.Color(LIGHT_COLOR), 0.5)
-		this.scene.add(ambientLight)
+	#buildLights(): THREE.Group {
+		const lights = new THREE.Group()
+		lights.name = 'lights'
 
-		const light1 = new THREE.PointLight(new THREE.Color(LIGHT_COLOR), 0.4)
-		light1.position.set(10, 10, 10)
-		this.scene.add(light1)
+		const ambient_light = new THREE.AmbientLight(new THREE.Color(LIGHT_COLOR), 0.5)
+		ambient_light.name = 'ambient_light'
 
-		const light2 = new THREE.PointLight(new THREE.Color(LIGHT_COLOR), 0.3)
-		light2.position.set(-10, 10, -10)
-		this.scene.add(light2)
+		const main_light = new THREE.PointLight(new THREE.Color(LIGHT_COLOR), 0.4)
+		main_light.position.set(10, 10, 10)
+		main_light.name = 'main_light'
+
+		const secondary_light = new THREE.PointLight(new THREE.Color(LIGHT_COLOR), 0.3)
+		secondary_light.position.set(-10, 10, -10)
+		secondary_light.name = 'secondary_light'
+
+		lights.add(ambient_light, main_light, secondary_light)
+
+		return lights
 	}
 }
