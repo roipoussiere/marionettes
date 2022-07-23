@@ -176,6 +176,12 @@ export class Theater {
 		this.renderer.render(this.scene, this.camera)
 	}
 
+	resetPose() {
+		Object.values(this.marionettes).forEach(marionette => {
+			marionette.resetPose()
+		})
+	}
+
 	#normalizePointer(pointer: THREE.Vector2) {
 		pointer.sub(this.canvas_origin).divide(this.canvas_size)
 		pointer.set(2 * pointer.x - 1, -2 * pointer.y + 1)

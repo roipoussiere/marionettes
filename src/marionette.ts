@@ -47,6 +47,10 @@ export class Marionette {
 			throw(`Skeleton not found in the model.`)
 		}
 
+		this.resetPose()
+	}
+
+	resetPose() {
 		this.loadFromString(this.default_pose)
 	}
 

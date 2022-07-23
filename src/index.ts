@@ -53,6 +53,8 @@ document.addEventListener('keydown', event  => {
 		theater.translate_mode = ! theater.translate_mode
 	} else if (event.code == 'KeyF') {
 		theater.fullscreen = ! theater.fullscreen
+	} else if (event.code == 'KeyC') {
+		theater.resetPose()
 	}
 })
 
