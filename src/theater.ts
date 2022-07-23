@@ -6,6 +6,9 @@ import { Marionette, MODEL_NAME_PREFIX } from './marionette'
 export const SPINNER_CLASS = 'body-posture-spinner'
 
 const POINTER_SENSIBILITY = 1.0
+const GROUND_COLOR = 0x9ec899
+const SKY_COLOR = 0x99c0c8
+const LIGHT_COLOR = 0xffdddd
 
 
 type OnChange = (marionette: Marionette) => void;
@@ -75,6 +78,9 @@ export class Theater {
 		this.control.maxDistance = 5
 
 		this.scene = new THREE.Scene()
+		this.scene.background = new THREE.Color(SKY_COLOR);
+		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
+
 		this.handles = new THREE.Group()
 		this.models = new THREE.Group()
 	}
@@ -242,26 +248,28 @@ export class Theater {
 	}
 
 	#addFloor() {
-		let floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
+		let floorGeometry = new THREE.PlaneGeometry(100, 100, 1, 1);
 		let floorMaterial = new THREE.MeshPhongMaterial({
-			color: 0xeeeeee,
+			color: GROUND_COLOR,
 			shininess: 0
 		});
 
 		let floor = new THREE.Mesh(floorGeometry, floorMaterial);
 		floor.name = 'floor'
 		floor.rotation.x = -0.5 * Math.PI;
-		floor.receiveShadow = true;
-		floor.position.y = 0;
 		this.scene.add(floor)
 	}
 		
 	#addLights() {
-		const ambientLight = new THREE.AmbientLight(new THREE.Color(0xffffff), 0.5)
+		const ambientLight = new THREE.AmbientLight(new THREE.Color(LIGHT_COLOR), 0.5)
 		this.scene.add(ambientLight)
 
-		const light = new THREE.PointLight(new THREE.Color(0xffffff), 0.5)
-		light.position.set(10, 10, 0)
-		this.scene.add(light)
+		const light1 = new THREE.PointLight(new THREE.Color(LIGHT_COLOR), 0.4)
+		light1.position.set(10, 10, 10)
+		this.scene.add(light1)
+
+		const light2 = new THREE.PointLight(new THREE.Color(LIGHT_COLOR), 0.3)
+		light2.position.set(-10, 10, -10)
+		this.scene.add(light2)
 	}
 }
