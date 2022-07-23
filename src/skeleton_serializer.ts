@@ -50,7 +50,7 @@ export class SkeletonSerializer {
 	toString(): string {
 		let str = ''
 		BonesConfig.bones.forEach(bone_config => {
-			const rotation = this.discretized_bones_rot[bone_config.name].clone()
+			const rotation = this.discretized_bones_rot[bone_config.name]
 			str += this.#boneRotationToString(rotation, bone_config.axes)
 		})
 
@@ -107,26 +107,13 @@ export class SkeletonSerializer {
 		)
 	}
 
-	stringToPosition(str: string): THREE.Vector3 {
-		const high_order_pos = this.#strToVector(str.substring(0, 3))
-		const low_order_pos  = this.#strToVector(str.substring(3, 6))
-
-		return VectorUtils.continuousPosition(
-			high_order_pos,
-			low_order_pos,
-			BonesConfig.MIN_POSITION,
-			BonesConfig.MAX_POSITION,
-			BonesConfig.BASE
-		)
-	}
-
 	#loadBonesRotationValues(values: number[]): void {
 		let cursor = 0
 		BonesConfig.bones.forEach(bone_config => {
 			const rotation = new THREE.Vector3(
-				bone_config.axes[0] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
-				bone_config.axes[1] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
-				bone_config.axes[2] == '_' ? BonesConfig.BASE / 2 : values[cursor++],
+				bone_config.axes.includes('x') ? values[cursor++] : BonesConfig.BASE / 2,
+				bone_config.axes.includes('y') ? values[cursor++] : BonesConfig.BASE / 2,
+				bone_config.axes.includes('z') ? values[cursor++] : BonesConfig.BASE / 2,
 			)
 			this.discretized_bones_rot[bone_config.name].copy(rotation)
 		})
@@ -140,17 +127,16 @@ export class SkeletonSerializer {
 	}
 
 	#boneRotationToString(rotation: THREE.Vector3, axes: string): string {
-		const get_rot = (id: number) => rotation.toArray()['xyz'.indexOf(axes[id])]
 		let str = ''
 
-		if (axes[0] != '_') {
-			str += this.#valueToStr(get_rot(0))
+		if (axes.includes('x')) {
+			str += this.#valueToStr(rotation.toArray()[0])
 		}
-		if (axes[1] != '_') {
-			str += this.#valueToStr(get_rot(1))
+		if (axes.includes('y')) {
+			str += this.#valueToStr(rotation.toArray()[1])
 		}
-		if (axes[2] != '_') {
-			str += this.#valueToStr(get_rot(2))
+		if (axes.includes('z')) {
+			str += this.#valueToStr(rotation.toArray()[2])
 		}
 		return str
 	}
@@ -167,14 +153,6 @@ export class SkeletonSerializer {
 		return this.#valueToStr(vector.x)
 		     + this.#valueToStr(vector.y)
 			 + this.#valueToStr(vector.z)
-	}
-
-	#strToVector(str: string): THREE.Vector3 {
-		return new THREE.Vector3(
-			this.#strToValue(str[0]),
-			this.#strToValue(str[1]),
-			this.#strToValue(str[2])
-		)
 	}
 
 }

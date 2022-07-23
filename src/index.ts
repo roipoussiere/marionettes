@@ -6,9 +6,7 @@ import { Theater } from './theater'
 
 
 const DEFAULT_POSE_BASE  = 'QeeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeesRdeeefeeetreeeeceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A'
-//                          QeeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeedRsefeeeeeerteceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A
-const DEFAULT_POSE_FLYER = 'teAeeeeeeeeeWeeXeeeeeeeeeeeeeeeeeeePPeeeeeeeePteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedPe3WE'
-//                          teAeeeeeeeeeWeeXeeeeeeeeeeeeeeeeeeeePPeeeeeeeetPeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedPe3WE
+const DEFAULT_POSE_FLYER = 'teAeeeeeeeeeWeeXeeeeeeneeeeeeneeeeePreeeeeeeePReeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAdPe3WE'
 
 const MODEL_PATH = './xbot.fbx'
 // const MODEL_PATH = './ybot.fbx'

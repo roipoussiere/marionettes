@@ -96,7 +96,6 @@ export class Marionette {
 	}
 
 	toString(): string {
-		this.roundPosition()
 		return this.serializer.toString()
 	}
 
@@ -159,7 +158,7 @@ export class Marionette {
 				closest_distance = distance
 			}
 		})
-		console.log(`clicked on ${ this.name }'s ${ closest_bone.name }`)
+		console.info(`clicked on ${ this.name }'s ${ closest_bone.name }`)
 
 		this.clicked_bone = closest_bone
 	}
