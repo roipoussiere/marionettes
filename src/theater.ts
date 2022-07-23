@@ -28,9 +28,12 @@ export class Theater {
 	clicked_marionette: Marionette | null
 	handles: THREE.Group
 	models: THREE.Group
+	on_change: CallableFunction
 	translate_mode: boolean
 	rotate_mode: boolean
-	on_change: CallableFunction
+	is_fullscreen: boolean
+	initial_width: number
+	initial_height: number
 
 	constructor(canvas_id: string, marionettes: Marionette[], on_change: OnChange = () => {}) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
@@ -43,6 +46,9 @@ export class Theater {
 		this.clicked_marionette = null
 		this.translate_mode = false
 		this.rotate_mode = false
+		this.is_fullscreen = false
+		this.initial_width = this.canvas.width
+		this.initial_height = this.canvas.height
 
 		this.marionettes = {}
 		marionettes.forEach(marionette => {
@@ -87,10 +93,16 @@ export class Theater {
 		this.scene = new THREE.Scene()
 	}
 
+	get fullscreen() {
+		return this.is_fullscreen
+	}
+
 	set fullscreen(fullscreen: boolean) {
+		this.is_fullscreen = fullscreen
+
 		const fullscreen_style = 'width:100%; height:100%; position:fixed; top:0; left:0;'
-		const width = fullscreen ? window.innerWidth : this.canvas.width
-		const height = fullscreen ? window.innerHeight : this.canvas.height
+		const width = fullscreen ? window.innerWidth : this.initial_width
+		const height = fullscreen ? window.innerHeight : this.initial_height
 
 		this.camera.aspect = width / height
 		this.renderer.setSize(width, height)
