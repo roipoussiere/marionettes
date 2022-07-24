@@ -156,11 +156,16 @@ export class Marionette {
 		let position = new THREE.Vector3()
 		let closest_distance = Infinity
 
-		this.skeleton.bones.forEach(bone => {
-			const distance = (bone.getWorldPosition(position).sub(point)).length()
-			if (distance < closest_distance) {
-				closest_bone = bone
-				closest_distance = distance
+		BonesConfig.bones.forEach(bone_config => {
+			const bone = this.skeleton.getBoneByName(bone_config.name)
+			if (bone && bone.name != 'Hips') {
+				const distance = (bone.getWorldPosition(position).sub(point)).length()
+				if (distance < closest_distance) {
+					closest_bone = bone
+					closest_distance = distance
+				}	
+			} else {
+				console.warn(`Can not bone ${ bone_config.name } in skeleton.`)
 			}
 		})
 		console.info(`clicked on ${ this.name }'s ${ closest_bone.name }`)
