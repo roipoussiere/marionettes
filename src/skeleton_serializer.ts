@@ -112,12 +112,18 @@ export class SkeletonSerializer {
 	}
 
 	#loadBonesRotationValues(values: number[]): void {
+		const scale = (vect: THREE.Vector3) => vect.addScalar(180).divideScalar(360 / BASE).round()
+
 		let cursor = 0
 		BonesConfig.bones.forEach(bone_config => {
 			const rotation = new THREE.Vector3(
 				bone_config.axes.includes('x') ? values[cursor++] : BASE / 2,
 				bone_config.axes.includes('y') ? values[cursor++] : BASE / 2,
 				bone_config.axes.includes('z') ? values[cursor++] : BASE / 2,
+			)
+			.clamp(
+				scale(bone_config.min_angle.clone()),
+				scale(bone_config.max_angle.clone())
 			)
 			this.discretized_bones_rot[bone_config.name].copy(rotation)
 		})

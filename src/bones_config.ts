@@ -30,8 +30,8 @@ export class BoneConfig {
 			axes = 'xyz',
 			rotation_order = 'XYZ',
 			reverse_direction = false,
-			min_angle = new V3(-360, -360, -360),
-			max_angle = new V3( 360,  360,  360)) {
+			min_angle = new V3(-180, -180, -180),
+			max_angle = new V3( 180,  180,  180)) {
 		this.name = name
 		this.axes = axes
 		this.rotation_order = rotation_order
