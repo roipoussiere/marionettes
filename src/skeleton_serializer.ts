@@ -11,6 +11,7 @@ const NB_BONE_VALUES = BonesConfig.bones
 	.join('')
 	.length
 const EXPECTED_STRING_LENGTH = NB_BONE_VALUES + 6
+const BASE = 60 // must be a multiple of 2
 const BASE60 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567'
 
 
@@ -27,8 +28,7 @@ export class SkeletonSerializer {
 
 		this.discretized_bones_rot = {}
 		BonesConfig.bones.forEach(bone_config => {
-			this.discretized_bones_rot[bone_config.name] = new THREE.Vector3()
-				.addScalar(BonesConfig.BASE / 2)
+			this.discretized_bones_rot[bone_config.name] = new THREE.Vector3().addScalar(BASE / 2)
 		})
 	}
 
@@ -64,20 +64,16 @@ export class SkeletonSerializer {
 		if ( ! ( bone.name in this.discretized_bones_rot)) {
 			throw new ReferenceError()
 		}
-
 		const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
 
-		VectorUtils.discretizeRotation(rotation, BonesConfig.BASE)
+		VectorUtils.discretizeRotation(rotation, BASE)
 		this.discretized_bones_rot[bone.name].copy(rotation)
 	}
 
 	getBoneRotation(bone_name: string): THREE.Euler {
 		const rotation = this.discretized_bones_rot[bone_name].clone()
-		const bone_config = BonesConfig.bones.find(bone_config => bone_config.name == bone_name)
-		if ( ! bone_config) {
-			throw new BonesConfig.BoneNotFoundError(bone_name)
-		}
-		VectorUtils.continuousRotation(rotation, BonesConfig.BASE)
+		const bone_config = BonesConfig.fromName(bone_name)
+		VectorUtils.continuousRotation(rotation, BASE)
 		return new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
 	}
 
@@ -94,7 +90,7 @@ export class SkeletonSerializer {
 			position.clone(),
 			BonesConfig.MIN_POSITION,
 			BonesConfig.MAX_POSITION,
-			BonesConfig.BASE
+			BASE
 		)
 
 		this.discretized_position[0].copy(high_order_pos)
@@ -107,17 +103,21 @@ export class SkeletonSerializer {
 			this.discretized_position[1],
 			BonesConfig.MIN_POSITION,
 			BonesConfig.MAX_POSITION,
-			BonesConfig.BASE
+			BASE
 		)
+	}
+
+	roundAngle(angle: THREE.Vector3, round_to=VectorUtils.RoundTo.NEAREST) {
+		return VectorUtils.roundRotationDegrees(angle, BASE, round_to)
 	}
 
 	#loadBonesRotationValues(values: number[]): void {
 		let cursor = 0
 		BonesConfig.bones.forEach(bone_config => {
 			const rotation = new THREE.Vector3(
-				bone_config.axes.includes('x') ? values[cursor++] : BonesConfig.BASE / 2,
-				bone_config.axes.includes('y') ? values[cursor++] : BonesConfig.BASE / 2,
-				bone_config.axes.includes('z') ? values[cursor++] : BonesConfig.BASE / 2,
+				bone_config.axes.includes('x') ? values[cursor++] : BASE / 2,
+				bone_config.axes.includes('y') ? values[cursor++] : BASE / 2,
+				bone_config.axes.includes('z') ? values[cursor++] : BASE / 2,
 			)
 			this.discretized_bones_rot[bone_config.name].copy(rotation)
 		})

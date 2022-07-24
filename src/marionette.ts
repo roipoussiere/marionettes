@@ -6,13 +6,12 @@ import * as THREE from 'three'
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 import * as BonesConfig from './bones_config'
 import { SkeletonSerializer } from './skeleton_serializer'
+import * as VectorUtils from './vector_utils'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
 export const HANDLES_NAME_PREFIX = 'handles_'
 export const HANDLE_NAME_PREFIX = 'handle_'
-
-type OnBone = (bone: THREE.Bone) => void
 
 
 export class Marionette {
@@ -66,7 +65,7 @@ export class Marionette {
 		})
 		const handle_geometry = new THREE.SphereGeometry(0.02, 6, 4)
 
-		this.#forEachEnabledBone(bone => {
+		BonesConfig.forEachEnabledBone(this.skeleton, bone => {
 			const handle = new THREE.Mesh(handle_geometry, handle_material)
 			handle.name = HANDLE_NAME_PREFIX + bone.name
 			this.handles.add(handle)
@@ -75,7 +74,7 @@ export class Marionette {
 	}
 
 	updateHandles() {
-		this.#forEachEnabledBone(bone => {
+		BonesConfig.forEachEnabledBone(this.skeleton, bone => {
 			const handle = this.handles.getObjectByName(HANDLE_NAME_PREFIX + bone.name)
 			if (handle) {
 				handle.position.copy(bone.getWorldPosition(handle.position))
@@ -130,14 +129,8 @@ export class Marionette {
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
-		const bone_config = BonesConfig.bones.find(config => config.name == this.clicked_bone.name)
-		if ( ! bone_config) {
-			throw new BonesConfig.BoneNotFoundError(this.clicked_bone.name)
-		}
+		const bone_config = BonesConfig.fromName(this.clicked_bone.name)
 		const axe = bone_config.axes[axe_modifier_id]
-
-		// Rotations are non-commutative, so rotating on both x/y with cursor
-		// will lead to unexpected results (ie. rotation on z)
 		const delta = (pointer_delta.x + pointer_delta.y) * (bone_config.reverse_direction ? -1 : 1)
 
 		const rotation = new THREE.Vector3()
@@ -147,7 +140,10 @@ export class Marionette {
 				axe == 'y' ? delta : 0,
 				axe == 'z' ? delta : 0
 			))
-			.clamp(bone_config.min_angle, bone_config.max_angle)
+			.clamp(
+				this.serializer.roundAngle(bone_config.min_angle.clone()),
+				this.serializer.roundAngle(bone_config.max_angle.clone()),
+			)
 
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
 		this.clicked_bone.setRotationFromEuler(euler_rotation)
@@ -158,7 +154,7 @@ export class Marionette {
 		let position = new THREE.Vector3()
 		let closest_distance = Infinity
 
-		this.#forEachEnabledBone(bone => {
+		BonesConfig.forEachEnabledBone(this.skeleton, bone => {
 			const distance = (bone.getWorldPosition(position).sub(point)).length()
 			if (distance < closest_distance) {
 				closest_bone = bone
@@ -168,17 +164,6 @@ export class Marionette {
 		console.info(`clicked on ${ this.name }'s ${ closest_bone.name }`)
 
 		this.clicked_bone = closest_bone
-	}
-
-	#forEachEnabledBone(on_bone: OnBone) {
-		BonesConfig.bones.filter(bone => bone.name != 'Hips').forEach(bone_config => {
-			const bone = this.skeleton.getBoneByName(bone_config.name)
-			if (bone) {
-				on_bone(bone)
-			} else {
-				throw new BonesConfig.BoneNotFoundError(bone_config.name)
-			}
-		})
 	}
 
 	roundPosition() {

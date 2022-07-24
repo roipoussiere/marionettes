@@ -1,9 +1,7 @@
 import * as THREE from 'three'
 import { Vector3 as V3 } from 'three'
-import * as VectorUtils from './vector_utils'
 
 
-export const BASE = 60 // must be a multiple of 2
 export const MIN_POSITION = new THREE.Vector3(-2, -1, -2)
 export const MAX_POSITION = new THREE.Vector3(2, 3, 2)
 
@@ -16,7 +14,10 @@ export class BoneNotFoundError extends Error {
 }
 
 
-class BoneConfig {
+type OnBone = (bone: THREE.Bone) => void
+
+
+export class BoneConfig {
 	name: string
 	axes: string
 	rotation_order: string
@@ -34,8 +35,8 @@ class BoneConfig {
 		this.name = name
 		this.axes = axes
 		this.rotation_order = rotation_order
-		this.min_angle = VectorUtils.roundRotation(min_angle.multiplyScalar(THREE.MathUtils.DEG2RAD), BASE)
-		this.max_angle = VectorUtils.roundRotation(max_angle.multiplyScalar(THREE.MathUtils.DEG2RAD), BASE)
+		this.min_angle = min_angle
+		this.max_angle = max_angle
 		this.reverse_direction = reverse_direction
 	}
 }
@@ -106,3 +107,22 @@ export const bones: BoneConfig[] = [
 	// LeftHandThumb4,  LeftHandRing4,   LeftHandIndex4, LeftHandMiddle4,  LeftHandPinky4,
 	// RightHandThumb4, RightHandPinky4, RightHandRing4, RightHandMiddle4, RightHandIndex4,
 ]
+
+export function fromName(bone_name: string): BoneConfig {
+	const bone_config = bones.find(bone_config => bone_config.name == bone_name)
+	if ( ! bone_config) {
+		throw new BoneNotFoundError(bone_name)
+	}
+	return bone_config
+}
+
+export function forEachEnabledBone(skeleton: THREE.Skeleton, on_bone: OnBone) {
+	bones.filter(bone => bone.name != 'Hips').forEach(bone_config => {
+		const bone = skeleton.getBoneByName(bone_config.name)
+		if (bone) {
+			on_bone(bone)
+		} else {
+			throw new BoneNotFoundError(bone_config.name)
+		}
+	})
+}

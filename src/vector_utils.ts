@@ -41,6 +41,10 @@ export function roundRotation(rotation: THREE.Vector3, base: number, round_to=Ro
 	return rotation
 }
 
+export function roundRotationDegrees(angle: THREE.Vector3, base: number, round_to=RoundTo.NEAREST): THREE.Vector3 {
+	return roundRotation(angle.multiplyScalar(THREE.MathUtils.DEG2RAD), base, round_to)
+}
+
 export function discretizePosition(position: THREE.Vector3, min_pos: THREE.Vector3,
 		max_pos: THREE.Vector3, base: number, round_to=RoundTo.NEAREST): THREE.Vector3[] {
 	const base_normalized_position = position
