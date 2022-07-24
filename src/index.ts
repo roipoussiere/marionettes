@@ -4,9 +4,8 @@ import { Marionette } from './marionette'
 import { ModelLoader } from './model_loader'
 import { Theater } from './theater'
 
-
-const DEFAULT_POSE_BASE  = 'QeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeesRdeeefeeetreeeeceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A'
-const DEFAULT_POSE_FLYER = 'teAeeeeeeeeWeeXeeeeeeneeeeeeneeeeePreeeeeeeePReeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAdPe3WE'
+const DEFAULT_POSE_BASE  = 'QeeeeeeeeeeeeeeeePeeeceePeeebeeeeeneReeeheeeogredeeeeeeeeeeeeeeeeeeeeeebbeeeeeeeeeeeeeeeeeeeAeA0A'
+const DEFAULT_POSE_FLYER = 'teAeeeeeeaedYeXeeeeeeneeeeeeneeeeehnTeeeeeeeoRqeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedPe3WE'
 
 const MODEL_PATH = './xbot.fbx'
 // const MODEL_PATH = './ybot.fbx'
