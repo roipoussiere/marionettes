@@ -3,13 +3,29 @@ import * as THREE from 'three'
 
 const TAU = Math.PI * 2.0
 
+export enum RoundTo {
+	NEAREST,
+	BOTTOM,
+	TOP
+}
 
-export function discretizeRotation(rotation: THREE.Vector3, base: number) {
+
+function roundVector(vector: THREE.Vector3, round_to: RoundTo) {
+	if (round_to == RoundTo.NEAREST) {
+		vector.round()
+	} else if (round_to == RoundTo.BOTTOM) {
+		vector.floor()
+	} else {
+		vector.ceil()
+	}
+}
+
+export function discretizeRotation(rotation: THREE.Vector3, base: number, round_to=RoundTo.NEAREST) {
 	rotation
 		.multiplyScalar(base)
 		.divideScalar(TAU)
 		.addScalar(base / 2)
-		.round()
+	roundVector(rotation, round_to)
 }
 
 export function continuousRotation(rotation: THREE.Vector3, base: number) {
@@ -19,14 +35,14 @@ export function continuousRotation(rotation: THREE.Vector3, base: number) {
 		.divideScalar(base)
 }
 
-export function roundRotation(rotation: THREE.Vector3, base: number): THREE.Vector3 {
-	discretizeRotation(rotation, base)
+export function roundRotation(rotation: THREE.Vector3, base: number, round_to=RoundTo.NEAREST): THREE.Vector3 {
+	discretizeRotation(rotation, base, round_to)
 	continuousRotation(rotation, base)
 	return rotation
 }
 
-export function discretizePosition(position: THREE.Vector3,
-		min_pos: THREE.Vector3, max_pos: THREE.Vector3, base: number): THREE.Vector3[] {
+export function discretizePosition(position: THREE.Vector3, min_pos: THREE.Vector3,
+		max_pos: THREE.Vector3, base: number, round_to=RoundTo.NEAREST): THREE.Vector3[] {
 	const base_normalized_position = position
 		.clone()
 		.sub(min_pos)
@@ -41,7 +57,7 @@ export function discretizePosition(position: THREE.Vector3,
 		.clone()
 		.sub(high_order_pos)
 		.multiplyScalar(base)
-		.round()
+	roundVector(low_order_pos, round_to)
 
 	return [ high_order_pos, low_order_pos ]
 }
@@ -58,8 +74,8 @@ export function continuousPosition(high_order_pos: THREE.Vector3, low_order_pos:
 	return pos
 }
 
-export function roundPosition(position: THREE.Vector3,
-		min_pos: THREE.Vector3, max_pos: THREE.Vector3, base: number): THREE.Vector3 {
-	const [ high_order_pos, low_order_pos ] = discretizePosition(position, min_pos, max_pos, base)
+export function roundPosition(position: THREE.Vector3, min_pos: THREE.Vector3,
+		max_pos: THREE.Vector3, base: number, round_to=RoundTo.NEAREST): THREE.Vector3 {
+	const [ high_order_pos, low_order_pos ] = discretizePosition(position, min_pos, max_pos, base, round_to)
 	return continuousPosition(high_order_pos, low_order_pos, min_pos, max_pos, base)
 }
