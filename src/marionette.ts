@@ -124,6 +124,7 @@ export class Marionette {
 		} else if (axe_modifier_id == 2) {
 			root_bone.rotateZ(pointer_delta.x + pointer_delta.y)
 		}
+		this.roundBone(root_bone)
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
