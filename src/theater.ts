@@ -3,7 +3,28 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Marionette, MODEL_NAME_PREFIX } from './marionette'
 
 
-export const SPINNER_CLASS = 'body-posture-spinner'
+export const SPINNER_CLASS = 'marionettes-spinner'
+export const BUTTONS_BAR_CLASS = 'marionettes-buttons-bar'
+export const BUTTONS_CLASS = 'marionettes-button'
+export const DEFAULT_STYLE = `
+.marionettes-spinner {
+	position: absolute;
+}
+.marionettes-button {
+	position: absolute;
+	padding: 0px;
+	border: none;
+	color: #777;
+	background-color: transparent;
+	text-align: center;
+	vertical-align: middle;
+	font-weight: bold;
+}
+.marionettes-button:hover {
+	background-color: #0002;
+	cursor: pointer;
+}
+`
 
 const POINTER_SENSIBILITY = 1.0
 const GROUND_COLOR = 0x9ec899
@@ -13,6 +34,22 @@ const LIGHT_COLOR = 0xffdddd
 
 type OnChange = (marionette: Marionette) => void;
 
+
+class Button {
+	name: string
+	icon: string
+	action: CallableFunction
+	tooltip: string
+	shortcut: string
+
+	constructor(name: string, icon: string, action: CallableFunction, tooltip = '', shortcut = '') {
+		this.name = name
+		this.icon = icon
+		this.action = action
+		this.tooltip = tooltip
+		this.shortcut = shortcut
+	}
+}
 
 export class Theater {
 	canvas: HTMLCanvasElement
@@ -68,7 +105,28 @@ export class Theater {
 	}
 
 	init() {
+		const style = document.createElement('style');
+		style.innerHTML = DEFAULT_STYLE
+		document.body.appendChild(style);
+
 		this.#addSpinner()
+		this.#addButtonsBar([
+			new Button('translate',  'T', () => {
+				this.translate_mode = ! this.translate_mode
+			}, 'Translate mode (t)'),
+			new Button('rotate',     'R', () => {
+				this.rotate_mode = ! this.rotate_mode
+			}, 'Rotate mode (r)'),
+			new Button('handles',    'H', () => {
+				this.handles_visibility = ! this.handles_visibility
+			}, 'Show handles (h)'),
+			new Button('reset',      'C', () => {
+				this.resetPose()
+			}, 'Reset (c)'),
+			new Button('fullscreen', 'F', () => {
+				this.fullscreen = ! this.fullscreen
+			}, 'Fullscreen (f)')
+		])
 
 		this.canvas.addEventListener('mousemove',  e  => this.#onPointerMove(e))
 		this.canvas.addEventListener('mousedown',  () => this.#onPointerPress())
@@ -254,15 +312,45 @@ export class Theater {
 
 	#addSpinner() {
 		const canvas_brect = this.canvas.getBoundingClientRect();
-		const size = Math.round(0.3 * Math.min(canvas_brect.width, canvas_brect.height))
-		const left = Math.round(canvas_brect.left + canvas_brect.width  / 2 - size / 2)
-		const right = Math.round(canvas_brect.top  + canvas_brect.height / 2 - size / 2)
+		const spinner_size = Math.round(0.3 * Math.min(canvas_brect.width, canvas_brect.height))
+		const left = Math.round(canvas_brect.left + canvas_brect.width  / 2 - spinner_size / 2)
+		const top = Math.round(canvas_brect.top  + canvas_brect.height / 2 - spinner_size / 2)
 
 		const spinner = document.createElement('div');
 		spinner.classList.add(SPINNER_CLASS)
-		spinner.style.cssText = `width: ${ size }px; height: ${ size  }px;`
-		                      + `left: ${  left }px; top: ${    right }px;`;
-		document.body.appendChild(spinner);
+		spinner.style.cssText = `
+			width: ${ spinner_size }px;
+			height: ${ spinner_size }px;
+		    left: ${ left }px;
+			top: ${ top }px;
+		`;
+
+	  document.body.appendChild(spinner);
+	}
+
+	#addButtonsBar(buttons: Button[]) {
+		const canvas_brect = this.canvas.getBoundingClientRect();
+		const icon_size = Math.round(0.07 * Math.min(canvas_brect.width, canvas_brect.height))
+
+		const buttons_bar = document.createElement('div');
+		buttons_bar.classList.add(BUTTONS_BAR_CLASS)
+
+		buttons.forEach((button, index) => {
+			const button_dom = document.createElement('button');
+			button_dom.classList.add(BUTTONS_CLASS)
+			button_dom.innerHTML = button.icon
+			button_dom.title = button.tooltip
+			button_dom.style.cssText = `
+				width: ${ icon_size }px;
+				height: ${ icon_size }px;
+				left: ${ Math.round(canvas_brect.left) }px;
+				top: ${ Math.round(canvas_brect.bottom) - (buttons.length - index) * icon_size }px;
+				font-size: ${ Math.round(0.7 * icon_size) }px;
+			`
+			button_dom.addEventListener('click', () => { button.action() })
+			buttons_bar.appendChild(button_dom)
+		})
+		document.body.appendChild(buttons_bar);
 	}
 
 	#buildGrid(): THREE.GridHelper {
