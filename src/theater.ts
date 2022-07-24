@@ -16,46 +16,59 @@ type OnChange = (marionette: Marionette) => void;
 
 export class Theater {
 	canvas: HTMLCanvasElement
-	pointer: THREE.Vector2
-	last_pointer: THREE.Vector2
-	axe_modifier_id: number // one in [0, 1, 2]
+	marionettes: { [id: string] : Marionette }
+	on_change: CallableFunction
+
 	renderer: THREE.WebGLRenderer
 	camera: THREE.PerspectiveCamera
-	scene: THREE.Scene
 	control: OrbitControls
-	marionettes: { [id: string] : Marionette }
-	meshes: THREE.SkinnedMesh[]
-	clicked_marionette: Marionette | null
-	handles: THREE.Group
+
 	models: THREE.Group
-	on_change: CallableFunction
+	handles: THREE.Group
+	scene: THREE.Scene
+
 	translate_mode: boolean
 	rotate_mode: boolean
 	is_fullscreen: boolean
-	initial_width: number
-	initial_height: number
+
+	initial_canvas_size: THREE.Vector2
+	pointer: THREE.Vector2
+	last_pointer: THREE.Vector2
+
+	axe_modifier_id: number // one in [0, 1, 2]
+	meshes: THREE.SkinnedMesh[]
+	clicked_marionette: Marionette | null
 
 	constructor(canvas_id: string, marionettes: Marionette[], on_change: OnChange = () => {}) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
-		this.#addSpinner()
+		this.marionettes = {}
+		marionettes.forEach(marionette => this.marionettes[marionette.name] = marionette)
 		this.on_change = on_change
 
-		this.pointer = new THREE.Vector2(0, 0)
-		this.last_pointer = new THREE.Vector2(0, 0)
-		this.axe_modifier_id = 0
-		this.clicked_marionette = null
+		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true })
+		this.camera = new THREE.PerspectiveCamera(45, this.canvas.width / this.canvas.height)
+		this.camera.position.set(0, 2, 5)
+		this.control = new OrbitControls(this.camera, this.renderer.domElement)
+
+		this.models = new THREE.Group()
+		this.handles = new THREE.Group()
+		this.scene = new THREE.Scene()
+
 		this.translate_mode = false
 		this.rotate_mode = false
 		this.is_fullscreen = false
-		this.initial_width = this.canvas.width
-		this.initial_height = this.canvas.height
 
-		this.marionettes = {}
-		marionettes.forEach(marionette => {
-			this.marionettes[marionette.name] = marionette
-		})
+		this.initial_canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
+		this.pointer = new THREE.Vector2(0, 0)
+		this.last_pointer = new THREE.Vector2(0, 0)
 
+		this.axe_modifier_id = 0
+		this.clicked_marionette = null
 		this.meshes = []
+	}
+
+	init() {
+		this.#addSpinner()
 
 		this.canvas.addEventListener('mousemove',  e  => this.#onPointerMove(e))
 		this.canvas.addEventListener('mousedown',  () => this.#onPointerPress())
@@ -65,32 +78,27 @@ export class Theater {
 		this.canvas.addEventListener('touchstart', () => this.#onPointerPress())
 		this.canvas.addEventListener('touchend' ,  () => this.#onPointerRelease())
 
-		this.renderer = new THREE.WebGLRenderer({
-			canvas: this.canvas,
-			antialias: true
-		})
 		this.renderer.setSize(this.canvas.width, this.canvas.height)
 		this.renderer.shadowMap.enabled = true;
 
-		this.camera = new THREE.PerspectiveCamera(
-		    45,
-            this.canvas.width / this.canvas.height
-        )
-		this.camera.position.set(0, 2, 5)
-
-		this.control = new OrbitControls(this.camera, this.renderer.domElement)
 		this.control.maxPolarAngle = Math.PI / 2
 		this.control.minDistance = 1
 		this.control.maxDistance = 5
 
-		this.handles = new THREE.Group()
 		this.handles.name = 'handles'
 		this.handles.visible = false
 
-		this.models = new THREE.Group()
 		this.models.name = 'models'
 
-		this.scene = new THREE.Scene()
+		this.scene.background = new THREE.Color(SKY_COLOR);
+		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
+
+		this.scene.add(
+			// new THREE.AxesHelper(),
+			this.#buildGrid(),
+			this.#buildFloor(),
+			this.#buildLights()
+		)
 	}
 
 	get fullscreen() {
@@ -101,8 +109,8 @@ export class Theater {
 		this.is_fullscreen = fullscreen
 
 		const fullscreen_style = 'width:100%; height:100%; position:fixed; top:0; left:0;'
-		const width = fullscreen ? window.innerWidth : this.initial_width
-		const height = fullscreen ? window.innerHeight : this.initial_height
+		const width = fullscreen ? window.innerWidth : this.initial_canvas_size.width
+		const height = fullscreen ? window.innerHeight : this.initial_canvas_size.height
 
 		this.camera.aspect = width / height
 		this.renderer.setSize(width, height)
@@ -148,18 +156,6 @@ export class Theater {
 			str.push(marionette.name + '=' + marionette.toString())
 		})
 		return str.join('&')
-	}
-
-	init() {
-		this.scene.background = new THREE.Color(SKY_COLOR);
-		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
-
-		this.scene.add(
-			// new THREE.AxesHelper(),
-			this.#buildGrid(),
-			this.#buildFloor(),
-			this.#buildLights()
-		)
 	}
 
 	onModelLoaded(model: THREE.Group) {
