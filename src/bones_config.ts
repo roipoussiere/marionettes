@@ -50,23 +50,23 @@ export const bones: BoneConfig[] = [
 	new BoneConfig('Neck',             'xz_', 'XZY', false, new V3(-50 ,-45 ,-40 ), new V3(30 , 45 , 40 )),
 	new BoneConfig('Head',             'xzy', 'XZY', false, new V3(-50 ,-45 ,-40 ), new V3(30 , 45 , 40 )),
 
-	new BoneConfig('LeftUpLeg',        'xzy', 'ZXY', true , new V3(-155,-30 ,-15 ), new V3(85 , 30 , 120)),
+	new BoneConfig('LeftUpLeg',        'xzy', 'ZXY', true , new V3(-90 ,-30 ,-15 ), new V3(85 , 30 , 120)),
 	new BoneConfig('LeftLeg',          'x__', 'XYZ', false, new V3(0   , 0  , 0  ), new V3(150, 0  , 0  )),
 	new BoneConfig('LeftFoot',         'xy_', 'YZX', false, new V3(-45 ,-85 , 0  ), new V3(55 , 40 , 0  )),
 	new BoneConfig('LeftToeBase',      'x__', 'XYZ', false, new V3(-15 , 0  , 0  ), new V3(65 , 0  , 0  )),
 
-	new BoneConfig('RightUpLeg',       'xzy', 'ZXY', true , new V3(-155,-30 ,-120), new V3(85 , 30 , 15 )),
+	new BoneConfig('RightUpLeg',       'xzy', 'ZXY', true , new V3(-90 ,-30 ,-120), new V3(85 , 30 , 15 )),
 	new BoneConfig('RightLeg',         'x__', 'XYZ', false, new V3(0   , 0  , 0  ), new V3(150, 0  , 0  )),
 	new BoneConfig('RightFoot',        'xy_', 'YZX', false, new V3(-45 ,-85 , 0  ), new V3(55 , 40 , 0  )),
 	new BoneConfig('RightToeBase',     'x__', 'XYZ', false, new V3(-15 , 0  , 0  ), new V3(65 , 0  , 0  )),
 
 	new BoneConfig('LeftShoulder',     'zyx', 'YZX', false, new V3(-40 ,-60 ,-40 ), new V3(40 , 50 , 40 )),
-	new BoneConfig('LeftArm',          'zyx', 'YZX', true , new V3(-90 ,-90 ,-105), new V3(90 , 90 , 40 )),
+	new BoneConfig('LeftArm',          'zyx', 'YZX', true , new V3(-85 ,-85 ,-85 ), new V3(85 , 85 , 85 )),
 	new BoneConfig('LeftForeArm',      'z__', 'XYZ', true , new V3( 0  , 0  , 0  ), new V3(0  , 0  , 160)),
 	new BoneConfig('LeftHand',         'zyx', 'YZX', true , new V3(-20 ,-35 ,-90 ), new V3(180, 40 , 90 )),
 
 	new BoneConfig('RightShoulder',    'zyx', 'YZX', false, new V3(-40 ,-60 ,-40 ), new V3(40 , 50 , 40 )),
-	new BoneConfig('RightArm',         'zyx', 'YZX', false, new V3(-90 ,-90 ,-105), new V3(90 , 90 , 105)),
+	new BoneConfig('RightArm',         'zyx', 'YZX', false, new V3(-85 ,-85 ,-85 ), new V3(85 , 85 , 85 )),
 	new BoneConfig('RightForeArm',     'z__', 'XYZ', false, new V3( 0  , 0  ,-160), new V3(0  , 0  , 0  )),
 	new BoneConfig('RightHand',        'zyx', 'YZX', false, new V3(-180,-35 ,-90 ), new V3(20,  40 , 90 )),
 
