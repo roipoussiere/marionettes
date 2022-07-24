@@ -73,8 +73,12 @@ export class SkeletonSerializer {
 
 	getBoneRotation(bone_name: string): THREE.Euler {
 		const rotation = this.discretized_bones_rot[bone_name].clone()
+		const bone_config = BonesConfig.bones.find(bone_config => bone_config.name == bone_name)
+		if ( ! bone_config) {
+			throw new BonesConfig.BoneNotFoundError(bone_name)
+		}
 		VectorUtils.continuousRotation(rotation, BonesConfig.BASE)
-		return new THREE.Euler().setFromVector3(rotation)
+		return new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
 	}
 
 	getBonesRotation(): { [id: string] : THREE.Euler } {

@@ -5,8 +5,8 @@ import { ModelLoader } from './model_loader'
 import { Theater } from './theater'
 
 
-const DEFAULT_POSE_BASE  = 'QeeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeesRdeeefeeetreeeeceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A'
-const DEFAULT_POSE_FLYER = 'teAeeeeeeeeeWeeXeeeeeeneeeeeeneeeeePreeeeeeeePReeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAdPe3WE'
+const DEFAULT_POSE_BASE  = 'QeeeeeeeeeeeeeeeeNeeeeeeNeeeeeeeeesRdeeefeeetreeeeceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAeA0A'
+const DEFAULT_POSE_FLYER = 'teAeeeeeeeeWeeXeeeeeeneeeeeeneeeeePreeeeeeeePReeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeAdPe3WE'
 
 const MODEL_PATH = './xbot.fbx'
 // const MODEL_PATH = './ybot.fbx'
@@ -20,14 +20,13 @@ const base  = new Marionette('base' , params.get('base' ) || DEFAULT_POSE_BASE)
 const flyer = new Marionette('flyer', params.get('flyer') || DEFAULT_POSE_FLYER)
 
 const model_loader = new ModelLoader(MODEL_PATH, model => {
-	console.log('Loaded model:', model)
 	model.scale.setScalar(0.01)
 
 	model.children.find(child => child instanceof THREE.Bone)?.traverse(bone => {
 		bone.name = bone.name.substring(BONES_PREFIX.length)
 	})
 
-	console.log('Post-processed model:', model)
+	console.log('Loaded model:', model)
 })
 
 const theater = new Theater('cv1', [ base, flyer ], marionette => {

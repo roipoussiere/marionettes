@@ -12,6 +12,8 @@ export const MODEL_NAME_PREFIX = 'model_'
 export const HANDLES_NAME_PREFIX = 'handles_'
 export const HANDLE_NAME_PREFIX = 'handle_'
 
+type OnBone = (bone: THREE.Bone) => void
+
 
 export class Marionette {
     name: string
@@ -64,16 +66,16 @@ export class Marionette {
 		})
 		const handle_geometry = new THREE.SphereGeometry(0.02, 6, 4)
 
-		this.skeleton.bones.forEach(bone => {
-			const handle = new THREE.Mesh( handle_geometry, handle_material )
-			handle.name = HANDLE_NAME_PREFIX  + bone.name
+		this.#forEachEnabledBone(bone => {
+			const handle = new THREE.Mesh(handle_geometry, handle_material)
+			handle.name = HANDLE_NAME_PREFIX + bone.name
 			this.handles.add(handle)
 		})
 		this.updateHandles()
 	}
 
 	updateHandles() {
-		this.skeleton.bones.forEach( bone => {
+		this.#forEachEnabledBone(bone => {
 			const handle = this.handles.getObjectByName(HANDLE_NAME_PREFIX + bone.name)
 			if (handle) {
 				handle.position.copy(bone.getWorldPosition(handle.position))
@@ -130,13 +132,13 @@ export class Marionette {
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
 		const bone_config = BonesConfig.bones.find(config => config.name == this.clicked_bone.name)
 		if ( ! bone_config) {
-			throw(`Bone name ${ this.clicked_bone.name } not found in bone config.`)
+			throw new BonesConfig.BoneNotFoundError(this.clicked_bone.name)
 		}
 		const axe = bone_config.axes[axe_modifier_id]
 
 		// Rotations are non-commutative, so rotating on both x/y with cursor
 		// will lead to unexpected results (ie. rotation on z)
-		const delta = (pointer_delta.x + pointer_delta.y) * (bone_config.reverse ? -1 : 1)
+		const delta = (pointer_delta.x + pointer_delta.y) * (bone_config.reverse_direction ? -1 : 1)
 
 		const rotation = new THREE.Vector3()
 			.setFromEuler(this.clicked_bone.rotation)
@@ -147,7 +149,7 @@ export class Marionette {
 			))
 			.clamp(bone_config.min_angle, bone_config.max_angle)
 
-		const euler_rotation = new THREE.Euler().setFromVector3(rotation)
+		const euler_rotation = new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
 		this.clicked_bone.setRotationFromEuler(euler_rotation)
 	}
 
@@ -156,21 +158,27 @@ export class Marionette {
 		let position = new THREE.Vector3()
 		let closest_distance = Infinity
 
-		BonesConfig.bones.forEach(bone_config => {
-			const bone = this.skeleton.getBoneByName(bone_config.name)
-			if (bone && bone.name != 'Hips') {
-				const distance = (bone.getWorldPosition(position).sub(point)).length()
-				if (distance < closest_distance) {
-					closest_bone = bone
-					closest_distance = distance
-				}	
-			} else {
-				console.warn(`Can not bone ${ bone_config.name } in skeleton.`)
+		this.#forEachEnabledBone(bone => {
+			const distance = (bone.getWorldPosition(position).sub(point)).length()
+			if (distance < closest_distance) {
+				closest_bone = bone
+				closest_distance = distance
 			}
 		})
 		console.info(`clicked on ${ this.name }'s ${ closest_bone.name }`)
 
 		this.clicked_bone = closest_bone
+	}
+
+	#forEachEnabledBone(on_bone: OnBone) {
+		BonesConfig.bones.filter(bone => bone.name != 'Hips').forEach(bone_config => {
+			const bone = this.skeleton.getBoneByName(bone_config.name)
+			if (bone) {
+				on_bone(bone)
+			} else {
+				throw new BonesConfig.BoneNotFoundError(bone_config.name)
+			}
+		})
 	}
 
 	roundPosition() {
