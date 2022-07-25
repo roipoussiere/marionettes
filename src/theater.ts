@@ -273,6 +273,7 @@ export class Theater {
 		const canvas_size = this.canvas_size
 
 		this.camera.aspect = canvas_size.width / canvas_size.height
+		this.camera.updateProjectionMatrix()
 		this.renderer.setSize(canvas_size.width, canvas_size.height)
 
 		this.#updateButtonsGeometry()
