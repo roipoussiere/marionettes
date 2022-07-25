@@ -11,7 +11,6 @@ pages:
     - mv demo/* public
     - mv dist/* public
     - mv assets/* public
-    - wget 'https://github.com/mrdoob/three.js/blob/dev/examples/models/gltf/Xbot.glb?raw=true' -O public/xbot-three.glb
 
   artifacts:
     paths:
