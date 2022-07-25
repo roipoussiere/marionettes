@@ -260,9 +260,9 @@ export class Theater {
 
 		if ( ! this.control.enabled && this.clicked_marionette) {
 			if (this.translate_mode) {
-				this.clicked_marionette.translate(this.pointer_delta, this.axe_modifier_id)
+				this.clicked_marionette.translateModel(this.pointer_delta, this.axe_modifier_id)
 			} else if (this.rotate_mode) {
-				this.clicked_marionette.rotate(this.pointer_delta, this.axe_modifier_id)
+				this.clicked_marionette.rotateModel(this.pointer_delta, this.axe_modifier_id)
 			} else {
 				this.clicked_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
 			}
@@ -278,6 +278,8 @@ export class Theater {
 		if (this.clicked_marionette) {
 			if (this.translate_mode) {
 				this.clicked_marionette.roundPosition()
+			} else if (this.rotate_mode) {
+				this.clicked_marionette.roundBone(this.clicked_marionette.root_bone)
 			} else {
 				this.clicked_marionette.roundBone(this.clicked_marionette.clicked_bone)
 			}

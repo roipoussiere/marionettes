@@ -35,6 +35,10 @@ export class Marionette {
 		this.serializer = new SkeletonSerializer()
 	}
 
+	get root_bone(): THREE.Bone {
+		return <THREE.Bone> this.model.children.find(child => child instanceof THREE.Bone)
+	}
+
 	setModel(model: THREE.Group) {
 		this.model = <THREE.Group> SkeletonUtils.clone(model)
 		this.model.name = MODEL_NAME_PREFIX + this.name
@@ -104,7 +108,7 @@ export class Marionette {
 		return this.serializer.toString()
 	}
 
-	translate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
+	translateModel(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
 		if (axe_modifier_id == 0) {
 			this.model.translateZ(pointer_delta.x + pointer_delta.y)
 		} else if (axe_modifier_id == 1) {
@@ -112,11 +116,10 @@ export class Marionette {
 		} else if (axe_modifier_id == 2) {
 			this.model.translateY(- pointer_delta.x - pointer_delta.y)
 		}
-		this.roundPosition()
 	}
 
-	rotate(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
-		const root_bone = <THREE.Bone> this.model.children.find(child => child instanceof THREE.Bone)
+	rotateModel(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
+		const root_bone = this.root_bone
 
 		if (axe_modifier_id == 0) {
 			root_bone.rotateX(pointer_delta.x + pointer_delta.y)
