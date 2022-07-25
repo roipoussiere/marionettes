@@ -6,14 +6,13 @@ type OnButtonClick = (button: Button) => void
 
 const BUTTONS_BAR_CLASS = 'marionettes-buttons-bar'
 const BUTTONS_CLASS = 'marionettes-button'
-const BUTTONS_REL_SIZE = 0.05
 const BUTTONS_CSS = `
 .${ BUTTONS_CLASS } {
 	position: absolute;
 	padding: 0px;
 	border: none;
 	color: #0004;
-	background-color: transparent;
+	background-color: #4441;
 	text-align: center;
 	vertical-align: middle;
 	font-weight: bold;
@@ -29,11 +28,14 @@ const BUTTONS_CSS = `
 
 
 export class ButtonsBar {
-    dom: HTMLElement
-	buttons: Button[]
 	custom_css: string
+	buttons_relative_size: number
 
-	constructor(custom_css = '') {
+	dom: HTMLElement
+	buttons: Button[]
+
+	constructor(buttons_relative_size = 0.05, custom_css = '') {
+		this.buttons_relative_size = buttons_relative_size
 		this.custom_css = custom_css
 		this.dom = document.createElement('div')
 		this.buttons = []
@@ -62,7 +64,8 @@ export class ButtonsBar {
     }
 
 	updateGeometry(canvas_size: THREE.Vector2, canvas_pos: THREE.Vector2) {
-		const btn_size = Math.round(BUTTONS_REL_SIZE * Math.max(canvas_size.width, canvas_size.height))
+		const base_size = Math.max(canvas_size.width, canvas_size.height)
+		const btn_size = Math.round(this.buttons_relative_size * base_size)
 
 		this.buttons.forEach((button, index) => {
 			const btn_position = new THREE.Vector2(
@@ -108,7 +111,7 @@ export class Button {
 			height: ${ button_size }px;
 			left: ${ button_pos.x }px;
 			top: ${ button_pos.y }px;
-			font-size: ${ Math.round(0.5 * button_size) }px;
+			font-size: ${ Math.round(0.618 * button_size) }px;
 		`
 	}
 }
