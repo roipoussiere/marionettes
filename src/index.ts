@@ -15,8 +15,8 @@ const BONES_PREFIX = 'mixamorig'
 // const BONES_PREFIX = 'mixamorig1'
 
 const params = new URLSearchParams(window.location.search.substring(1))
-const base  = new Marionette('base' , params.get('base' ) || DEFAULT_POSE_BASE)
-const flyer = new Marionette('flyer', params.get('flyer') || DEFAULT_POSE_FLYER)
+const base  = new Marionette('base' , params.get('_base' ) || DEFAULT_POSE_BASE)
+const flyer = new Marionette('flyer', params.get('_flyer') || DEFAULT_POSE_FLYER)
 
 const model_loader = new ModelLoader(MODEL_PATH, model => {
 	model.scale.setScalar(0.01)
@@ -29,7 +29,13 @@ const model_loader = new ModelLoader(MODEL_PATH, model => {
 })
 
 const theater = new Theater('cv1', [ base, flyer ], marionette => {
-	const new_url = window.location.pathname + '?' + theater.getPoseAsUrlString()
+	let params: string[] = []
+
+	Object.values(theater.marionettes).map(marionette => {
+		params.push('_' + marionette.name + '=' + marionette.toString())
+	})
+
+	const new_url = window.location.pathname + '?' + params.join('&')
 	window.history.pushState({}, '', new_url)
 })
 

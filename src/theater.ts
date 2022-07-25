@@ -164,14 +164,6 @@ export class Theater {
 		return pointer_delta
 	}
 
-	getPoseAsUrlString(): string {
-		let str: string[] = []
-		Object.values(this.marionettes).forEach(marionette => {
-			str.push(marionette.name + '=' + marionette.toString())
-		})
-		return str.join('&')
-	}
-
 	onModelLoaded(model: THREE.Group) {
 		Object.values(this.marionettes).forEach(marionette => {
 			marionette.setModel(model)
