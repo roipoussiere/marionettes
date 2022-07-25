@@ -26,11 +26,14 @@ export const DEFAULT_STYLE = `
 }
 `
 
+const SPINNER_REL_SIZE = 0.3
+const BUTTONS_REL_SIZE = 0.05
+
 const POINTER_SENSIBILITY = 1.0
+
 const GROUND_COLOR = 0x9ec899
 const SKY_COLOR = 0x99c0c8
 const LIGHT_COLOR = 0xffdddd
-
 
 type OnChange = (marionette: Marionette) => void;
 
@@ -41,6 +44,7 @@ class Button {
 	action: CallableFunction
 	tooltip: string
 	shortcut: string
+	dom: HTMLElement
 
 	constructor(name: string, icon: string, action: CallableFunction, tooltip = '', shortcut = '') {
 		this.name = name
@@ -48,6 +52,7 @@ class Button {
 		this.action = action
 		this.tooltip = tooltip
 		this.shortcut = shortcut
+		this.dom = document.createElement('button')
 	}
 }
 
@@ -55,6 +60,8 @@ export class Theater {
 	canvas: HTMLCanvasElement
 	marionettes: { [id: string] : Marionette }
 	on_change: CallableFunction
+
+	// Scene and marionettes
 
 	renderer: THREE.WebGLRenderer
 	camera: THREE.PerspectiveCamera
@@ -64,17 +71,20 @@ export class Theater {
 	handles: THREE.Group
 	scene: THREE.Scene
 
-	translate_mode: boolean
-	rotate_mode: boolean
-	is_fullscreen: boolean
+	clicked_marionette: Marionette | null
+	meshes: THREE.SkinnedMesh[]
+	axe_modifier_id: number // one in [0, 1, 2]
 
+	// UI
+
+	buttons: Button[]
 	initial_canvas_size: THREE.Vector2
 	pointer: THREE.Vector2
 	last_pointer: THREE.Vector2
 
-	axe_modifier_id: number // one in [0, 1, 2]
-	meshes: THREE.SkinnedMesh[]
-	clicked_marionette: Marionette | null
+	translate_mode: boolean
+	rotate_mode: boolean
+	is_fullscreen: boolean
 
 	constructor(canvas_id: string, marionettes: Marionette[], on_change: OnChange = () => {}) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
@@ -91,17 +101,18 @@ export class Theater {
 		this.handles = new THREE.Group()
 		this.scene = new THREE.Scene()
 
-		this.translate_mode = false
-		this.rotate_mode = false
-		this.is_fullscreen = false
+		this.clicked_marionette = null
+		this.meshes = []
+		this.axe_modifier_id = 0
 
+		this.buttons = []
 		this.initial_canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
 		this.pointer = new THREE.Vector2(0, 0)
 		this.last_pointer = new THREE.Vector2(0, 0)
 
-		this.axe_modifier_id = 0
-		this.clicked_marionette = null
-		this.meshes = []
+		this.translate_mode = false
+		this.rotate_mode = false
+		this.is_fullscreen = false
 	}
 
 	init() {
@@ -110,23 +121,8 @@ export class Theater {
 		document.body.appendChild(style);
 
 		this.#addSpinner()
-		this.#addButtonsBar([
-			new Button('translate',  'T', () => {
-				this.translate_mode = ! this.translate_mode
-			}, 'Translate mode (t)'),
-			new Button('rotate',     'R', () => {
-				this.rotate_mode = ! this.rotate_mode
-			}, 'Rotate mode (r)'),
-			new Button('handles',    'H', () => {
-				this.handles_visibility = ! this.handles_visibility
-			}, 'Show handles (h)'),
-			new Button('reset',      'C', () => {
-				this.resetPose()
-			}, 'Reset (c)'),
-			new Button('fullscreen', 'F', () => {
-				this.fullscreen = ! this.fullscreen
-			}, 'Fullscreen (f)')
-		])
+		this.initButtons()
+		this.#addButtonsBar()
 
 		this.canvas.addEventListener('mousemove',  e  => this.#onPointerMove(e))
 		this.canvas.addEventListener('mousedown',  () => this.#onPointerPress())
@@ -135,6 +131,8 @@ export class Theater {
 		this.canvas.addEventListener('touchmove',  e  => this.#onPointerMove(e, true))
 		this.canvas.addEventListener('touchstart', () => this.#onPointerPress())
 		this.canvas.addEventListener('touchend' ,  () => this.#onPointerRelease())
+
+		window.addEventListener('resize', () => this.#onWindowResize())
 
 		this.renderer.setSize(this.canvas.width, this.canvas.height)
 		this.renderer.shadowMap.enabled = true;
@@ -159,29 +157,52 @@ export class Theater {
 		)
 	}
 
+	initButtons() {
+		this.buttons = [
+			new Button('translate',  'T', () => {
+				this.translate_mode = ! this.translate_mode
+			}, 'Translate mode (t)'),
+			new Button('rotate',     'R', () => {
+				this.rotate_mode = ! this.rotate_mode
+			}, 'Rotate mode (r)'),
+			new Button('handles',    'H', () => {
+				this.handles_visibility = ! this.handles_visibility
+			}, 'Show handles (h)'),
+			new Button('reset',      'C', () => {
+				this.resetPose()
+			}, 'Reset (c)'),
+			new Button('fullscreen', 'F', () => {
+				this.fullscreen = ! this.fullscreen
+			}, 'Fullscreen (f)')
+		]
+	}
+
 	get fullscreen() {
 		return this.is_fullscreen
 	}
 
 	set fullscreen(fullscreen: boolean) {
 		this.is_fullscreen = fullscreen
-
 		const fullscreen_style = 'width:100%; height:100%; position:fixed; top:0; left:0;'
-		const width = fullscreen ? window.innerWidth : this.initial_canvas_size.width
-		const height = fullscreen ? window.innerHeight : this.initial_canvas_size.height
-
-		this.camera.aspect = width / height
-		this.renderer.setSize(width, height)
 		this.renderer.domElement.setAttribute('style', fullscreen ? fullscreen_style : '')
+		this.#onWindowResize()
 	}
 
-	get canvas_origin(): THREE.Vector2 {
-		const canvas_brect = this.canvas.getBoundingClientRect()
-		return new THREE.Vector2(canvas_brect.left - 1, canvas_brect.top).ceil()
+	get canvas_size(): THREE.Vector2 {
+		if(this.is_fullscreen) {
+			return new THREE.Vector2(window.innerWidth, window.innerHeight)
+		} else {
+			return new THREE.Vector2(this.initial_canvas_size.width, this.initial_canvas_size.height).round()
+		}
 	}
 
-	get canvas_size() {
-		return new THREE.Vector2(this.canvas.width, this.canvas.height)
+	get canvas_position(): THREE.Vector2 {
+		if(this.is_fullscreen) {
+			return new THREE.Vector2(0, 0)
+		} else {
+			const canvas_brect = this.canvas.getBoundingClientRect();
+			return new THREE.Vector2(canvas_brect.left - 1, canvas_brect.top).ceil()
+		}
 	}
 
 	get handles_visibility(): boolean {
@@ -248,8 +269,17 @@ export class Theater {
 		})
 	}
 
+	#onWindowResize() {
+		const canvas_size = this.canvas_size
+
+		this.camera.aspect = canvas_size.width / canvas_size.height
+		this.renderer.setSize(canvas_size.width, canvas_size.height)
+
+		this.#updateButtonsGeometry()
+	}
+
 	#normalizePointer(pointer: THREE.Vector2) {
-		pointer.sub(this.canvas_origin).divide(this.canvas_size)
+		pointer.sub(this.canvas_position).divide(this.canvas_size)
 		pointer.set(2 * pointer.x - 1, -2 * pointer.y + 1)
 	}
 
@@ -303,7 +333,6 @@ export class Theater {
 
 		const intersects = raycaster.intersectObjects(this.meshes, true)
 		if (intersects.length > 0 && intersects[0].object.parent) {
-			// console.log('intersect:', intersects[0])
 			this.control.enabled = false
 			const clicked_marionette_name = intersects[0].object.parent.name
 				.substring(MODEL_NAME_PREFIX.length)
@@ -313,10 +342,11 @@ export class Theater {
 	}
 
 	#addSpinner() {
-		const canvas_brect = this.canvas.getBoundingClientRect();
-		const spinner_size = Math.round(0.3 * Math.min(canvas_brect.width, canvas_brect.height))
-		const left = Math.round(canvas_brect.left + canvas_brect.width  / 2 - spinner_size / 2)
-		const top = Math.round(canvas_brect.top  + canvas_brect.height / 2 - spinner_size / 2)
+		const c_size = this.canvas_size
+		const c_pos = this.canvas_position
+		const spinner_size = Math.round(SPINNER_REL_SIZE * Math.min(c_size.width, c_size.height))
+		const left = Math.round(c_pos.x + c_size.width  / 2 - spinner_size / 2)
+		const top  = Math.round(c_pos.y + c_size.height / 2 - spinner_size / 2)
 
 		const spinner = document.createElement('div');
 		spinner.classList.add(SPINNER_CLASS)
@@ -330,29 +360,36 @@ export class Theater {
 	  document.body.appendChild(spinner);
 	}
 
-	#addButtonsBar(buttons: Button[]) {
-		const canvas_brect = this.canvas.getBoundingClientRect();
-		const icon_size = Math.round(0.07 * Math.min(canvas_brect.width, canvas_brect.height))
-
+	#addButtonsBar() {
 		const buttons_bar = document.createElement('div');
 		buttons_bar.classList.add(BUTTONS_BAR_CLASS)
 
-		buttons.forEach((button, index) => {
-			const button_dom = document.createElement('button');
-			button_dom.classList.add(BUTTONS_CLASS)
-			button_dom.innerHTML = button.icon
-			button_dom.title = button.tooltip
-			button_dom.style.cssText = `
+		this.buttons.forEach(button => {
+			button.dom.classList.add(BUTTONS_CLASS)
+			button.dom.innerHTML = button.icon
+			button.dom.title = button.tooltip
+			button.dom.addEventListener('click', () => { button.action() })
+			buttons_bar.appendChild(button.dom)
+		})
+
+		this.#updateButtonsGeometry()
+		document.body.appendChild(buttons_bar);
+	}
+
+	#updateButtonsGeometry() {
+		const c_size = this.canvas_size
+		const c_pos = this.canvas_position
+		const icon_size = Math.round(BUTTONS_REL_SIZE * Math.max(c_size.width, c_size.height))
+
+		this.buttons.forEach((button, index) => {
+			button.dom.style.cssText = `
 				width: ${ icon_size }px;
 				height: ${ icon_size }px;
-				left: ${ Math.round(canvas_brect.left) }px;
-				top: ${ Math.round(canvas_brect.bottom) - (buttons.length - index) * icon_size }px;
+				left: ${ c_pos.x }px;
+				top: ${ c_pos.y + c_size.height - (this.buttons.length - index) * icon_size }px;
 				font-size: ${ Math.round(0.7 * icon_size) }px;
 			`
-			button_dom.addEventListener('click', () => { button.action() })
-			buttons_bar.appendChild(button_dom)
 		})
-		document.body.appendChild(buttons_bar);
 	}
 
 	#buildGrid(): THREE.GridHelper {
