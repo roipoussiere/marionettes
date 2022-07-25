@@ -8,7 +8,7 @@ const BUTTONS_BAR_CLASS = 'marionettes-buttons-bar'
 const BUTTONS_CLASS = 'marionettes-button'
 const BUTTONS_REL_SIZE = 0.05
 const BUTTONS_CSS = `
-.marionettes-button {
+.${ BUTTONS_CLASS } {
 	position: absolute;
 	padding: 0px;
 	border: none;
@@ -18,11 +18,11 @@ const BUTTONS_CSS = `
 	vertical-align: middle;
 	font-weight: bold;
 }
-.marionettes-button:hover {
+.${ BUTTONS_CLASS }:hover {
 	background-color: #0002;
 	cursor: pointer;
 }
-.marionettes-button.is_activated {
+.${ BUTTONS_CLASS }.is_activated {
 	background-color: #0003;
 }
 `
@@ -31,8 +31,10 @@ const BUTTONS_CSS = `
 export class ButtonsBar {
     dom: HTMLElement
 	buttons: Button[]
+	custom_css: string
 
-	constructor() {
+	constructor(custom_css = '') {
+		this.custom_css = custom_css
 		this.dom = document.createElement('div')
 		this.buttons = []
 	}
@@ -50,7 +52,7 @@ export class ButtonsBar {
 		this.dom.classList.add(BUTTONS_BAR_CLASS)
 
 		const style = document.createElement('style');
-		style.innerText = BUTTONS_CSS
+		style.innerText = BUTTONS_CSS + this.custom_css
 		this.dom.appendChild(style)
 
 		this.buttons.forEach(button => {
