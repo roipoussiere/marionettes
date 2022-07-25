@@ -2,15 +2,8 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Marionette, MODEL_NAME_PREFIX } from './marionette'
 import { ButtonsBar, Button } from './buttons_bar'
+import { Spinner } from './spinner'
 
-export const SPINNER_CLASS = 'marionettes-spinner'
-export const DEFAULT_STYLE = `
-.marionettes-spinner {
-	position: absolute;
-}
-`
-
-const SPINNER_REL_SIZE = 0.3
 
 const POINTER_SENSIBILITY = 1.0
 
@@ -43,6 +36,7 @@ export class Theater {
 	// UI
 
 	buttons_bar: ButtonsBar
+	spinner: Spinner
 	initial_canvas_size: THREE.Vector2
 	pointer: THREE.Vector2
 	last_pointer: THREE.Vector2
@@ -71,6 +65,7 @@ export class Theater {
 		this.axe_modifier_id = 0
 
 		this.buttons_bar = new ButtonsBar()
+		this.spinner = new Spinner()
 		this.initial_canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
 		this.pointer = new THREE.Vector2(0, 0)
 		this.last_pointer = new THREE.Vector2(0, 0)
@@ -81,10 +76,6 @@ export class Theater {
 	}
 
 	init() {
-		const style = document.createElement('style');
-		style.innerHTML = DEFAULT_STYLE
-		document.body.appendChild(style);
-
 		this.#addSpinner()
 		this.#addButtons()
 
@@ -198,9 +189,7 @@ export class Theater {
 		this.scene.add(this.models)
 		this.scene.add(this.handles)
 
-		Array.from(document.getElementsByClassName(SPINNER_CLASS)).forEach(spinner => {
-			spinner.remove()
-		})
+		this.spinner.disable()
 	}
 
 	render() {
@@ -287,22 +276,9 @@ export class Theater {
 	}
 
 	#addSpinner() {
-		const c_size = this.canvas_size
-		const c_pos = this.canvas_position
-		const spinner_size = Math.round(SPINNER_REL_SIZE * Math.min(c_size.width, c_size.height))
-		const left = Math.round(c_pos.x + c_size.width  / 2 - spinner_size / 2)
-		const top  = Math.round(c_pos.y + c_size.height / 2 - spinner_size / 2)
-
-		const spinner = document.createElement('div');
-		spinner.classList.add(SPINNER_CLASS)
-		spinner.style.cssText = `
-			width: ${ spinner_size }px;
-			height: ${ spinner_size }px;
-			left: ${ left }px;
-			top: ${ top }px;
-		`;
-
-	  document.body.appendChild(spinner);
+		this.spinner.init(this.canvas_size, this.canvas_position)
+		this.spinner.enable()
+		document.body.appendChild(this.spinner.dom)
 	}
 
 	#addButtons() {
@@ -331,9 +307,9 @@ export class Theater {
 				this.fullscreen = button.is_enabled
 			}, 'F')
 		]
-		document.body.appendChild(this.buttons_bar.dom)
 		this.buttons_bar.init()
 		this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
+		document.body.appendChild(this.buttons_bar.dom)
 	}
 
 	#buildGrid(): THREE.GridHelper {

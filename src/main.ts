@@ -1,4 +1,4 @@
-import { Theater, SPINNER_CLASS } from './theater'
+import { Theater } from './theater'
 import { ModelLoader } from './model_loader'
 
 
@@ -13,36 +13,14 @@ export class Main {
     }
 
     init() {
-		this.#addStyle()
 		this.theaters.forEach(theater => {
 			theater.init()
 		})
-        this.model_loader.loadModel(model => {
-            this.theaters.forEach(theater => theater.onModelLoaded(model))
-			const spinners = Array.from(document.getElementsByClassName(SPINNER_CLASS))
-            spinners.forEach(spinner => spinner.remove())
-        })
-        
-    }
 
-    #addStyle() {
-		var style = document.createElement('style');
-		style.innerHTML = `
-	.${SPINNER_CLASS} {
-	position: absolute;
-	display: inline-block;
-	border: 10px solid #aaa;
-	border-top: 10px solid #3498db;
-	border-radius: 50%;
-	animation: spin 2s linear infinite;
-	}
-	@keyframes spin {
-	0% { transform: rotate(0deg); }
-	100% { transform: rotate(360deg); }
-	}
-		`;
-		document.body.appendChild(style);
-	}
+		this.model_loader.loadModel(model => {
+            this.theaters.forEach(theater => theater.onModelLoaded(model))
+        })
+    }
 
 	animate(callback: FrameRequestCallback) {
 		requestAnimationFrame(callback)
