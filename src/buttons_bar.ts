@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 
-type OnButtonClick = (button: Button) => void
+type ButtonAction = (button: Button) => void
 
 
 const BUTTONS_BAR_CLASS = 'marionettes-buttons-bar'
@@ -28,8 +28,8 @@ const BUTTONS_CSS = `
 
 
 export class ButtonsBar {
-	custom_css: string
 	buttons_relative_size: number
+	custom_css: string
 
 	dom: HTMLElement
 	buttons: Button[]
@@ -37,6 +37,7 @@ export class ButtonsBar {
 	constructor(buttons_relative_size = 0.05, custom_css = '') {
 		this.buttons_relative_size = buttons_relative_size
 		this.custom_css = custom_css
+
 		this.dom = document.createElement('div')
 		this.buttons = []
 	}
@@ -59,7 +60,7 @@ export class ButtonsBar {
 
 		this.buttons.forEach(button => {
             button.init()
-            this.dom.appendChild(button.dom)
+			this.dom.appendChild(button.dom)
 		})
     }
 
@@ -80,19 +81,20 @@ export class ButtonsBar {
 
 export class Button {
 	name: string
-	on_click: OnButtonClick
-	icon: string
+	action: ButtonAction
 	shortcut: string
+	icon: string
 	tooltip: string
 
 	dom: HTMLElement
 
-	constructor(name: string, on_click: OnButtonClick, icon = '', shortcut = '', tooltip = '') {
+	constructor(name: string, action: ButtonAction, shortcut = '', icon = '', tooltip = '') {
 		this.name = name
-		this.on_click = on_click
-		this.icon = icon ? icon : capitalize(this.name.substring(0, 2))
+		this.action = action
 		this.shortcut = shortcut
-		this.tooltip = (tooltip ? tooltip : capitalize(this.name)) + (shortcut ? `(${ shortcut })` : '')
+		this.icon = icon ? icon : capitalize(this.name.substring(0, 2))
+		this.tooltip = (tooltip ? tooltip : capitalize(this.name)) + (shortcut ? ` (${ shortcut })` : '')
+
 		this.dom = document.createElement('button')
 	}
 
@@ -101,7 +103,12 @@ export class Button {
         this.dom.innerHTML = this.icon
         this.dom.title = this.tooltip
         this.dom.addEventListener('click', () => {
-			this.on_click(this)
+			this.action(this)
+		})
+		document.addEventListener('keydown', event  => {
+			if (event.code == 'Key' + this.shortcut) {
+				this.action(this)
+			}
 		})
     }
 

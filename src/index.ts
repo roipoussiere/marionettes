@@ -29,13 +29,13 @@ const model_loader = new ModelLoader(MODEL_PATH, model => {
 })
 
 const theater = new Theater('cv1', [ base, flyer ], marionette => {
-	let new_url = window.location.pathname + '?' + theater.getPoseAsUrlString()
+	const new_url = window.location.pathname + '?' + theater.getPoseAsUrlString()
 	window.history.pushState({}, '', new_url)
 })
-const main = new Main(model_loader, [ theater ])
 
+const main = new Main(model_loader, [ theater ])
 main.init()
-let animate = () => main.animate(animate)
+const animate = () => main.animate(animate)
 animate()
 
 document.addEventListener('keydown', event  => {
@@ -43,16 +43,6 @@ document.addEventListener('keydown', event  => {
 		theater.axe_modifier_id = 1
 	} else if (event.shiftKey) {
 		theater.axe_modifier_id = 2
-	} else if (event.code == 'KeyH') {
-		theater.handles_visibility = ! theater.handles_visibility
-	} else if (event.code == 'KeyR') {
-		theater.rotate_mode = ! theater.rotate_mode
-	} else if (event.code == 'KeyT') {
-		theater.translate_mode = ! theater.translate_mode
-	} else if (event.code == 'KeyF') {
-		theater.fullscreen = ! theater.fullscreen
-	} else if (event.code == 'KeyC') {
-		theater.resetPose()
 	}
 })
 

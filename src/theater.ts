@@ -309,19 +309,19 @@ export class Theater {
 		this.buttons_bar.buttons = [
 			new Button('translate', () => {
 				this.translate_mode = ! this.translate_mode
-			}),
+			}, 'T'),
 			new Button('rotate', () => {
 				this.rotate_mode = ! this.rotate_mode
-			}),
+			}, 'R'),
 			new Button('handles', () => {
 				this.handles_visibility = ! this.handles_visibility
-			}),
+			}, 'H'),
 			new Button('reset', () => {
 				this.resetPose()
-			}),
+			}, 'C'),
 			new Button('fullscreen', () => {
 				this.fullscreen = ! this.fullscreen
-			})
+			}, 'F')
 		]
 		document.body.appendChild(this.buttons_bar.dom)
 		this.buttons_bar.init()
