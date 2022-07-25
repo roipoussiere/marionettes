@@ -21,14 +21,13 @@
     "url": "https://framagit.org/roipoussiere/marionettes"
   },
   "scripts": {
-    "postinstall": "wget 'https://raw.githubusercontent.com/three-types/three-ts-types/6829af2cc5b91731f28a0d3e85a52b46581f4781/types/three/examples/jsm/utils/SkeletonUtils.d.ts' -O 'node_modules/@types/three/examples/jsm/utils/SkeletonUtils.d.ts'",
     "dev": "webpack serve --config ./webpack.dev.js",
     "build": "webpack --config ./webpack.prod.js",
     "prepublish": "yarn run build"
   },
   "devDependencies": {
-    "@types/three": "^0.141.0",
-    "three": "^0.141.0",
+    "@types/three": "^0.142.0",
+    "three": "^0.142.0",
     "ts-loader": "^9.3.0",
     "typescript": "^4.7.4",
     "webpack": "^5.73.0",
