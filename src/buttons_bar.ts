@@ -8,7 +8,7 @@ const CLASS_NAME_BUTTONS_BAR = 'marionettes-buttons-bar'
 const CLASS_NAME_BUTTON = 'marionettes-button'
 const CLASS_NAME_BUTTON_ACTIVATED = 'is-activated'
 
-const BUTTONS_CSS = `
+const DEFAULT_CSS = `
 .${ CLASS_NAME_BUTTON } {
 	position: absolute;
 	padding: 0px;
@@ -30,15 +30,15 @@ const BUTTONS_CSS = `
 
 
 export class ButtonsBar {
-	buttons_relative_size: number
-	custom_css: string
+	relative_size: number
+	css: string
 
 	dom: HTMLElement
 	buttons: Button[]
 
-	constructor(buttons_relative_size = 0.05, custom_css = '') {
-		this.buttons_relative_size = buttons_relative_size
-		this.custom_css = custom_css
+	constructor(relative_size = 0.05, custom_css = '') {
+		this.relative_size = relative_size
+		this.css = DEFAULT_CSS + custom_css
 
 		this.dom = document.createElement('div')
 		this.buttons = []
@@ -57,7 +57,7 @@ export class ButtonsBar {
 		this.dom.classList.add(CLASS_NAME_BUTTONS_BAR)
 
 		const style = document.createElement('style');
-		style.innerText = BUTTONS_CSS + this.custom_css
+		style.innerText = this.css
 		this.dom.appendChild(style)
 
 		this.buttons.forEach(button => {
@@ -68,7 +68,7 @@ export class ButtonsBar {
 
 	updateGeometry(canvas_size: THREE.Vector2, canvas_pos: THREE.Vector2) {
 		const base_size = Math.max(canvas_size.width, canvas_size.height)
-		const btn_size = Math.round(this.buttons_relative_size * base_size)
+		const btn_size = Math.round(this.relative_size * base_size)
 
 		this.buttons.forEach((button, index) => {
 			const btn_position = new THREE.Vector2(
