@@ -1,33 +1,16 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Marionette, MODEL_NAME_PREFIX } from './marionette'
-
+import { ButtonsBar, Button } from './buttons_bar'
 
 export const SPINNER_CLASS = 'marionettes-spinner'
-export const BUTTONS_BAR_CLASS = 'marionettes-buttons-bar'
-export const BUTTONS_CLASS = 'marionettes-button'
 export const DEFAULT_STYLE = `
 .marionettes-spinner {
 	position: absolute;
 }
-.marionettes-button {
-	position: absolute;
-	padding: 0px;
-	border: none;
-	color: #777;
-	background-color: transparent;
-	text-align: center;
-	vertical-align: middle;
-	font-weight: bold;
-}
-.marionettes-button:hover {
-	background-color: #0002;
-	cursor: pointer;
-}
 `
 
 const SPINNER_REL_SIZE = 0.3
-const BUTTONS_REL_SIZE = 0.05
 
 const POINTER_SENSIBILITY = 1.0
 
@@ -35,26 +18,8 @@ const GROUND_COLOR = 0x9ec899
 const SKY_COLOR = 0x99c0c8
 const LIGHT_COLOR = 0xffdddd
 
-type OnChange = (marionette: Marionette) => void;
+type OnChange = (marionette: Marionette) => void
 
-
-class Button {
-	name: string
-	icon: string
-	action: CallableFunction
-	tooltip: string
-	shortcut: string
-	dom: HTMLElement
-
-	constructor(name: string, icon: string, action: CallableFunction, tooltip = '', shortcut = '') {
-		this.name = name
-		this.icon = icon
-		this.action = action
-		this.tooltip = tooltip
-		this.shortcut = shortcut
-		this.dom = document.createElement('button')
-	}
-}
 
 export class Theater {
 	canvas: HTMLCanvasElement
@@ -77,7 +42,7 @@ export class Theater {
 
 	// UI
 
-	buttons: Button[]
+	buttons_bar: ButtonsBar
 	initial_canvas_size: THREE.Vector2
 	pointer: THREE.Vector2
 	last_pointer: THREE.Vector2
@@ -105,7 +70,7 @@ export class Theater {
 		this.meshes = []
 		this.axe_modifier_id = 0
 
-		this.buttons = []
+		this.buttons_bar = new ButtonsBar()
 		this.initial_canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
 		this.pointer = new THREE.Vector2(0, 0)
 		this.last_pointer = new THREE.Vector2(0, 0)
@@ -121,8 +86,7 @@ export class Theater {
 		document.body.appendChild(style);
 
 		this.#addSpinner()
-		this.initButtons()
-		this.#addButtonsBar()
+		this.#addButtons()
 
 		this.canvas.addEventListener('mousemove',  e  => this.#onPointerMove(e))
 		this.canvas.addEventListener('mousedown',  () => this.#onPointerPress())
@@ -155,26 +119,6 @@ export class Theater {
 			this.#buildFloor(),
 			this.#buildLights()
 		)
-	}
-
-	initButtons() {
-		this.buttons = [
-			new Button('translate',  'T', () => {
-				this.translate_mode = ! this.translate_mode
-			}, 'Translate mode (t)'),
-			new Button('rotate',     'R', () => {
-				this.rotate_mode = ! this.rotate_mode
-			}, 'Rotate mode (r)'),
-			new Button('handles',    'H', () => {
-				this.handles_visibility = ! this.handles_visibility
-			}, 'Show handles (h)'),
-			new Button('reset',      'C', () => {
-				this.resetPose()
-			}, 'Reset (c)'),
-			new Button('fullscreen', 'F', () => {
-				this.fullscreen = ! this.fullscreen
-			}, 'Fullscreen (f)')
-		]
 	}
 
 	get fullscreen() {
@@ -276,7 +220,7 @@ export class Theater {
 		this.camera.updateProjectionMatrix()
 		this.renderer.setSize(canvas_size.width, canvas_size.height)
 
-		this.#updateButtonsGeometry()
+		this.buttons_bar.updateGeometry(canvas_size, this.canvas_position)
 	}
 
 	#normalizePointer(pointer: THREE.Vector2) {
@@ -354,43 +298,34 @@ export class Theater {
 		spinner.style.cssText = `
 			width: ${ spinner_size }px;
 			height: ${ spinner_size }px;
-		    left: ${ left }px;
+			left: ${ left }px;
 			top: ${ top }px;
 		`;
 
 	  document.body.appendChild(spinner);
 	}
 
-	#addButtonsBar() {
-		const buttons_bar = document.createElement('div');
-		buttons_bar.classList.add(BUTTONS_BAR_CLASS)
-
-		this.buttons.forEach(button => {
-			button.dom.classList.add(BUTTONS_CLASS)
-			button.dom.innerHTML = button.icon
-			button.dom.title = button.tooltip
-			button.dom.addEventListener('click', () => { button.action() })
-			buttons_bar.appendChild(button.dom)
-		})
-
-		this.#updateButtonsGeometry()
-		document.body.appendChild(buttons_bar);
-	}
-
-	#updateButtonsGeometry() {
-		const c_size = this.canvas_size
-		const c_pos = this.canvas_position
-		const icon_size = Math.round(BUTTONS_REL_SIZE * Math.max(c_size.width, c_size.height))
-
-		this.buttons.forEach((button, index) => {
-			button.dom.style.cssText = `
-				width: ${ icon_size }px;
-				height: ${ icon_size }px;
-				left: ${ c_pos.x }px;
-				top: ${ c_pos.y + c_size.height - (this.buttons.length - index) * icon_size }px;
-				font-size: ${ Math.round(0.7 * icon_size) }px;
-			`
-		})
+	#addButtons() {
+		this.buttons_bar.buttons = [
+			new Button('translate', () => {
+				this.translate_mode = ! this.translate_mode
+			}),
+			new Button('rotate', () => {
+				this.rotate_mode = ! this.rotate_mode
+			}),
+			new Button('handles', () => {
+				this.handles_visibility = ! this.handles_visibility
+			}),
+			new Button('reset', () => {
+				this.resetPose()
+			}),
+			new Button('fullscreen', () => {
+				this.fullscreen = ! this.fullscreen
+			})
+		]
+		document.body.appendChild(this.buttons_bar.dom)
+		this.buttons_bar.init()
+		this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
 	}
 
 	#buildGrid(): THREE.GridHelper {
