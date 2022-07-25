@@ -307,20 +307,28 @@ export class Theater {
 
 	#addButtons() {
 		this.buttons_bar.buttons = [
-			new Button('translate', () => {
-				this.translate_mode = ! this.translate_mode
+			new Button('translate', true, button => {
+				if (button.is_enabled && this.rotate_mode) {
+					this.rotate_mode = false
+					this.buttons_bar.getButton('rotate').disable()
+				}
+				this.translate_mode = button.is_enabled
 			}, 'T'),
-			new Button('rotate', () => {
-				this.rotate_mode = ! this.rotate_mode
+			new Button('rotate', true, button => {
+				this.rotate_mode = button.is_enabled
+				if (button.is_enabled && this.translate_mode) {
+					this.translate_mode = false
+					this.buttons_bar.getButton('translate').disable()
+				}
 			}, 'R'),
-			new Button('handles', () => {
-				this.handles_visibility = ! this.handles_visibility
+			new Button('handles', true, button => {
+				this.handles_visibility = button.is_enabled
 			}, 'H'),
-			new Button('reset', () => {
+			new Button('reset', false, () => {
 				this.resetPose()
 			}, 'C'),
-			new Button('fullscreen', () => {
-				this.fullscreen = ! this.fullscreen
+			new Button('fullscreen', true, button => {
+				this.fullscreen = button.is_enabled
 			}, 'F')
 		]
 		document.body.appendChild(this.buttons_bar.dom)

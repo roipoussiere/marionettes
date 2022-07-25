@@ -4,10 +4,12 @@ import * as THREE from 'three'
 type ButtonAction = (button: Button) => void
 
 
-const BUTTONS_BAR_CLASS = 'marionettes-buttons-bar'
-const BUTTONS_CLASS = 'marionettes-button'
+const CLASS_NAME_BUTTONS_BAR = 'marionettes-buttons-bar'
+const CLASS_NAME_BUTTON = 'marionettes-button'
+const CLASS_NAME_BUTTON_ACTIVATED = 'is-activated'
+
 const BUTTONS_CSS = `
-.${ BUTTONS_CLASS } {
+.${ CLASS_NAME_BUTTON } {
 	position: absolute;
 	padding: 0px;
 	border: none;
@@ -17,12 +19,12 @@ const BUTTONS_CSS = `
 	vertical-align: middle;
 	font-weight: bold;
 }
-.${ BUTTONS_CLASS }:hover {
+.${ CLASS_NAME_BUTTON }.${ CLASS_NAME_BUTTON_ACTIVATED } {
 	background-color: #0002;
-	cursor: pointer;
 }
-.${ BUTTONS_CLASS }.is_activated {
+.${ CLASS_NAME_BUTTON }:hover {
 	background-color: #0003;
+	cursor: pointer;
 }
 `
 
@@ -52,7 +54,7 @@ export class ButtonsBar {
 	}
 
     init() {
-		this.dom.classList.add(BUTTONS_BAR_CLASS)
+		this.dom.classList.add(CLASS_NAME_BUTTONS_BAR)
 
 		const style = document.createElement('style');
 		style.innerText = BUTTONS_CSS + this.custom_css
@@ -81,36 +83,66 @@ export class ButtonsBar {
 
 export class Button {
 	name: string
+	is_checkbox: boolean
 	action: ButtonAction
 	shortcut: string
 	icon: string
+	is_enabled: boolean
 	tooltip: string
 
 	dom: HTMLElement
 
-	constructor(name: string, action: ButtonAction, shortcut = '', icon = '', tooltip = '') {
+
+	constructor(name: string, is_checkbox: boolean, action: ButtonAction, shortcut = '', icon = '', is_enabled = false, tooltip = '') {
 		this.name = name
+		this.is_checkbox = is_checkbox
 		this.action = action
 		this.shortcut = shortcut
 		this.icon = icon ? icon : capitalize(this.name.substring(0, 2))
+		this.is_enabled = is_enabled
 		this.tooltip = (tooltip ? tooltip : capitalize(this.name)) + (shortcut ? ` (${ shortcut })` : '')
 
 		this.dom = document.createElement('button')
 	}
 
 	init() {
-        this.dom.classList.add(BUTTONS_CLASS)
+        this.dom.classList.add(CLASS_NAME_BUTTON)
         this.dom.innerHTML = this.icon
         this.dom.title = this.tooltip
         this.dom.addEventListener('click', () => {
-			this.action(this)
+			this.trigger()
 		})
 		document.addEventListener('keydown', event  => {
 			if (event.code == 'Key' + this.shortcut) {
-				this.action(this)
+				this.trigger()
 			}
 		})
+		if (this.is_checkbox && this.is_enabled) {
+			this.dom.classList.add(CLASS_NAME_BUTTON_ACTIVATED)
+		}
     }
+
+	enable() {
+		this.is_enabled = true
+		this.dom.classList.add(CLASS_NAME_BUTTON_ACTIVATED)
+	}
+
+	disable() {
+		this.is_enabled = false
+		this.dom.classList.remove(CLASS_NAME_BUTTON_ACTIVATED)
+	}
+
+	trigger() {
+		if (this.is_checkbox) {
+			this.is_enabled = ! this.is_enabled
+		}
+		if (this.is_enabled) {
+			this.enable()
+		} else {
+			this.disable()
+		}
+		this.action(this)
+	}
 
 	updateGeometry(button_size: number, button_pos: THREE.Vector2) {
 		this.dom.style.cssText = `
