@@ -5,11 +5,13 @@
         "outDir": "dist",
         "moduleResolution": "node",
         "target": "es6",
-        "strict": true
+        "strict": true,
+        "esModuleInterop": true
     },
     "include": ["**/*.ts"],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "tests"
     ]
 }
