@@ -106,9 +106,9 @@ export class NumberSerializer extends Serializer {
 }
 
 
-type DoubleDiscreteValue = [number, number]
+type DoubleDiscreteValue = [ number, number ]
 
-export class DoubleSerializer extends Serializer {
+export class NumberSerializerDoublePrecision extends Serializer {
 	min: number
 	max: number
 	range: number
@@ -167,4 +167,144 @@ export class DoubleSerializer extends Serializer {
 		return this.unpack(value[0]) * BASE + this.unpack(value[1])
 	}
 
+}
+
+
+export class Vector3Serializer extends Serializer {
+	min: THREE.Vector3
+	max: THREE.Vector3
+
+	serializer_x: NumberSerializer
+	serializer_y: NumberSerializer
+	serializer_z: NumberSerializer
+
+	constructor(min: THREE.Vector3, max: THREE.Vector3) {
+		super()
+		this.min = min
+		this.max = max
+
+		this.serializer_x = new NumberSerializer(min.x, max.x)
+		this.serializer_y = new NumberSerializer(min.y, max.y)
+		this.serializer_z = new NumberSerializer(min.z, max.z)
+	}
+
+	stringToDiscreteValue(str: string): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.serializer_x.stringToDiscreteValue(str[0]),
+			this.serializer_y.stringToDiscreteValue(str[1]),
+			this.serializer_z.stringToDiscreteValue(str[2])
+		)
+	}
+
+	discreteValueTostring(value: THREE.Vector3): string {
+		return this.serializer_x.discreteValueTostring(value.x)
+			+  this.serializer_y.discreteValueTostring(value.y)
+			+  this.serializer_z.discreteValueTostring(value.z)
+	}
+
+	discretize(value: THREE.Vector3, round_to: RoundTo): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.serializer_x.discretize(value.x, round_to),
+			this.serializer_y.discretize(value.y, round_to),
+			this.serializer_z.discretize(value.z, round_to)
+		)
+	}
+
+	makeContinuous(value: THREE.Vector3): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.serializer_x.makeContinuous(value.x),
+			this.serializer_y.makeContinuous(value.y),
+			this.serializer_z.makeContinuous(value.z)
+		)
+	}
+
+	pack(value: THREE.Vector3): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.serializer_x.pack(value.x),
+			this.serializer_y.pack(value.y),
+			this.serializer_z.pack(value.z)
+		)
+	}
+
+	unpack(value: THREE.Vector3): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.serializer_x.unpack(value.x),
+			this.serializer_y.unpack(value.y),
+			this.serializer_z.unpack(value.z)
+		)
+	}
+}
+
+
+type DoubleDiscreteVector3 = [ THREE.Vector3, THREE.Vector3 ]
+
+export class Vector3SerializerDoublePrecision extends Serializer {
+	min: THREE.Vector3
+	max: THREE.Vector3
+
+	serializer_x: NumberSerializerDoublePrecision
+	serializer_y: NumberSerializerDoublePrecision
+	serializer_z: NumberSerializerDoublePrecision
+
+	constructor(min: THREE.Vector3, max: THREE.Vector3) {
+		super()
+		this.min = min
+		this.max = max
+
+		this.serializer_x = new NumberSerializerDoublePrecision(min.x, max.x)
+		this.serializer_y = new NumberSerializerDoublePrecision(min.y, max.y)
+		this.serializer_z = new NumberSerializerDoublePrecision(min.z, max.z)
+	}
+
+	stringToDiscreteValue(str: string): DoubleDiscreteVector3 {
+		const discrete_x = this.serializer_x.stringToDiscreteValue(str.substring(0, 2))
+		const discrete_y = this.serializer_y.stringToDiscreteValue(str.substring(2, 4))
+		const discrete_z = this.serializer_z.stringToDiscreteValue(str.substring(4, 6))
+
+		return [
+			new THREE.Vector3(discrete_x[0], discrete_y[0], discrete_z[0]),
+			new THREE.Vector3(discrete_x[1], discrete_y[1], discrete_z[1])
+		]
+	}
+
+	discreteValueTostring(value: DoubleDiscreteVector3): string {
+		return this.serializer_x.discreteValueTostring([ value[0].x, value[1].x ])
+			+  this.serializer_y.discreteValueTostring([ value[0].y, value[1].y ])
+			+  this.serializer_z.discreteValueTostring([ value[0].z, value[1].z ])
+	}
+
+	discretize(value: THREE.Vector3, round_to: RoundTo): DoubleDiscreteVector3 {
+		const discrete_x = this.serializer_x.discretize(value.x, round_to)
+		const discrete_y = this.serializer_y.discretize(value.y, round_to)
+		const discrete_z = this.serializer_z.discretize(value.z, round_to)
+
+		return [
+			new THREE.Vector3(discrete_x[0], discrete_y[0], discrete_z[0]),
+			new THREE.Vector3(discrete_x[1], discrete_y[1], discrete_z[1])
+		]
+	}
+
+	makeContinuous(value: DoubleDiscreteVector3): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.serializer_x.makeContinuous([ value[0].x, value[1].x ]),
+			this.serializer_y.makeContinuous([ value[0].y, value[1].y ]),
+			this.serializer_z.makeContinuous([ value[0].z, value[1].z ])
+		)
+	}
+
+	pack(value: THREE.Vector3): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.serializer_x.pack(value.x),
+			this.serializer_y.pack(value.y),
+			this.serializer_z.pack(value.z)
+		)
+	}
+
+	unpack(value: THREE.Vector3): THREE.Vector3 {
+		return new THREE.Vector3(
+			this.serializer_x.unpack(value.x),
+			this.serializer_y.unpack(value.y),
+			this.serializer_z.unpack(value.z)
+		)
+	}
 }
