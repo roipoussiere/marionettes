@@ -1,24 +1,19 @@
 import * as THREE from 'three'
-import { Vector3 } from 'three'
 import * as BonesConfig from './bones_config'
-import * as VectorUtils from './vector_utils'
+import * as Serializer from './serializer'
 
 
-const NB_BONE_VALUES = BonesConfig.bones
-	.map(bone_config => bone_config.axes)
-	.join('')
-	.split('_')
-	.join('')
-	.length
-const EXPECTED_STRING_LENGTH = NB_BONE_VALUES + 6
-const BASE = 60 // must be a multiple of 2
-const BASE60 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567'
+const EXPECTED_STRING_LENGTH = BonesConfig.NB_BONE_VALUES + 6
 
 
 export class SkeletonSerializer {
 
-	discretized_position: THREE.Vector3[]
-	discretized_bones_rot: { [id: string] : THREE.Vector3 }
+	discretized_position: Serializer.DoubleDiscreteVector3
+	discrete_bones_rot: { [id: string] : THREE.Vector3 }
+
+	single_axis_serializer: Serializer.NumberSerializer
+	rotation_serializer: Serializer.Vector3Serializer
+	position_serializer: Serializer.Vector3SerializerDoublePrecision
 
 	constructor() {
 		this.discretized_position = [
@@ -26,54 +21,63 @@ export class SkeletonSerializer {
 			new THREE.Vector3()
 		]
 
-		this.discretized_bones_rot = {}
+		this.discrete_bones_rot = {}
 		BonesConfig.bones.forEach(bone_config => {
-			this.discretized_bones_rot[bone_config.name] = new THREE.Vector3().addScalar(BASE / 2)
+			this.discrete_bones_rot[bone_config.name] = new THREE.Vector3().addScalar(Serializer.BASE / 2)
 		})
+
+		this.single_axis_serializer = new Serializer.NumberSerializer(-180, 180)
+		this.rotation_serializer = new Serializer.Vector3Serializer(
+			new THREE.Vector3(-180, -180, -180),
+			new THREE.Vector3(180, 180, 180)
+		)
+		this.position_serializer = new Serializer.Vector3SerializerDoublePrecision(
+			new THREE.Vector3(-10, -10, -10),
+			new THREE.Vector3(10, 10, 10)
+		)
 	}
 
 	fromString(str: string): void {
 		if (str.length != EXPECTED_STRING_LENGTH) {
 			throw(`Can not load model from string "${ str }": `
-			+ `string length should be ${ EXPECTED_STRING_LENGTH } but is ${ str.length }.`)
+				+ `string length should be ${ EXPECTED_STRING_LENGTH } but is ${ str.length }.`)
 		}
 
-		const values: number[] = []
-		for (const c of str) {
-			values.push(this.#strToValue(c))
-		}
+		const rotations_str = str.substring(0, BonesConfig.NB_BONE_VALUES - 1)
+		this.discrete_bones_rot = this.#getBonesRotations(rotations_str)
 
-		this.#loadBonesRotationValues(values.slice(0, NB_BONE_VALUES - 1))
-		this.#loadModelPositionValues(values.slice(NB_BONE_VALUES, NB_BONE_VALUES + 6))
+		const position_str = str.substring(BonesConfig.NB_BONE_VALUES)
+		this.discretized_position = this.position_serializer.stringToDiscreteValue(position_str)
 	}
 
 	toString(): string {
 		let str = ''
-		BonesConfig.bones.forEach(bone_config => {
-			const rotation = this.discretized_bones_rot[bone_config.name]
-			str += this.#boneRotationToString(rotation, bone_config.axes)
-		})
 
-		str += this.#vectorToStr(this.discretized_position[0])
-		str += this.#vectorToStr(this.discretized_position[1])
+		BonesConfig.bones.forEach(config => {
+			str += this.#boneRotationToString(this.discrete_bones_rot[config.name], config.axes)
+		})
+		str += this.position_serializer.discreteValueTostring(this.discretized_position)
 
 		return str
 	}
 
 	loadBoneRotation(bone: THREE.Bone): void {
-		if ( ! ( bone.name in this.discretized_bones_rot)) {
-			throw new ReferenceError()
+		if ( ! ( bone.name in this.discrete_bones_rot)) {
+			throw new BonesConfig.BoneNotFoundError(bone.name)
 		}
-		const rotation = new THREE.Vector3().setFromEuler(bone.rotation)
 
-		VectorUtils.discretizeRotation(rotation, BASE)
-		this.discretized_bones_rot[bone.name].copy(rotation)
+		let rotation = new THREE.Vector3().setFromEuler(bone.rotation)
+		rotation = this.rotation_serializer.discretize(rotation)
+
+		this.discrete_bones_rot[bone.name].copy(rotation)
 	}
 
 	getBoneRotation(bone_name: string): THREE.Euler {
-		const rotation = this.discretized_bones_rot[bone_name].clone()
 		const bone_config = BonesConfig.fromName(bone_name)
-		VectorUtils.continuousRotation(rotation, BASE)
+
+		let rotation = this.discrete_bones_rot[bone_name].clone()
+		rotation = this.rotation_serializer.makeContinuous(rotation)
+
 		return new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
 	}
 
@@ -86,83 +90,52 @@ export class SkeletonSerializer {
 	}
 
 	loadModelPosition(position: THREE.Vector3): void {
-		const [ high_order_pos, low_order_pos ] = VectorUtils.discretizePosition(
-			position.clone(),
-			BonesConfig.MIN_POSITION,
-			BonesConfig.MAX_POSITION,
-			BASE
-		)
-
-		this.discretized_position[0].copy(high_order_pos)
-		this.discretized_position[1].copy(low_order_pos)
+		this.discretized_position = this.position_serializer.discretize(position)
 	}
 
 	getModelPosition(): THREE.Vector3 {
-		return VectorUtils.continuousPosition(
-			this.discretized_position[0],
-			this.discretized_position[1],
-			BonesConfig.MIN_POSITION,
-			BonesConfig.MAX_POSITION,
-			BASE
-		)
+		return this.position_serializer.makeContinuous(this.discretized_position)
 	}
 
-	roundAngle(angle: THREE.Vector3, round_to=VectorUtils.RoundTo.NEAREST) {
-		return VectorUtils.roundRotationDegrees(angle, BASE, round_to)
+	roundBoneRotation(rotation: THREE.Vector3) {
+		return this.rotation_serializer.round(rotation).multiplyScalar(THREE.MathUtils.DEG2RAD)
 	}
+	
+	#getBonesRotations(rotations_str: string): { [id: string] : THREE.Vector3 } {
+		const discretized_bones_rot: { [id: string] : THREE.Vector3 } = {}
 
-	#loadBonesRotationValues(values: number[]): void {
-		const scale = (vect: THREE.Vector3) => vect.addScalar(180).divideScalar(360 / BASE).round()
+		const discrete_rotations: number[] = []
+		for (const char of rotations_str) {
+			discrete_rotations.push(this.single_axis_serializer.stringToDiscreteValue(char))
+		}
 
 		let cursor = 0
-		BonesConfig.bones.forEach(bone_config => {
+		BonesConfig.bones.forEach(config => {
 			const rotation = new THREE.Vector3(
-				bone_config.axes.includes('x') ? values[cursor++] : BASE / 2,
-				bone_config.axes.includes('y') ? values[cursor++] : BASE / 2,
-				bone_config.axes.includes('z') ? values[cursor++] : BASE / 2,
+				config.axes.includes('x') ? discrete_rotations[cursor++] : 0,
+				config.axes.includes('y') ? discrete_rotations[cursor++] : 0,
+				config.axes.includes('z') ? discrete_rotations[cursor++] : 0,
 			)
-			.clamp(
-				scale(bone_config.min_angle.clone()),
-				scale(bone_config.max_angle.clone())
-			)
-			this.discretized_bones_rot[bone_config.name].copy(rotation)
+			discretized_bones_rot[config.name] = rotation
 		})
-	}
 
-	#loadModelPositionValues(values: number[]): void {
-		this.discretized_position = [
-			new Vector3().fromArray(values.slice(0, 3)),
-			new Vector3().fromArray(values.slice(3, 6))
-		]
+		return discretized_bones_rot
 	}
 
 	#boneRotationToString(rotation: THREE.Vector3, axes: string): string {
 		let str = ''
 
 		if (axes.includes('x')) {
-			str += this.#valueToStr(rotation.toArray()[0])
+			str += this.single_axis_serializer.discreteValueTostring(rotation.toArray()[0])
 		}
 		if (axes.includes('y')) {
-			str += this.#valueToStr(rotation.toArray()[1])
+			str += this.single_axis_serializer.discreteValueTostring(rotation.toArray()[1])
 		}
 		if (axes.includes('z')) {
-			str += this.#valueToStr(rotation.toArray()[2])
+			str += this.single_axis_serializer.discreteValueTostring(rotation.toArray()[2])
 		}
 		return str
 	}
 
-	#valueToStr(value: number): string {
-		return BASE60.charAt(value)
-	}
-
-	#strToValue(str: string): number {
-		return BASE60.indexOf(str)
-	}
-
-	#vectorToStr(vector: THREE.Vector3): string {
-		return this.#valueToStr(vector.x)
-		     + this.#valueToStr(vector.y)
-			 + this.#valueToStr(vector.z)
-	}
 
 }
