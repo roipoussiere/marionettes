@@ -1,44 +1,33 @@
 import * as THREE from 'three'
 
 
-const ENCODER_STRING = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567'
+const ENCODER_STRING = 'ZYXWVUTSRQPONMLKJIHGFEDCBA753102468abcdefghijklmnopqrstuvwxyz'
 
-export const BASE = 60 // must be a multiple of 2
-
-
-export enum RoundTo {
-	NEAREST,
-	BOTTOM,
-	TOP
-}
-
-
-function roundTo(value: number, round_to: RoundTo) {
-	if (round_to == RoundTo.NEAREST) {
-		return Math.round(value)
-	} else if (round_to == RoundTo.BOTTOM) {
-		return Math.floor(value)
-	} else {
-		return Math.ceil(value)
-	}
-}
+export const BASE = 61
 
 
 export class SerializationError extends Error {}
 
 
-abstract class Serializer {
+function pack(value: number, min: number, max: number): number {
+	const clamped_value = THREE.MathUtils.clamp(value, min, max)
+	return (clamped_value - min) / (max - min) * (BASE - 1)
+}
+
+function unpack(value: number, min: number, max: number): number {
+	return (value / (BASE - 1) * (max - min)) + min
+}
+
+
+export abstract class Serializer {
 	abstract stringToDiscreteValue(str: string): any
 	abstract discreteValueTostring(value: any): string
 
-	abstract discretize(value: any, round_to: RoundTo): any
+	abstract discretize(value: any): any
 	abstract makeContinuous(value: any): any
 
-	abstract pack(value: any): any
-	abstract unpack(value: any): any
-
-	round(value: any, round_to=RoundTo.NEAREST): any {
-		const discrete_value = this.discretize(value, round_to)
+	round(value: any): any {
+		const discrete_value = this.discretize(value)
 		return this.makeContinuous(discrete_value)
 	}
 
@@ -47,8 +36,8 @@ abstract class Serializer {
 		return this.makeContinuous(discrete_value)
 	}
 
-	toString(value: any, round_to=RoundTo.NEAREST): string {
-		const discrete_value = this.discretize(value, round_to)
+	toString(value: any): string {
+		const discrete_value = this.discretize(value)
 		return this.discreteValueTostring(discrete_value)
 	}
 }
@@ -57,13 +46,11 @@ abstract class Serializer {
 export class NumberSerializer extends Serializer {
 	min: number
 	max: number
-	range: number
 
 	constructor(min: number, max: number) {
 		super()
 		this.min = min
 		this.max = max
-		this.range = this.max - this.min
 	}
 
 	stringToDiscreteValue(str: string): number {
@@ -87,38 +74,29 @@ export class NumberSerializer extends Serializer {
 		}
 	}
 
-	pack(value: number): number {
-		const clamped_value = THREE.MathUtils.clamp(value, this.min, this.max)
-		return (clamped_value - this.min) / this.range * BASE
-	}
-
-	unpack(value: number): number {
-		return (value / BASE * this.range) + this.min
-	}
-
-	discretize(value: number, round_to=RoundTo.NEAREST): number {
-		return roundTo(this.pack(value), round_to)
+	discretize(value: number): number {
+		return Math.round(pack(value, this.min, this.max))
 	}
 
 	makeContinuous(value: number): number {
-		return this.unpack(value)
+		return unpack(value, this.min, this.max)
 	}
 
-	round(value: number, round_to=RoundTo.NEAREST): number {
-		return super.round(value, round_to)
+	round(value: number): number {
+		return super.round(value)
 	}
 
 	fromString(str: string): number {
 		return super.fromString(str)
 	}
 
-	toString(value: number, round_to=RoundTo.NEAREST): string {
-		return super.toString(value, round_to)
+	toString(value: number): string {
+		return super.toString(value)
 	}
 }
 
 
-export type DoubleDiscreteValue = [ number, number ]
+export type DiscreteValueDoublePrecision = [ number, number ]
 
 export class NumberSerializerDoublePrecision extends Serializer {
 	min: number
@@ -132,7 +110,7 @@ export class NumberSerializerDoublePrecision extends Serializer {
 		this.range = this.max - this.min
 	}
 
-	stringToDiscreteValue(str: string): DoubleDiscreteValue {
+	stringToDiscreteValue(str: string): DiscreteValueDoublePrecision {
 		if (str.length != 2) {
 			throw new SerializationError(`String length must be equal to 2 but is ${ str.length }.`)
 		}
@@ -147,7 +125,7 @@ export class NumberSerializerDoublePrecision extends Serializer {
 		}	
 	}
 
-	discreteValueTostring(value: DoubleDiscreteValue): string {
+	discreteValueTostring(value: DiscreteValueDoublePrecision): string {
 		if (value[0] >= BASE || value[1] >= BASE) {
 			throw new SerializationError(`Can not convert value ${ value } to string: index overflow.`)
 		} else {
@@ -155,57 +133,39 @@ export class NumberSerializerDoublePrecision extends Serializer {
 		}
 	}
 
-	pack(value: number): number {
-		const clamped_value = THREE.MathUtils.clamp(value, this.min, this.max)
-		return (clamped_value - this.min) / this.range * BASE
-	}
-
-	unpack(value: number): number {
-		return (value / BASE * this.range) + this.min
-	}
-
-	discretize(value: number, round_to=RoundTo.NEAREST): DoubleDiscreteValue {
-		const packed_value = this.pack(value)
+	discretize(value: number): DiscreteValueDoublePrecision {
+		const packed_value = pack(value, this.min, this.max)
 		const high_order_value = Math.floor(packed_value)
-		const low_order_value = (packed_value - high_order_value) * BASE
+		const low_order_value = Math.floor((packed_value - high_order_value) * BASE)
 
-		return [
-			roundTo(high_order_value, round_to),
-			roundTo(low_order_value, round_to)
-		]
+		return [ high_order_value, low_order_value ]
 	}
 
-	makeContinuous(value: DoubleDiscreteValue): number {
-		return this.unpack(value[0]) * BASE + this.unpack(value[1])
+	makeContinuous(value: DiscreteValueDoublePrecision): number {
+		return unpack(value[0], this.min, this.max) * BASE + unpack(value[1], this.min, this.max)
 	}
 
-	round(value: number, round_to=RoundTo.NEAREST): number {
-		return super.round(value, round_to)
+	round(value: number): number {
+		return super.round(value)
 	}
 
 	fromString(str: string): number {
 		return super.fromString(str)
 	}
 
-	toString(value: number, round_to=RoundTo.NEAREST): string {
-		return super.toString(value, round_to)
+	toString(value: number): string {
+		return super.toString(value)
 	}
 }
 
 
 export class Vector3Serializer extends Serializer {
-	min: THREE.Vector3
-	max: THREE.Vector3
-
 	serializer_x: NumberSerializer
 	serializer_y: NumberSerializer
 	serializer_z: NumberSerializer
 
 	constructor(min: THREE.Vector3, max: THREE.Vector3) {
 		super()
-		this.min = min
-		this.max = max
-
 		this.serializer_x = new NumberSerializer(min.x, max.x)
 		this.serializer_y = new NumberSerializer(min.y, max.y)
 		this.serializer_z = new NumberSerializer(min.z, max.z)
@@ -225,11 +185,11 @@ export class Vector3Serializer extends Serializer {
 			+  this.serializer_z.discreteValueTostring(value.z)
 	}
 
-	discretize(value: THREE.Vector3, round_to=RoundTo.NEAREST): THREE.Vector3 {
+	discretize(value: THREE.Vector3): THREE.Vector3 {
 		return new THREE.Vector3(
-			this.serializer_x.discretize(value.x, round_to),
-			this.serializer_y.discretize(value.y, round_to),
-			this.serializer_z.discretize(value.z, round_to)
+			this.serializer_x.discretize(value.x),
+			this.serializer_y.discretize(value.y),
+			this.serializer_z.discretize(value.z)
 		)
 	}
 
@@ -241,57 +201,36 @@ export class Vector3Serializer extends Serializer {
 		)
 	}
 
-	pack(value: THREE.Vector3): THREE.Vector3 {
-		return new THREE.Vector3(
-			this.serializer_x.pack(value.x),
-			this.serializer_y.pack(value.y),
-			this.serializer_z.pack(value.z)
-		)
-	}
-
-	unpack(value: THREE.Vector3): THREE.Vector3 {
-		return new THREE.Vector3(
-			this.serializer_x.unpack(value.x),
-			this.serializer_y.unpack(value.y),
-			this.serializer_z.unpack(value.z)
-		)
-	}
-
-	round(value: THREE.Vector3, round_to=RoundTo.NEAREST): THREE.Vector3 {
-		return super.round(value, round_to)
+	round(value: THREE.Vector3): THREE.Vector3 {
+		return super.round(value)
 	}
 
 	fromString(str: string): THREE.Vector3 {
 		return super.fromString(str)
 	}
 
-	toString(value: THREE.Vector3, round_to=RoundTo.NEAREST): string {
-		return super.toString(value, round_to)
+	toString(value: THREE.Vector3): string {
+		return super.toString(value)
 	}
 }
 
 
-export type DoubleDiscreteVector3 = [ THREE.Vector3, THREE.Vector3 ]
+export type DiscreteVector3DoublePrecision = [ THREE.Vector3, THREE.Vector3 ]
 
 export class Vector3SerializerDoublePrecision extends Serializer {
-	min: THREE.Vector3
-	max: THREE.Vector3
-
 	serializer_x: NumberSerializerDoublePrecision
 	serializer_y: NumberSerializerDoublePrecision
 	serializer_z: NumberSerializerDoublePrecision
 
 	constructor(min: THREE.Vector3, max: THREE.Vector3) {
 		super()
-		this.min = min
-		this.max = max
 
 		this.serializer_x = new NumberSerializerDoublePrecision(min.x, max.x)
 		this.serializer_y = new NumberSerializerDoublePrecision(min.y, max.y)
 		this.serializer_z = new NumberSerializerDoublePrecision(min.z, max.z)
 	}
 
-	stringToDiscreteValue(str: string): DoubleDiscreteVector3 {
+	stringToDiscreteValue(str: string): DiscreteVector3DoublePrecision {
 		const discrete_x = this.serializer_x.stringToDiscreteValue(str.substring(0, 2))
 		const discrete_y = this.serializer_y.stringToDiscreteValue(str.substring(2, 4))
 		const discrete_z = this.serializer_z.stringToDiscreteValue(str.substring(4, 6))
@@ -302,16 +241,16 @@ export class Vector3SerializerDoublePrecision extends Serializer {
 		]
 	}
 
-	discreteValueTostring(value: DoubleDiscreteVector3): string {
+	discreteValueTostring(value: DiscreteVector3DoublePrecision): string {
 		return this.serializer_x.discreteValueTostring([ value[0].x, value[1].x ])
 			+  this.serializer_y.discreteValueTostring([ value[0].y, value[1].y ])
 			+  this.serializer_z.discreteValueTostring([ value[0].z, value[1].z ])
 	}
 
-	discretize(value: THREE.Vector3, round_to=RoundTo.NEAREST): DoubleDiscreteVector3 {
-		const discrete_x = this.serializer_x.discretize(value.x, round_to)
-		const discrete_y = this.serializer_y.discretize(value.y, round_to)
-		const discrete_z = this.serializer_z.discretize(value.z, round_to)
+	discretize(value: THREE.Vector3): DiscreteVector3DoublePrecision {
+		const discrete_x = this.serializer_x.discretize(value.x)
+		const discrete_y = this.serializer_y.discretize(value.y)
+		const discrete_z = this.serializer_z.discretize(value.z)
 
 		return [
 			new THREE.Vector3(discrete_x[0], discrete_y[0], discrete_z[0]),
@@ -319,7 +258,7 @@ export class Vector3SerializerDoublePrecision extends Serializer {
 		]
 	}
 
-	makeContinuous(value: DoubleDiscreteVector3): THREE.Vector3 {
+	makeContinuous(value: DiscreteVector3DoublePrecision): THREE.Vector3 {
 		return new THREE.Vector3(
 			this.serializer_x.makeContinuous([ value[0].x, value[1].x ]),
 			this.serializer_y.makeContinuous([ value[0].y, value[1].y ]),
@@ -327,31 +266,15 @@ export class Vector3SerializerDoublePrecision extends Serializer {
 		)
 	}
 
-	pack(value: THREE.Vector3): THREE.Vector3 {
-		return new THREE.Vector3(
-			this.serializer_x.pack(value.x),
-			this.serializer_y.pack(value.y),
-			this.serializer_z.pack(value.z)
-		)
-	}
-
-	unpack(value: THREE.Vector3): THREE.Vector3 {
-		return new THREE.Vector3(
-			this.serializer_x.unpack(value.x),
-			this.serializer_y.unpack(value.y),
-			this.serializer_z.unpack(value.z)
-		)
-	}
-
-	round(value: THREE.Vector3, round_to=RoundTo.NEAREST): THREE.Vector3 {
-		return super.round(value, round_to)
+	round(value: THREE.Vector3): THREE.Vector3 {
+		return super.round(value)
 	}
 
 	fromString(str: string): THREE.Vector3 {
 		return super.fromString(str)
 	}
 
-	toString(value: THREE.Vector3, round_to=RoundTo.NEAREST): string {
-		return super.toString(value, round_to)
+	toString(value: THREE.Vector3): string {
+		return super.toString(value)
 	}
 }
