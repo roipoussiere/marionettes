@@ -18,6 +18,18 @@ function unpack(value: number, min: number, max: number): number {
 	return (value / (BASE - 1) * (max - min)) + min
 }
 
+// seriously, js...
+function round(value: number, digits=9) {
+	return Math.round( (value + Number.EPSILON) * Math.pow(10, digits) ) / Math.pow(10, digits)
+}
+
+function roundVector3(vector: THREE.Vector3, digits=9) {
+	return vector.set(
+		round(vector.x, digits),
+		round(vector.y, digits),
+		round(vector.z, digits)
+	)
+}
 
 export abstract class Serializer {
 	abstract stringToDiscreteValue(str: string): any
@@ -53,6 +65,10 @@ export class NumberSerializer extends Serializer {
 		this.max = max
 	}
 
+	round = (value: number): number => round(super.round(value))
+	fromString = (str: string): number => super.fromString(str)
+	toString = (value: number): string => super.toString(value)
+
 	stringToDiscreteValue(str: string): number {
 		if (str.length != 1) {
 			throw new SerializationError(`String length must be equal to 1 but is ${ str.length }.`)
@@ -81,18 +97,6 @@ export class NumberSerializer extends Serializer {
 	makeContinuous(value: number): number {
 		return unpack(value, this.min, this.max)
 	}
-
-	round(value: number): number {
-		return super.round(value)
-	}
-
-	fromString(str: string): number {
-		return super.fromString(str)
-	}
-
-	toString(value: number): string {
-		return super.toString(value)
-	}
 }
 
 
@@ -101,14 +105,16 @@ export type DiscreteValueDoublePrecision = [ number, number ]
 export class NumberSerializerDoublePrecision extends Serializer {
 	min: number
 	max: number
-	range: number
 
 	constructor(min: number, max: number) {
 		super()
 		this.min = min
 		this.max = max
-		this.range = this.max - this.min
 	}
+
+	round = (value: number): number => round(super.round(value))
+	fromString = (str: string): number => super.fromString(str)
+	toString = (value: number): string => super.toString(value)
 
 	stringToDiscreteValue(str: string): DiscreteValueDoublePrecision {
 		if (str.length != 2) {
@@ -135,26 +141,17 @@ export class NumberSerializerDoublePrecision extends Serializer {
 
 	discretize(value: number): DiscreteValueDoublePrecision {
 		const packed_value = pack(value, this.min, this.max)
-		const high_order_value = Math.floor(packed_value)
-		const low_order_value = Math.floor((packed_value - high_order_value) * BASE)
+		const high_order = Math.round(packed_value)
+		const low_order = pack(packed_value, high_order-0.5, high_order+0.5)
 
-		return [ high_order_value, low_order_value ]
+		return [ high_order, Math.round(low_order) ]
 	}
 
 	makeContinuous(value: DiscreteValueDoublePrecision): number {
-		return unpack(value[0], this.min, this.max) * BASE + unpack(value[1], this.min, this.max)
-	}
-
-	round(value: number): number {
-		return super.round(value)
-	}
-
-	fromString(str: string): number {
-		return super.fromString(str)
-	}
-
-	toString(value: number): string {
-		return super.toString(value)
+		const e = ( this.max - this.min ) / ( BASE - 1 ) / 2
+		const high_order = unpack(value[0], this.min, this.max)
+		const low_order = unpack(value[1], -e, e)
+		return high_order + low_order
 	}
 }
 
@@ -170,6 +167,10 @@ export class Vector3Serializer extends Serializer {
 		this.serializer_y = new NumberSerializer(min.y, max.y)
 		this.serializer_z = new NumberSerializer(min.z, max.z)
 	}
+
+	round = (value: THREE.Vector3): THREE.Vector3 => roundVector3(super.round(value))
+	fromString = (str: string): THREE.Vector3 => super.fromString(str)
+	toString = (value: THREE.Vector3): string => super.toString(value)
 
 	stringToDiscreteValue(str: string): THREE.Vector3 {
 		return new THREE.Vector3(
@@ -200,18 +201,6 @@ export class Vector3Serializer extends Serializer {
 			this.serializer_z.makeContinuous(value.z)
 		)
 	}
-
-	round(value: THREE.Vector3): THREE.Vector3 {
-		return super.round(value)
-	}
-
-	fromString(str: string): THREE.Vector3 {
-		return super.fromString(str)
-	}
-
-	toString(value: THREE.Vector3): string {
-		return super.toString(value)
-	}
 }
 
 
@@ -229,6 +218,10 @@ export class Vector3SerializerDoublePrecision extends Serializer {
 		this.serializer_y = new NumberSerializerDoublePrecision(min.y, max.y)
 		this.serializer_z = new NumberSerializerDoublePrecision(min.z, max.z)
 	}
+
+	round = (value: THREE.Vector3): THREE.Vector3 => roundVector3(super.round(value))
+	fromString = (str: string): THREE.Vector3 => super.fromString(str)
+	toString = (value: THREE.Vector3): string => super.toString(value)
 
 	stringToDiscreteValue(str: string): DiscreteVector3DoublePrecision {
 		const discrete_x = this.serializer_x.stringToDiscreteValue(str.substring(0, 2))
@@ -264,17 +257,5 @@ export class Vector3SerializerDoublePrecision extends Serializer {
 			this.serializer_y.makeContinuous([ value[0].y, value[1].y ]),
 			this.serializer_z.makeContinuous([ value[0].z, value[1].z ])
 		)
-	}
-
-	round(value: THREE.Vector3): THREE.Vector3 {
-		return super.round(value)
-	}
-
-	fromString(str: string): THREE.Vector3 {
-		return super.fromString(str)
-	}
-
-	toString(value: THREE.Vector3): string {
-		return super.toString(value)
 	}
 }

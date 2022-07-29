@@ -65,32 +65,35 @@ describe('Testing NumberSerializerDoublePrecision', () => {
 	})
 
 	test('discretize()', () => {
-		expect(serializer.discretize(-180)).toStrictEqual([ 0 , 0  ])
+		expect(serializer.discretize(-180)).toStrictEqual([ 0 , 30 ])
 		expect(serializer.discretize( 0  )).toStrictEqual([ 30, 30 ])
-		expect(serializer.discretize( 180)).toStrictEqual([ 60, 60 ])
+		expect(serializer.discretize( 180)).toStrictEqual([ 60, 30 ])
 	})
 
 	test('makeContinuous()', () => {
-		expect(serializer.makeContinuous([ 0 , 0  ])).toBe(-180)
+		expect(serializer.makeContinuous([ 0 , 30 ])).toBe(-180)
 		expect(serializer.makeContinuous([ 30, 30 ])).toBe(0)
-		expect(serializer.makeContinuous([ 60, 60 ])).toBe(180)
+		expect(serializer.makeContinuous([ 60, 30 ])).toBe(180)
+
+		expect(serializer.makeContinuous([ 29, 60 ])).toBe(-3)
+		expect(serializer.makeContinuous([ 30, 0 ])).toBe(-3)
 	})
 
 	test('fromString()', () => {
-		expect(serializer.fromString('ZZ')).toBe(-180)
+		expect(serializer.fromString('Z0')).toBe(-180)
 		expect(serializer.fromString('00')).toBe(0)
-		expect(serializer.fromString('zz')).toBe(180)
+		expect(serializer.fromString('z0')).toBe(180)
 	})
 
 	test('toString()', () => {
-		expect(serializer.toString(-180)).toBe('ZZ')
+		expect(serializer.toString(-180)).toBe('Z0')
 		expect(serializer.toString( 0  )).toBe('00')
-		expect(serializer.toString( 180)).toBe('zz')
+		expect(serializer.toString( 180)).toBe('z0')
 	})
 
 	test('round()', () => {
 		expect(serializer.round(-190)).toBe(-180)
-		expect(serializer.round( 0.1)).toBe(0)
+		expect(serializer.round( 0.1)).toBe(0.1)
 		expect(serializer.round( 190)).toBe(180)
 	})
 })
@@ -166,32 +169,32 @@ describe('Testing Vector3SerializerDoublePrecision', () => {
 	})
 
 	test('discretize()', () => {
-		expect(serializer.discretize(vectm180)).toStrictEqual([ 0 , 0  ])
-		expect(serializer.discretize(vect0   )).toStrictEqual([ 30, 30 ])
-		expect(serializer.discretize(vect180 )).toStrictEqual([ 60, 60 ])
+		expect(serializer.discretize(vectm180)).toStrictEqual([ vect0 , vect30 ])
+		expect(serializer.discretize(vect0   )).toStrictEqual([ vect30, vect30 ])
+		expect(serializer.discretize(vect180 )).toStrictEqual([ vect60, vect30 ])
 	})
 
 	test('makeContinuous()', () => {
-		expect(serializer.makeContinuous([ vect0 , vect0  ])).toStrictEqual(vectm180)
+		expect(serializer.makeContinuous([ vect0 , vect30  ])).toStrictEqual(vectm180)
 		expect(serializer.makeContinuous([ vect30, vect30 ])).toStrictEqual(vect0)
-		expect(serializer.makeContinuous([ vect60, vect60 ])).toStrictEqual(vect180)
+		expect(serializer.makeContinuous([ vect60, vect30 ])).toStrictEqual(vect180)
 	})
 
 	test('fromString()', () => {
-		expect(serializer.fromString('ZZZZZZ')).toStrictEqual(vectm180)
+		expect(serializer.fromString('Z0Z0Z0')).toStrictEqual(vectm180)
 		expect(serializer.fromString('000000')).toStrictEqual(vect0)
-		expect(serializer.fromString('zzzzzz')).toStrictEqual(vect180)
+		expect(serializer.fromString('z0z0z0')).toStrictEqual(vect180)
 	})
 
 	test('toString()', () => {
-		expect(serializer.toString(vectm180)).toBe('ZZZZZZ')
+		expect(serializer.toString(vectm180)).toBe('Z0Z0Z0')
 		expect(serializer.toString(vect0   )).toBe('000000')
-		expect(serializer.toString(vect180 )).toBe('zzzzzz')
+		expect(serializer.toString(vect180 )).toBe('z0z0z0')
 	})
 
 	test('round()', () => {
 		expect(serializer.round(new THREE.Vector3(-190, -190, -190))).toStrictEqual(vectm180)
-		expect(serializer.round(new THREE.Vector3( 0.1,  0.1,  0.1))).toStrictEqual(vect0)
+		expect(serializer.round(new THREE.Vector3( 0.1,  0.1,  0.1))).toStrictEqual(new THREE.Vector3( 0.1,  0.1,  0.1))
 		expect(serializer.round(new THREE.Vector3( 190,  190,  190))).toStrictEqual(vect180)
 	})
 })
