@@ -72,7 +72,7 @@ export class NumberSerializer extends Serializer {
 	}
 
 	discreteValueTostring(value: number): string {
-		if (value >= BASE) {
+		if (value < 0 || value >= BASE) {
 			throw new SerializationError(`Can not convert value ${ value } to string: index overflow.`)
 		} else {
 			return ENCODER_STRING.charAt(value)
@@ -126,7 +126,7 @@ export class NumberSerializerDoublePrecision extends Serializer {
 	}
 
 	discreteValueTostring(value: DiscreteValueDoublePrecision): string {
-		if (value[0] >= BASE || value[1] >= BASE) {
+		if (value[0] < 0 || value[0] >= BASE || value[1] < 0 || value[1] >= BASE) {
 			throw new SerializationError(`Can not convert value ${ value } to string: index overflow.`)
 		} else {
 			return ENCODER_STRING.charAt(value[0]) + ENCODER_STRING.charAt(value[1])
@@ -145,7 +145,7 @@ export class NumberSerializerDoublePrecision extends Serializer {
 	makeContinuous(value: DiscreteValueDoublePrecision): number {
 		const high_order = unpack(value[0], this.min, this.max)
 		const low_order = unpack(value[1], 0, ( this.max - this.min ) / BASE)
-		return high_order + low_order
+		return THREE.MathUtils.clamp(high_order + low_order, this.min, this.max - this.epsilon)
 	}
 }
 

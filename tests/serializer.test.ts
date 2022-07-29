@@ -9,24 +9,32 @@ describe('Testing NumberSerializer', () => {
 		expect(serializer.stringToDiscreteValue('Z')).toBe(0)
 		expect(serializer.stringToDiscreteValue('0')).toBe(30)
 		expect(serializer.stringToDiscreteValue('z')).toBe(59)
+		expect(() => serializer.stringToDiscreteValue('?')).toThrow(Serializer.SerializationError)
+		expect(() => serializer.stringToDiscreteValue('00')).toThrow(Serializer.SerializationError)
 	})
 
 	test('discreteValueTostring()', () => {
 		expect(serializer.discreteValueTostring(0 )).toBe('Z')
 		expect(serializer.discreteValueTostring(30)).toBe('0')
 		expect(serializer.discreteValueTostring(59)).toBe('z')
+		expect(() => serializer.discreteValueTostring(-1)).toThrow(Serializer.SerializationError)
+		expect(() => serializer.discreteValueTostring(60)).toThrow(Serializer.SerializationError)
 	})
 
 	test('discretize()', () => {
+		expect(serializer.discretize(-181)).toBe(0)
 		expect(serializer.discretize(-180)).toBe(0)
 		expect(serializer.discretize( 0  )).toBe(30)
 		expect(serializer.discretize( 174)).toBe(59)
+		expect(serializer.discretize( 180)).toBe(59)
 	})
 
 	test('makeContinuous()', () => {
+		expect(serializer.makeContinuous(-1)).toBe(-180)
 		expect(serializer.makeContinuous(0 )).toBe(-180)
 		expect(serializer.makeContinuous(30)).toBe(0)
 		expect(serializer.makeContinuous(59)).toBe(174)
+		expect(serializer.makeContinuous(60)).toBe(174)
 	})
 
 	test('fromString()', () => {
@@ -36,9 +44,11 @@ describe('Testing NumberSerializer', () => {
 	})
 
 	test('toString()', () => {
+		expect(serializer.toString(-181)).toBe('Z')
 		expect(serializer.toString(-180)).toBe('Z')
 		expect(serializer.toString( 0  )).toBe('0')
 		expect(serializer.toString( 174)).toBe('z')
+		expect(serializer.toString( 180)).toBe('z')
 	})
 
 	test('round()', () => {
@@ -56,28 +66,39 @@ describe('Testing NumberSerializerDoublePrecision', () => {
 		expect(serializer.stringToDiscreteValue('ZZ')).toStrictEqual([ 0 , 0  ])
 		expect(serializer.stringToDiscreteValue('00')).toStrictEqual([ 30, 30 ])
 		expect(serializer.stringToDiscreteValue('zz')).toStrictEqual([ 59, 59 ])
+		expect(() => serializer.stringToDiscreteValue('??')).toThrow(Serializer.SerializationError)
+		expect(() => serializer.stringToDiscreteValue('0')).toThrow(Serializer.SerializationError)
+		expect(() => serializer.stringToDiscreteValue('000')).toThrow(Serializer.SerializationError)
 	})
 
 	test('discreteValueTostring()', () => {
 		expect(serializer.discreteValueTostring([ 0 , 0   ])).toBe('ZZ')
 		expect(serializer.discreteValueTostring([ 30 , 30 ])).toBe('00')
 		expect(serializer.discreteValueTostring([ 59, 59  ])).toBe('zz')
+		expect(() => serializer.discreteValueTostring([ -1, 30 ])).toThrow(Serializer.SerializationError)
+		expect(() => serializer.discreteValueTostring([ 60, 30 ])).toThrow(Serializer.SerializationError)
+		expect(() => serializer.discreteValueTostring([ 30, -1 ])).toThrow(Serializer.SerializationError)
+		expect(() => serializer.discreteValueTostring([ 30, 60 ])).toThrow(Serializer.SerializationError)
 	})
 
 	test('discretize()', () => {
-		expect(serializer.discretize(-180)).toStrictEqual([ 0 , 0  ])
-		expect(serializer.discretize( 0  )).toStrictEqual([ 30, 0  ])
-		expect(serializer.discretize( 0.1)).toStrictEqual([ 30, 1  ])
-		expect(serializer.discretize( 1  )).toStrictEqual([ 30, 10 ])
-		expect(serializer.discretize( 180)).toStrictEqual([ 59, 59 ])
+		expect(serializer.discretize(-181  )).toStrictEqual([ 0 , 0  ])
+		expect(serializer.discretize(-180  )).toStrictEqual([ 0 , 0  ])
+		expect(serializer.discretize( 0    )).toStrictEqual([ 30, 0  ])
+		expect(serializer.discretize( 0.1  )).toStrictEqual([ 30, 1  ])
+		expect(serializer.discretize( 1    )).toStrictEqual([ 30, 10 ])
+		expect(serializer.discretize( 179.9)).toStrictEqual([ 59, 59 ])
+		expect(serializer.discretize( 180  )).toStrictEqual([ 59, 59 ])
 	})
 
 	test('makeContinuous()', () => {
+		expect(serializer.makeContinuous([ -1, 0  ])).toBe(-180)
 		expect(serializer.makeContinuous([ 0 , 0  ])).toBe(-180)
 		expect(serializer.makeContinuous([ 30, 0  ])).toBe(0)
 		expect(serializer.makeContinuous([ 30, 1  ])).toBe(0.1)
 		expect(serializer.makeContinuous([ 30, 10 ])).toBe(1)
 		expect(serializer.makeContinuous([ 59, 59 ])).toBe(179.9)
+		expect(serializer.makeContinuous([ 60, 0  ])).toBe(179.9)
 	})
 
 	test('fromString()', () => {
