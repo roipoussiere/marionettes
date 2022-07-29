@@ -39,6 +39,14 @@ export class BoneConfig {
 		this.max_angle = max_angle
 		this.reverse_direction = reverse_direction
 	}
+
+	get min_angle_rad(): THREE.Vector3 {
+		return this.min_angle.clone().multiplyScalar(THREE.MathUtils.DEG2RAD)
+	}
+
+	get max_angle_rad(): THREE.Vector3 {
+		return this.max_angle.clone().multiplyScalar(THREE.MathUtils.DEG2RAD)
+	}
 }
 
 // Set axe orientation and constraints for each bone

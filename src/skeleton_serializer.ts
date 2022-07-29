@@ -15,7 +15,7 @@ export class SkeletonSerializer {
 	rotation_serializer: Serializer.Vector3Serializer
 	position_serializer: Serializer.Vector3SerializerDoublePrecision
 
-	constructor() {
+	constructor(min_pos: THREE.Vector3, max_pos: THREE.Vector3) {
 		this.discretized_position = [
 			new THREE.Vector3(),
 			new THREE.Vector3()
@@ -26,15 +26,12 @@ export class SkeletonSerializer {
 			this.discrete_bones_rot[bone_config.name] = new THREE.Vector3().addScalar(Serializer.BASE / 2)
 		})
 
-		this.single_axis_serializer = new Serializer.NumberSerializer(-180, 180)
+		this.single_axis_serializer = new Serializer.NumberSerializer(-Math.PI, Math.PI)
 		this.rotation_serializer = new Serializer.Vector3Serializer(
-			new THREE.Vector3(-180, -180, -180),
-			new THREE.Vector3(180, 180, 180)
+			new THREE.Vector3(-Math.PI, -Math.PI, -Math.PI),
+			new THREE.Vector3( Math.PI,  Math.PI,  Math.PI)
 		)
-		this.position_serializer = new Serializer.Vector3SerializerDoublePrecision(
-			new THREE.Vector3(-1.8, -1.8, -1.8),
-			new THREE.Vector3(1.8, 1.8, 1.8)
-		)
+		this.position_serializer = new Serializer.Vector3SerializerDoublePrecision(min_pos, max_pos)
 	}
 
 	fromString(str: string): void {
@@ -45,7 +42,6 @@ export class SkeletonSerializer {
 
 		const rotations_str = str.substring(0, BonesConfig.NB_BONE_VALUES - 1)
 		this.discrete_bones_rot = this.#getBonesRotations(rotations_str)
-
 		const position_str = str.substring(BonesConfig.NB_BONE_VALUES)
 		this.discretized_position = this.position_serializer.stringToDiscreteValue(position_str)
 	}
@@ -76,9 +72,7 @@ export class SkeletonSerializer {
 		const bone_config = BonesConfig.fromName(bone_name)
 
 		let rotation = this.discrete_bones_rot[bone_name].clone()
-		rotation = this.rotation_serializer
-			.makeContinuous(rotation)
-			.multiplyScalar(THREE.MathUtils.DEG2RAD)
+		rotation = this.rotation_serializer.makeContinuous(rotation)
 
 		return new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
 	}
@@ -100,7 +94,7 @@ export class SkeletonSerializer {
 	}
 
 	roundBoneRotation(rotation: THREE.Vector3) {
-		return this.rotation_serializer.round(rotation).multiplyScalar(THREE.MathUtils.DEG2RAD)
+		return this.rotation_serializer.round(rotation)
 	}
 	
 	#getBonesRotations(rotations_str: string): { [id: string] : THREE.Vector3 } {

@@ -9,6 +9,9 @@ export const MODEL_NAME_PREFIX = 'model_'
 export const HANDLES_NAME_PREFIX = 'handles_'
 export const HANDLE_NAME_PREFIX = 'handle_'
 
+const MIN_POS = new THREE.Vector3(-1.8, -1.8, -1.8)
+const MAX_POS = new THREE.Vector3( 1.8,  1.8,  1.8)
+
 
 export class Marionette {
     name: string
@@ -28,7 +31,7 @@ export class Marionette {
 		this.model = new THREE.Group()
 		this.handles = new THREE.Group()
 		this.doing_something = false
-		this.serializer = new SkeletonSerializer()
+		this.serializer = new SkeletonSerializer(MIN_POS, MAX_POS)
 	}
 
 	get root_bone(): THREE.Bone {
@@ -111,6 +114,7 @@ export class Marionette {
 		} else if (axe_modifier_id == 2) {
 			this.model.translateY(- pointer_delta.x - pointer_delta.y)
 		}
+		this.model.position.clamp(MIN_POS, MAX_POS)
 	}
 
 	rotateModel(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
@@ -138,8 +142,8 @@ export class Marionette {
 				axe == 'z' ? delta : 0
 			))
 			.clamp(
-				this.serializer.roundBoneRotation(bone_config.min_angle.clone()),
-				this.serializer.roundBoneRotation(bone_config.max_angle.clone()),
+				this.serializer.roundBoneRotation(bone_config.min_angle_rad),
+				this.serializer.roundBoneRotation(bone_config.max_angle_rad)
 			)
 
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
