@@ -8,7 +8,7 @@ const EXPECTED_STRING_LENGTH = BonesConfig.NB_BONE_VALUES + 6
 
 export class SkeletonSerializer {
 
-	discretized_position: Serializer.DoubleDiscreteVector3
+	discretized_position: Serializer.DiscreteVector3DoublePrecision
 	discrete_bones_rot: { [id: string] : THREE.Vector3 }
 
 	single_axis_serializer: Serializer.NumberSerializer
@@ -32,8 +32,8 @@ export class SkeletonSerializer {
 			new THREE.Vector3(180, 180, 180)
 		)
 		this.position_serializer = new Serializer.Vector3SerializerDoublePrecision(
-			new THREE.Vector3(-10, -10, -10),
-			new THREE.Vector3(10, 10, 10)
+			new THREE.Vector3(-1.8, -1.8, -1.8),
+			new THREE.Vector3(1.8, 1.8, 1.8)
 		)
 	}
 
@@ -76,7 +76,9 @@ export class SkeletonSerializer {
 		const bone_config = BonesConfig.fromName(bone_name)
 
 		let rotation = this.discrete_bones_rot[bone_name].clone()
-		rotation = this.rotation_serializer.makeContinuous(rotation)
+		rotation = this.rotation_serializer
+			.makeContinuous(rotation)
+			.multiplyScalar(THREE.MathUtils.DEG2RAD)
 
 		return new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
 	}
@@ -112,9 +114,9 @@ export class SkeletonSerializer {
 		let cursor = 0
 		BonesConfig.bones.forEach(config => {
 			const rotation = new THREE.Vector3(
-				config.axes.includes('x') ? discrete_rotations[cursor++] : 0,
-				config.axes.includes('y') ? discrete_rotations[cursor++] : 0,
-				config.axes.includes('z') ? discrete_rotations[cursor++] : 0,
+				config.axes.includes('x') ? discrete_rotations[cursor++] : Serializer.BASE / 2,
+				config.axes.includes('y') ? discrete_rotations[cursor++] : Serializer.BASE / 2,
+				config.axes.includes('z') ? discrete_rotations[cursor++] : Serializer.BASE / 2,
 			)
 			discretized_bones_rot[config.name] = rotation
 		})

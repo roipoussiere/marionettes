@@ -1,12 +1,8 @@
 import * as THREE from 'three'
 
-// Note: SkeletonUtils is broken and has been patched in this PR:
-// https://github.com/three-types/three-ts-types/pull/230/
-// Which is included in the project. See postinstall script in package.json
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 import * as BonesConfig from './bones_config'
 import { SkeletonSerializer } from './skeleton_serializer'
-import * as VectorUtils from './vector_utils'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
@@ -95,12 +91,11 @@ export class Marionette {
 			if (bone) {
 				bone.rotation.copy(bone_rotation)
 			} else {
-				throw(`Can not find bone: ${ bone_name }`)
+				throw new BonesConfig.BoneNotFoundError(bone_name)
 			}
 		}
 
 		this.model.position.copy(this.serializer.getModelPosition())
-
 		this.updateHandles()
 	}
 
@@ -143,8 +138,8 @@ export class Marionette {
 				axe == 'z' ? delta : 0
 			))
 			.clamp(
-				this.serializer.roundAngle(bone_config.min_angle.clone()),
-				this.serializer.roundAngle(bone_config.max_angle.clone()),
+				this.serializer.roundBoneRotation(bone_config.min_angle.clone()),
+				this.serializer.roundBoneRotation(bone_config.max_angle.clone()),
 			)
 
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)

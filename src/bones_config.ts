@@ -108,6 +108,13 @@ export const bones: BoneConfig[] = [
 	// RightHandThumb4, RightHandPinky4, RightHandRing4, RightHandMiddle4, RightHandIndex4,
 ]
 
+export const NB_BONE_VALUES = bones
+	.map(bone_config => bone_config.axes)
+	.join('')
+	.split('_')
+	.join('')
+	.length
+
 export function fromName(bone_name: string): BoneConfig {
 	const bone_config = bones.find(bone_config => bone_config.name == bone_name)
 	if ( ! bone_config) {
