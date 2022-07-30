@@ -4,9 +4,14 @@ A tool to edit and preview 3d-model postures.
 
 ![](./assets/icon.png)
 
-It's a work in progress for now, come back later!
+Try [the demo](https://roipoussiere.frama.io/marionettes)!
 
-Still curious? Try [the demo](https://roipoussiere.frama.io/marionettes).
+## Features
+
+- loads model from a from `.glb` or `.fbx` skeleton files (so any model from [Mixamo](https://www.mixamo.com/#/?type=Character) should be fine)
+- high precision model (spine, fingers, etc.)
+- built-in serializer (can be used to save postures in file or share them via url, see demo);
+- optional fullscreen mode
 
 ## Installation
 
@@ -22,17 +27,16 @@ This project is [published on npm registry](https://www.npmjs.com/package/marion
     cd marionettes
     yarn install
 
-## Acknowledgments
+## Usage
 
-### Ressources
+Check out the [index page source](src/index.ts), which is used to build the demo page.
 
-I got some help and inspiration from:
+## Alternatives
 
-- [official Three.js documentation](https://threejs.org/docs/)
-- [Sean Bradley's Three.js tutorial](https://sbcode.net/threejs/)
-- [codrops - How to Create an Interactive 3D Character with Three.js](https://tympanus.net/codrops/2019/10/14/how-to-create-an-interactive-3d-character-with-three-js/)
-- [boytchev's mannequin.js](https://boytchev.github.io/mannequin.js/)
+- [Boytchev's mannequin.js](https://boytchev.github.io/mannequin.js/)
 
-### Models
+### Credits
 
-3D model used in the demo page comes from [Mixamo](https://www.mixamo.com/#/?type=Character).
+- Marionettes source code: Nathanaël Jourdane and contributors, [MIT liense](./LICENSE);
+- 3D model used in the demo page: [Mixamo](https://www.mixamo.com/#/?type=Character), royalty free;
+- Postures created with Marionettes: it's up to you, of course. :)
