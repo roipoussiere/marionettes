@@ -7,7 +7,7 @@ export const MAX_POSITION = new THREE.Vector3(2, 3, 2)
 
 
 export class BoneNotFoundError extends Error {
-	constructor(bone_name: string, details: string = '') {
+	constructor(bone_name: string, details = '') {
 		super(`Bone ${ bone_name } not found${ details ? ' ' + details : '' }`)
 		this.name = 'BoneNotFoundError'
 	}

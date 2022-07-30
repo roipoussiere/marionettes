@@ -6,7 +6,12 @@ const ENCODER_STRING = 'ZYXWVUTSRQPONMLKJIHGFEDCBA75310246abcdefghijklmnopqrstuv
 export const BASE = 60
 
 
-export class SerializationError extends Error {}
+export type DiscreteValueDoublePrecision = [ number, number ]
+export type DiscreteVector3DoublePrecision = [ THREE.Vector3, THREE.Vector3 ]
+export type AllowedSerializerType = number
+	| DiscreteValueDoublePrecision
+	| THREE.Vector3
+	| DiscreteVector3DoublePrecision
 
 
 function pack(value: number, min: number, max: number): number {
@@ -18,24 +23,27 @@ function unpack(value: number, min: number, max: number): number {
 }
 
 
+export class SerializationError extends Error {}
+
+
 export abstract class Serializer {
-	abstract stringToDiscreteValue(str: string): any
-	abstract discreteValueTostring(value: any): string
+	abstract stringToDiscreteValue(str: string): AllowedSerializerType
+	abstract discreteValueTostring(value: AllowedSerializerType): string
 
-	abstract discretize(value: any): any
-	abstract makeContinuous(value: any): any
+	abstract discretize(value: AllowedSerializerType): AllowedSerializerType
+	abstract makeContinuous(value: AllowedSerializerType): AllowedSerializerType
 
-	round(value: any): any {
+	round(value: AllowedSerializerType): AllowedSerializerType {
 		const discrete_value = this.discretize(value)
 		return this.makeContinuous(discrete_value)
 	}
 
-	fromString(str: string): any {
+	fromString(str: string): AllowedSerializerType {
 		const discrete_value = this.stringToDiscreteValue(str)
 		return this.makeContinuous(discrete_value)
 	}
 
-	toString(value: any): string {
+	toString(value: AllowedSerializerType): string {
 		const discrete_value = this.discretize(value)
 		return this.discreteValueTostring(discrete_value)
 	}
@@ -54,8 +62,8 @@ export class NumberSerializer extends Serializer {
 		this.epsilon = (max - min) / BASE
 	}
 
-	round = (value: number): number => super.round(value)
-	fromString = (str: string): number => super.fromString(str)
+	round = (value: number): number => <number> super.round(value)
+	fromString = (str: string): number => <number> super.fromString(str)
 	toString = (value: number): string => super.toString(value)
 
 	stringToDiscreteValue(str: string): number {
@@ -91,8 +99,6 @@ export class NumberSerializer extends Serializer {
 }
 
 
-export type DiscreteValueDoublePrecision = [ number, number ]
-
 export class NumberSerializerDoublePrecision extends Serializer {
 	min: number
 	max: number
@@ -106,8 +112,8 @@ export class NumberSerializerDoublePrecision extends Serializer {
 
 	}
 
-	round = (value: number): number => super.round(value)
-	fromString = (str: string): number => super.fromString(str)
+	round = (value: number): number => <number> super.round(value)
+	fromString = (str: string): number => <number> super.fromString(str)
 	toString = (value: number): string => super.toString(value)
 
 	stringToDiscreteValue(str: string): DiscreteValueDoublePrecision {
@@ -162,8 +168,8 @@ export class Vector3Serializer extends Serializer {
 		this.serializer_z = new NumberSerializer(min.z, max.z)
 	}
 
-	round = (vector: THREE.Vector3): THREE.Vector3 => super.round(vector)
-	fromString = (str: string): THREE.Vector3 => super.fromString(str)
+	round = (vector: THREE.Vector3): THREE.Vector3 => <THREE.Vector3> super.round(vector)
+	fromString = (str: string): THREE.Vector3 => <THREE.Vector3> super.fromString(str)
 	toString = (vector: THREE.Vector3): string => super.toString(vector)
 
 	stringToDiscreteValue(str: string): THREE.Vector3 {
@@ -198,8 +204,6 @@ export class Vector3Serializer extends Serializer {
 }
 
 
-export type DiscreteVector3DoublePrecision = [ THREE.Vector3, THREE.Vector3 ]
-
 export class Vector3SerializerDoublePrecision extends Serializer {
 	serializer_x: NumberSerializerDoublePrecision
 	serializer_y: NumberSerializerDoublePrecision
@@ -213,8 +217,8 @@ export class Vector3SerializerDoublePrecision extends Serializer {
 		this.serializer_z = new NumberSerializerDoublePrecision(min.z, max.z)
 	}
 
-	round = (vector: THREE.Vector3): THREE.Vector3 => super.round(vector)
-	fromString = (str: string): THREE.Vector3 => super.fromString(str)
+	round = (vector: THREE.Vector3): THREE.Vector3 => <THREE.Vector3> super.round(vector)
+	fromString = (str: string): THREE.Vector3 => <THREE.Vector3> super.fromString(str)
 	toString = (vector: THREE.Vector3): string => super.toString(vector)
 
 	stringToDiscreteValue(str: string): DiscreteVector3DoublePrecision {

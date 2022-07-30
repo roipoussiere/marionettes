@@ -4,9 +4,9 @@ import * as THREE from 'three'
 const DEFAULT_COLOR = new THREE.Color(0xff3399)
 
 export function makeBoneHandle(bone: THREE.Bone, color = DEFAULT_COLOR) {
-	let sceneGeometry = new THREE.SphereGeometry( 2.00);
-	let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
-	let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
+	const scene_geometry = new THREE.SphereGeometry( 2.00);
+	const scene_material = new THREE.MeshBasicMaterial( { color } );
+	const sphere = new THREE.Mesh(scene_geometry, scene_material);
 	sphere.name = "BoneHandle"
 	// Careful, the bone is submitted to intense scaling, it appears.
 	// Why isn't the scale normalized ?  WTF   Perhaps we should normalize our models first.
@@ -16,9 +16,9 @@ export function makeBoneHandle(bone: THREE.Bone, color = DEFAULT_COLOR) {
 }
 
 export function hintPoint(position: THREE.Vector3, color = DEFAULT_COLOR) {
-	let sceneGeometry = new THREE.SphereGeometry( 0.03);
-	let sceneMaterial = new THREE.MeshBasicMaterial( { color } );
-	let sphere = new THREE.Mesh(sceneGeometry, sceneMaterial);
+	const scene_geometry = new THREE.SphereGeometry( 0.03);
+	const scene_material = new THREE.MeshBasicMaterial( { color } );
+	const sphere = new THREE.Mesh(scene_geometry, scene_material);
 	sphere.position.add(position)
 	sphere.name = "PointHint"
 	return sphere

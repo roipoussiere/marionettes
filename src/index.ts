@@ -30,8 +30,8 @@ const model_loader = new ModelLoader(MODEL_PATH, model => {
 	console.info('Loaded model:', model)
 })
 
-const theater = new Theater('cv1', [ base, flyer ], marionette => {
-	let params: string[] = []
+const theater = new Theater('cv1', [ base, flyer ], () => {
+	const params: string[] = []
 
 	params.push('cam=' + theater.camera_pos)
 	Object.values(theater.marionettes).map(marionette => {

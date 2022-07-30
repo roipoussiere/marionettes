@@ -151,8 +151,8 @@ export class Marionette {
 	}
 
 	updateClickedBone(point: THREE.Vector3) {
+		const position = new THREE.Vector3()
 		let closest_bone = new THREE.Bone
-		let position = new THREE.Vector3()
 		let closest_distance = Infinity
 
 		BonesConfig.forEachEnabledBone(this.skeleton, bone => {
