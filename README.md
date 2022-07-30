@@ -8,8 +8,8 @@ Try [the demo](https://roipoussiere.frama.io/marionettes)!
 
 ## Features
 
-- loads model from a from `.glb` or `.fbx` skeleton files (so any model from [Mixamo](https://www.mixamo.com/#/?type=Character) should be fine)
-- high precision model (spine, fingers, etc.)
+- loads model from a from `.glb` or `.fbx` skeleton files (any model from [Mixamo](https://www.mixamo.com/#/?type=Character) should be fine);
+- high precision model (spine, fingers, etc.);
 - built-in serializer (can be used to save postures in file or share them via url, see demo);
 - optional fullscreen mode
 

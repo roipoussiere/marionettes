@@ -1,6 +1,6 @@
 {
   "name": "marionettes",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A tool to edit and preview 3d-model postures.",
   "keywords": [
     "mannequin",
