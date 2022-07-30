@@ -1,8 +1,10 @@
 # Marionettes
 
-A tool to edit and preview 3d-model postures.
+Marionettes is a client-side library used to edit and preview 3d-model postures.
 
 ![](./assets/icon.png)
+
+Code is hosted on [Framagit](https://framagit.org/roipoussiere/marionettes) (GitLab instance) and [Github](https://github.com/roipoussiere/marionettes) and releases are published on [npm registry](https://www.npmjs.com/package/marionettes)
 
 Try [the demo](https://roipoussiere.frama.io/marionettes)!
 
@@ -15,13 +17,15 @@ Try [the demo](https://roipoussiere.frama.io/marionettes)!
 
 ## Installation
 
-### Via yarn / npm
+### Via yarn
 
-This project is [published on npm registry](https://www.npmjs.com/package/marionettes).
+    yarn add marionettes
 
-    yarn install marionettes
+### Via npm
 
-### Via sources
+    npm install marionettes
+
+### From sources
 
     git clone https://framagit.org/roipoussiere/marionettes.git
     cd marionettes
