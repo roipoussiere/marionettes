@@ -1,9 +1,17 @@
 body {
-    overflow: hidden;
-    margin: 0px;
-    background-color: #ddd;
+	overflow: hidden;
+	margin: 0px;
+	background-color: #c8ab99;
+	font-family: sans-serif;
+	text-align: center;
 }
 
-#canvas-container {
-    text-align: center;
+canvas {
+	box-shadow: 0px 0px 10px #0005;
+	margin: 1px
+}
+
+#details {
+	margin: auto;
+	max-width: 800px;
 }

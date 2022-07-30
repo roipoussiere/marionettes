@@ -9,7 +9,7 @@ import { SerializationError, Vector3Serializer } from './serializer'
 const POINTER_SENSIBILITY = 1.0
 
 const GROUND_COLOR = 0x9ec899
-const SKY_COLOR = 0x99c0c8
+const SKY_COLOR = 0x99b6c8
 const LIGHT_COLOR = 0xffdddd
 
 type OnChange = (marionette: Marionette) => void
