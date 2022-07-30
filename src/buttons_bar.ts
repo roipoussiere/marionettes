@@ -69,17 +69,22 @@ export class ButtonsBar {
 	updateGeometry(canvas_size: THREE.Vector2, canvas_pos: THREE.Vector2) {
 		const base_size = Math.max(canvas_size.width, canvas_size.height)
 		const btn_size = Math.round(this.relative_size * base_size)
+		const visible_buttons = this.buttons.filter(button => button.is_visible)
 
-		this.buttons.forEach((button, index) => {
+		visible_buttons.forEach((button, index) => {
 			const btn_position = new THREE.Vector2(
 				canvas_pos.x,
-				canvas_pos.y + canvas_size.height - (this.buttons.length - index) * btn_size
+				canvas_pos.y + canvas_size.height - (visible_buttons.length - index) * btn_size
 			)
 			button.updateGeometry(btn_size, btn_position)
 		})
+
+		this.buttons.filter(button => ! button.is_visible).forEach(button => {
+			button.dom.style.cssText = 'display: none'
+		})
 	}
 
-	triggerActionsOnEnabled() {
+	triggerEnabledButtons() {
 		this.buttons.forEach(button => {
 			if (button.is_checkbox && button.is_enabled) {
 				button.is_enabled = false
@@ -95,18 +100,20 @@ export class Button {
 	action: ButtonAction
 	shortcut: string
 	is_enabled: boolean
+	is_visible: boolean
 	icon: string
 	tooltip: string
 
 	dom: HTMLElement
 
 
-	constructor(name: string, is_checkbox: boolean, action: ButtonAction, shortcut = '', is_enabled = false, icon = '', tooltip = '') {
+	constructor(name: string, is_checkbox: boolean, action: ButtonAction, shortcut = '', is_enabled = false, is_visible = true, icon = '', tooltip = '') {
 		this.name = name
 		this.is_checkbox = is_checkbox
 		this.action = action
 		this.shortcut = shortcut
 		this.is_enabled = is_enabled
+		this.is_visible = is_visible
 		this.icon = icon ? icon : capitalize(this.name.substring(0, 2))
 		this.tooltip = (tooltip ? tooltip : capitalize(this.name)) + (shortcut ? ` (${ shortcut })` : '')
 
