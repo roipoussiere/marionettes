@@ -6,8 +6,6 @@ import { SkeletonSerializer } from './skeleton_serializer'
 
 
 export const MODEL_NAME_PREFIX = 'model_'
-export const HANDLES_NAME_PREFIX = 'handles_'
-export const HANDLE_NAME_PREFIX = 'handle_'
 
 const MIN_POS = new THREE.Vector3(-1.8, -1.8, -1.8)
 const MAX_POS = new THREE.Vector3( 1.8,  1.8,  1.8)
@@ -17,9 +15,8 @@ export class Marionette {
     name: string
 	default_pose: string
 	skeleton: THREE.Skeleton
-	clicked_bone: THREE.Bone
+	focused_bone: THREE.Bone
 	model: THREE.Group
-	handles: THREE.Group
 	doing_something: boolean
 	serializer: SkeletonSerializer
 
@@ -27,9 +24,8 @@ export class Marionette {
         this.name = name
 		this.default_pose = default_pose
 		this.skeleton = new THREE.Skeleton([])
-		this.clicked_bone = new THREE.Bone()
+		this.focused_bone = new THREE.Bone()
 		this.model = new THREE.Group()
-		this.handles = new THREE.Group()
 		this.doing_something = false
 		this.serializer = new SkeletonSerializer(MIN_POS, MAX_POS)
 	}
@@ -58,33 +54,6 @@ export class Marionette {
 		this.loadFromString(this.default_pose)
 	}
 
-	initHandles() {
-		this.handles.name = HANDLES_NAME_PREFIX + this.name
-		const handle_material = new THREE.MeshBasicMaterial({
-			color: 0xffffff,
-			depthTest: false,
-			opacity: 0.5,
-			transparent: true
-		})
-		const handle_geometry = new THREE.SphereGeometry(0.02, 6, 4)
-
-		BonesConfig.forEachEnabledBone(this.skeleton, bone => {
-			const handle = new THREE.Mesh(handle_geometry, handle_material)
-			handle.name = HANDLE_NAME_PREFIX + bone.name
-			this.handles.add(handle)
-		})
-		this.updateHandles()
-	}
-
-	updateHandles() {
-		BonesConfig.forEachEnabledBone(this.skeleton, bone => {
-			const handle = this.handles.getObjectByName(HANDLE_NAME_PREFIX + bone.name)
-			if (handle) {
-				handle.position.copy(bone.getWorldPosition(handle.position))
-			}
-		})
-	}
-
 	loadFromString(str: string) {
 		this.serializer.fromString(str)
 
@@ -99,7 +68,6 @@ export class Marionette {
 		}
 
 		this.model.position.copy(this.serializer.getModelPosition())
-		this.updateHandles()
 	}
 
 	toString(): string {
@@ -130,12 +98,12 @@ export class Marionette {
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
-		const bone_config = BonesConfig.fromName(this.clicked_bone.name)
+		const bone_config = BonesConfig.fromName(this.focused_bone.name)
 		const axe = bone_config.axes[axe_modifier_id]
 		const delta = (pointer_delta.x + pointer_delta.y) * (bone_config.reverse_direction ? -1 : 1)
 
 		const rotation = new THREE.Vector3()
-			.setFromEuler(this.clicked_bone.rotation)
+			.setFromEuler(this.focused_bone.rotation)
 			.add(new THREE.Vector3(
 				axe == 'x' ? delta : 0,
 				axe == 'y' ? delta : 0,
@@ -147,10 +115,10 @@ export class Marionette {
 			)
 
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
-		this.clicked_bone.setRotationFromEuler(euler_rotation)
+		this.focused_bone.setRotationFromEuler(euler_rotation)
 	}
 
-	updateClickedBone(point: THREE.Vector3) {
+	updateFocusedBone(point: THREE.Vector3): THREE.Bone {
 		const position = new THREE.Vector3()
 		let closest_bone = new THREE.Bone
 		let closest_distance = Infinity
@@ -162,9 +130,9 @@ export class Marionette {
 				closest_distance = distance
 			}
 		})
-		console.info(`clicked on ${ this.name }'s ${ closest_bone.name }`)
 
-		this.clicked_bone = closest_bone
+		this.focused_bone = closest_bone
+		return this.focused_bone
 	}
 
 	roundPosition() {

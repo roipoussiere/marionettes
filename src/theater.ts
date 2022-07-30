@@ -29,10 +29,10 @@ export class Theater {
 	cam_serializer: Vector3Serializer
 
 	models: THREE.Group
-	handles: THREE.Group
+	bone_helper: THREE.Mesh
 	scene: THREE.Scene
 
-	clicked_marionette: Marionette | null
+	focused_marionette: Marionette | null
 	meshes: THREE.SkinnedMesh[]
 	axe_modifier_id: number // one in [0, 1, 2]
 
@@ -43,10 +43,13 @@ export class Theater {
 	initial_canvas_size: THREE.Vector2
 	pointer: THREE.Vector2
 	last_pointer: THREE.Vector2
+	raycaster: THREE.Raycaster
+	on_drag: boolean
 
 	translate_mode: boolean
 	rotate_mode: boolean
 	is_fullscreen: boolean
+	helper_mode: boolean
 
 	constructor(canvas_id: string, marionettes: Marionette[], on_change: OnChange = () => {}) {
 		this.canvas = <HTMLCanvasElement> document.getElementById(canvas_id)
@@ -65,10 +68,10 @@ export class Theater {
 		)
 
 		this.models = new THREE.Group()
-		this.handles = new THREE.Group()
+		this.bone_helper = new THREE.Mesh()
 		this.scene = new THREE.Scene()
 
-		this.clicked_marionette = null
+		this.focused_marionette = null
 		this.meshes = []
 		this.axe_modifier_id = 0
 
@@ -77,10 +80,13 @@ export class Theater {
 		this.initial_canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
 		this.pointer = new THREE.Vector2(0, 0)
 		this.last_pointer = new THREE.Vector2(0, 0)
+		this.raycaster = new THREE.Raycaster()
+		this.on_drag = false
 
 		this.translate_mode = false
 		this.rotate_mode = false
 		this.is_fullscreen = false
+		this.helper_mode = true
 	}
 
 	init() {
@@ -104,19 +110,19 @@ export class Theater {
 		this.control.minDistance = 1
 		this.control.maxDistance = 5
 
-		this.handles.name = 'handles'
-		this.handles.visible = false
-
 		this.models.name = 'models'
 
 		this.scene.background = new THREE.Color(SKY_COLOR);
 		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
 
+		this.bone_helper = this.#buildBoneHelper()
+
 		this.scene.add(
 			// new THREE.AxesHelper(),
 			this.#buildGrid(),
 			this.#buildFloor(),
-			this.#buildLights()
+			this.#buildLights(),
+			this.bone_helper
 		)
 	}
 
@@ -146,14 +152,6 @@ export class Theater {
 			const canvas_brect = this.canvas.getBoundingClientRect();
 			return new THREE.Vector2(canvas_brect.left - 1, canvas_brect.top).ceil()
 		}
-	}
-
-	get handles_visibility(): boolean {
-		return this.handles.visible
-	}
-
-	set handles_visibility(handles_visibility: boolean) {
-		this.handles.visible = handles_visibility
 	}
 
 	get normalized_pointer(): THREE.Vector2 {
@@ -206,13 +204,8 @@ export class Theater {
 				}
 			})
 			this.models.add(marionette.model)
-
-			marionette.initHandles()
-			this.handles.add(marionette.handles)
-			// this.handles.add( new THREE.SkeletonHelper( marionette.model ))
 		})
 		this.scene.add(this.models)
-		this.scene.add(this.handles)
 
 		this.spinner.disable()
 	}
@@ -247,55 +240,64 @@ export class Theater {
 		this.last_pointer.copy(this.pointer)
 		this.pointer.set(target.clientX, target.clientY)
 
-		if ( ! this.control.enabled && this.clicked_marionette) {
+		if (this.on_drag && this.focused_marionette) {
 			if (this.translate_mode) {
-				this.clicked_marionette.translateModel(this.pointer_delta, this.axe_modifier_id)
+				this.focused_marionette.translateModel(this.pointer_delta, this.axe_modifier_id)
 			} else if (this.rotate_mode) {
-				this.clicked_marionette.rotateModel(this.pointer_delta, this.axe_modifier_id)
+				this.focused_marionette.rotateModel(this.pointer_delta, this.axe_modifier_id)
 			} else {
-				this.clicked_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
+				this.focused_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
 			}
-			this.clicked_marionette.updateHandles()
+		} else if ( this.helper_mode && ! this.on_drag) {
+			this.#raycast()
+			this.bone_helper.visible = this.focused_marionette != null
 		}
 	}
 
 	#onPointerPress() {
-		this.#raycast()
+		this.on_drag = true
+
+		if ( ! this.helper_mode) {
+			this.#raycast()
+		}
+
+		if (this.focused_marionette) {
+			this.control.enabled = false
+		}
 	}
 
 	#onPointerRelease() {
-		if (this.clicked_marionette) {
+		this.on_drag = false
+
+		if (this.focused_marionette) {
 			if (this.translate_mode) {
-				this.clicked_marionette.roundPosition()
+				this.focused_marionette.roundPosition()
+				console.info(`Updated ${ this.focused_marionette.name } position.`)
 			} else if (this.rotate_mode) {
-				this.clicked_marionette.roundBone(this.clicked_marionette.root_bone)
+				this.focused_marionette.roundBone(this.focused_marionette.root_bone)
+				console.info(`Updated ${ this.focused_marionette.name } rotation.`)
 			} else {
-				this.clicked_marionette.roundBone(this.clicked_marionette.clicked_bone)
+				this.focused_marionette.roundBone(this.focused_marionette.focused_bone)
+				console.info(`Updated ${ this.focused_marionette.name }'s ${ this.focused_marionette.focused_bone.name } bone rotation.`)
 			}
 		}
 
-		this.on_change(this.clicked_marionette)
+		this.on_change(this.focused_marionette)
 		this.control.enabled = true
-		this.clicked_marionette = null
 	}
 
 	#raycast() {
-		const raycaster = new THREE.Raycaster()
-		raycaster.setFromCamera(this.normalized_pointer, this.camera);
+		this.raycaster.setFromCamera(this.normalized_pointer, this.camera);
+		const intersects = this.raycaster.intersectObjects(this.meshes, true)
 
-		// Bones do not have geometry or volume so the Raycaster cannot intersect them.
-		// Solution: compare the clicked triangle position with each skeleton joint,
-		//           get the bone with shorter distance.
-		// if (0 < v1.dot(v2) < v3^2) // is the selected point in zone between v1 and v2?
-		// sin(v1.angle(v2))*len
-
-		const intersects = raycaster.intersectObjects(this.meshes, true)
 		if (intersects.length > 0 && intersects[0].object.parent) {
-			this.control.enabled = false
-			const clicked_marionette_name = intersects[0].object.parent.name
-				.substring(MODEL_NAME_PREFIX.length)
-			this.clicked_marionette = this.marionettes[clicked_marionette_name]
-			this.clicked_marionette.updateClickedBone(intersects[0].point)
+			const model = intersects[0].object.parent
+			const marionette_name = model.name.substring(MODEL_NAME_PREFIX.length)
+			this.focused_marionette = this.marionettes[marionette_name]
+			const focused_bone = this.focused_marionette.updateFocusedBone(intersects[0].point)
+			this.bone_helper.position.copy(focused_bone.getWorldPosition(this.bone_helper.position))
+		} else {
+			this.focused_marionette = null
 		}
 	}
 
@@ -321,9 +323,10 @@ export class Theater {
 					this.buttons_bar.getButton('translate').disable()
 				}
 			}, 'R'),
-			new Button('handles', true, button => {
-				this.handles_visibility = button.is_enabled
-			}, 'H'),
+			new Button('bone helper', true, button => {
+				this.helper_mode = button.is_enabled
+				this.bone_helper.visible = false
+			}, 'H', true),
 			new Button('reset', false, () => {
 				this.resetPose()
 			}, 'C'),
@@ -331,8 +334,11 @@ export class Theater {
 				this.fullscreen = button.is_enabled
 			}, 'F')
 		]
+
 		this.buttons_bar.init()
+		this.buttons_bar.triggerActionsOnEnabled()
 		this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
+
 		document.body.appendChild(this.buttons_bar.dom)
 	}
 
@@ -377,5 +383,22 @@ export class Theater {
 		lights.add(ambient_light, main_light, secondary_light)
 
 		return lights
+	}
+
+	#buildBoneHelper(): THREE.Mesh {
+		const handle_material = new THREE.MeshBasicMaterial({
+			color: 0xffffff,
+			depthTest: false,
+			opacity: 0.5,
+			transparent: true
+		})
+
+		const handle_geometry = new THREE.SphereGeometry(0.02, 6, 4)
+
+		const handle = new THREE.Mesh(handle_geometry, handle_material)
+		handle.name = 'bone_helper'
+		handle.visible = false
+
+		return handle
 	}
 }

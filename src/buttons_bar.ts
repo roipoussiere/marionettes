@@ -79,6 +79,14 @@ export class ButtonsBar {
 		})
 	}
 
+	triggerActionsOnEnabled() {
+		this.buttons.forEach(button => {
+			if (button.is_checkbox && button.is_enabled) {
+				button.is_enabled = false
+				button.trigger()
+			}
+		})
+	}
 }
 
 export class Button {
@@ -86,20 +94,20 @@ export class Button {
 	is_checkbox: boolean
 	action: ButtonAction
 	shortcut: string
-	icon: string
 	is_enabled: boolean
+	icon: string
 	tooltip: string
 
 	dom: HTMLElement
 
 
-	constructor(name: string, is_checkbox: boolean, action: ButtonAction, shortcut = '', icon = '', is_enabled = false, tooltip = '') {
+	constructor(name: string, is_checkbox: boolean, action: ButtonAction, shortcut = '', is_enabled = false, icon = '', tooltip = '') {
 		this.name = name
 		this.is_checkbox = is_checkbox
 		this.action = action
 		this.shortcut = shortcut
-		this.icon = icon ? icon : capitalize(this.name.substring(0, 2))
 		this.is_enabled = is_enabled
+		this.icon = icon ? icon : capitalize(this.name.substring(0, 2))
 		this.tooltip = (tooltip ? tooltip : capitalize(this.name)) + (shortcut ? ` (${ shortcut })` : '')
 
 		this.dom = document.createElement('button')
