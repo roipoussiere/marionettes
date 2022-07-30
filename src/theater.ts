@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Marionette, MODEL_NAME_PREFIX } from './marionette'
 import { ButtonsBar, Button } from './buttons_bar'
 import { Spinner } from './spinner'
+import { SerializationError, Vector3Serializer } from './serializer'
 
 
 const POINTER_SENSIBILITY = 1.0
@@ -24,6 +25,8 @@ export class Theater {
 	renderer: THREE.WebGLRenderer
 	camera: THREE.PerspectiveCamera
 	control: OrbitControls
+
+	cam_serializer: Vector3Serializer
 
 	models: THREE.Group
 	handles: THREE.Group
@@ -55,6 +58,11 @@ export class Theater {
 		this.camera = new THREE.PerspectiveCamera(45, this.canvas.width / this.canvas.height)
 		this.camera.position.set(0, 2, 5)
 		this.control = new OrbitControls(this.camera, this.renderer.domElement)
+
+		this.cam_serializer = new Vector3Serializer(
+			new THREE.Vector3(-5, -5, -5),
+			new THREE.Vector3(5 ,  5,  5)
+		)
 
 		this.models = new THREE.Group()
 		this.handles = new THREE.Group()
@@ -164,6 +172,31 @@ export class Theater {
 		return pointer_delta
 	}
 
+	get camera_pos(): string {
+		const cam_rot = new THREE.Vector3().setFromEuler(this.camera.rotation)
+
+		const cam_pos_str = this.cam_serializer.toString(this.camera.position)
+		const cam_rot_str = this.cam_serializer.toString(cam_rot)
+		const cam_target_str = this.cam_serializer.toString(this.control.target)
+
+		return cam_pos_str + cam_rot_str + cam_target_str
+	}
+
+	set camera_pos(str: string) {
+		if (str.length != 9) {
+			throw new SerializationError()
+		}
+		const cam_pos_str = str.substring(0, 3)
+		const cam_rot_str = str.substring(3, 6)
+		const cam_target_str = str.substring(6, 9)
+
+		this.camera.position.copy(this.cam_serializer.fromString(cam_pos_str))
+		this.camera.rotation.setFromVector3(this.cam_serializer.fromString(cam_rot_str))
+		this.control.target.copy(this.cam_serializer.fromString(cam_target_str))
+
+		this.control.update();
+	}
+
 	onModelLoaded(model: THREE.Group) {
 		Object.values(this.marionettes).forEach(marionette => {
 			marionette.setModel(model)
@@ -239,10 +272,9 @@ export class Theater {
 			} else {
 				this.clicked_marionette.roundBone(this.clicked_marionette.clicked_bone)
 			}
-
-			this.on_change(this.clicked_marionette)
 		}
 
+		this.on_change(this.clicked_marionette)
 		this.control.enabled = true
 		this.clicked_marionette = null
 	}

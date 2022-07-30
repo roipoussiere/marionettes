@@ -6,6 +6,7 @@ import { Theater } from './theater'
 
 const DEFAULT_POSE_BASE  = 'J0000000000000000K000300K000500000f0I0006000g4j010000000000000000000000550000000000000000000ZL00Z'
 const DEFAULT_POSE_FLYER = 'l0Z000000701B0C000000f000000f000006fG0000000gIi000000000000000000000000000000000000000000000Z2U0Z'
+const DEFAULT_CAM_POS = 'oqDHai320'
 
 const MODEL_PATH = './xbot.fbx'
 // const MODEL_PATH = './ybot.fbx'
@@ -17,6 +18,7 @@ const BONES_PREFIX = 'mixamorig'
 const params = new URLSearchParams(window.location.search.substring(1))
 const base  = new Marionette('base' , params.get('_base' ) || DEFAULT_POSE_BASE)
 const flyer = new Marionette('flyer', params.get('_flyer') || DEFAULT_POSE_FLYER)
+const cam_pos = params.get('cam') || DEFAULT_CAM_POS
 
 const model_loader = new ModelLoader(MODEL_PATH, model => {
 	model.scale.setScalar(0.01)
@@ -31,6 +33,7 @@ const model_loader = new ModelLoader(MODEL_PATH, model => {
 const theater = new Theater('cv1', [ base, flyer ], marionette => {
 	let params: string[] = []
 
+	params.push('cam=' + theater.camera_pos)
 	Object.values(theater.marionettes).map(marionette => {
 		params.push('_' + marionette.name + '=' + marionette.toString())
 	})
@@ -38,6 +41,7 @@ const theater = new Theater('cv1', [ base, flyer ], marionette => {
 	const new_url = window.location.pathname + '?' + params.join('&')
 	window.history.pushState({}, '', new_url)
 })
+theater.camera_pos = cam_pos
 
 const main = new Main(model_loader, [ theater ])
 main.init()
