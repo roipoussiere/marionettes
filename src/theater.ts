@@ -46,6 +46,7 @@ export class Theater {
 	raycaster: THREE.Raycaster
 	on_drag: boolean
 
+	is_editable: boolean
 	translate_mode: boolean
 	rotate_mode: boolean
 	is_fullscreen: boolean
@@ -83,6 +84,7 @@ export class Theater {
 		this.raycaster = new THREE.Raycaster()
 		this.on_drag = false
 
+		this.is_editable = true
 		this.translate_mode = false
 		this.rotate_mode = false
 		this.is_fullscreen = false
@@ -236,6 +238,10 @@ export class Theater {
 	}
 
 	#onPointerMove(event: UIEvent, touch = false) {
+		if ( ! this.is_editable) {
+			return
+		}
+
 		const target = touch ? (<TouchEvent> event).changedTouches[0] : <MouseEvent> event
 		this.last_pointer.copy(this.pointer)
 		this.pointer.set(target.clientX, target.clientY)
@@ -256,6 +262,9 @@ export class Theater {
 
 	#onPointerPress() {
 		this.on_drag = true
+		if ( ! this.is_editable) {
+			return
+		}
 
 		if ( ! this.helper_mode) {
 			this.#raycast()
@@ -268,6 +277,9 @@ export class Theater {
 
 	#onPointerRelease() {
 		this.on_drag = false
+		if ( ! this.is_editable) {
+			return
+		}
 
 		if (this.focused_marionette) {
 			if (this.translate_mode) {
@@ -309,6 +321,14 @@ export class Theater {
 
 	#addButtons() {
 		this.buttons_bar.buttons = [
+			new Button('edit', true, button => {
+				this.is_editable = button.is_enabled
+				this.buttons_bar.getButton('translate').is_visible = this.is_editable
+				this.buttons_bar.getButton('rotate').is_visible = this.is_editable
+				this.buttons_bar.getButton('helper').is_visible = this.is_editable
+				this.buttons_bar.getButton('reset').is_visible = this.is_editable
+				this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
+			}, 'E', true),
 			new Button('translate', true, button => {
 				if (button.is_enabled && this.rotate_mode) {
 					this.rotate_mode = false
@@ -323,9 +343,9 @@ export class Theater {
 					this.buttons_bar.getButton('translate').disable()
 				}
 			}, 'R'),
-			new Button('bone helper', true, button => {
+			new Button('helper', true, button => {
 				this.helper_mode = button.is_enabled
-				this.bone_helper.visible = false
+				this.bone_helper.visible = this.helper_mode
 			}, 'H', true),
 			new Button('reset', false, () => {
 				this.resetPose()
@@ -336,7 +356,7 @@ export class Theater {
 		]
 
 		this.buttons_bar.init()
-		this.buttons_bar.triggerActionsOnEnabled()
+		this.buttons_bar.triggerEnabledButtons()
 		this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
 
 		document.body.appendChild(this.buttons_bar.dom)
