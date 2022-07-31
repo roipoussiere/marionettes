@@ -83,15 +83,6 @@ export class ButtonsBar {
 			button.dom.style.cssText = 'display: none'
 		})
 	}
-
-	triggerEnabledButtons() {
-		this.buttons.forEach(button => {
-			if (button.is_checkbox && button.is_enabled) {
-				button.is_enabled = false
-				button.trigger()
-			}
-		})
-	}
 }
 
 export class Button {
@@ -120,46 +111,62 @@ export class Button {
 		this.dom = document.createElement('button')
 	}
 
-	init() {
+	init(): Button {
         this.dom.classList.add(CLASS_NAME_BUTTON)
         this.dom.innerHTML = this.icon
         this.dom.title = this.tooltip
-        this.dom.addEventListener('click', () => {
+
+		this.dom.addEventListener('click', () => {
+			this.switch()
 			this.trigger()
 		})
+
 		document.addEventListener('keydown', event  => {
 			if (event.code == 'Key' + this.shortcut) {
+				this.switch()
 				this.trigger()
 			}
 		})
+
 		if (this.is_checkbox && this.is_enabled) {
 			this.dom.classList.add(CLASS_NAME_BUTTON_ACTIVATED)
 		}
+
+		return this
     }
 
-	enable() {
+	enable(): Button {
 		this.is_enabled = true
 		this.dom.classList.add(CLASS_NAME_BUTTON_ACTIVATED)
+		return this
 	}
 
-	disable() {
+	disable(): Button {
 		this.is_enabled = false
 		this.dom.classList.remove(CLASS_NAME_BUTTON_ACTIVATED)
+		return this
 	}
 
-	trigger() {
+	trigger(): Button {
+		this.action(this)
+		return this
+	}
+
+	switch(): Button {
 		if (this.is_checkbox) {
 			this.is_enabled = ! this.is_enabled
+
+			if (this.is_enabled) {
+				this.enable()
+			} else {
+				this.disable()
+			}
 		}
-		if (this.is_enabled) {
-			this.enable()
-		} else {
-			this.disable()
-		}
-		this.action(this)
+
+		return this
 	}
 
-	updateGeometry(button_size: number, button_pos: THREE.Vector2) {
+	updateGeometry(button_size: number, button_pos: THREE.Vector2): Button {
 		this.dom.style.cssText = `
 			width: ${ button_size }px;
 			height: ${ button_size }px;
@@ -167,6 +174,7 @@ export class Button {
 			top: ${ button_pos.y }px;
 			font-size: ${ Math.round(0.618 * button_size) }px;
 		`
+		return this
 	}
 }
 

@@ -328,7 +328,7 @@ export class Theater {
 				this.buttons_bar.getButton('helper').is_visible = this.is_editable
 				this.buttons_bar.getButton('reset').is_visible = this.is_editable
 				this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
-			}, 'E', true),
+			}, 'E', false),
 			new Button('translate', true, button => {
 				if (button.is_enabled && this.rotate_mode) {
 					this.rotate_mode = false
@@ -346,7 +346,7 @@ export class Theater {
 			new Button('helper', true, button => {
 				this.helper_mode = button.is_enabled
 				this.bone_helper.visible = this.helper_mode
-			}, 'H', true),
+			}, 'H'),
 			new Button('reset', false, () => {
 				this.resetPose()
 			}, 'C'),
@@ -356,7 +356,8 @@ export class Theater {
 		]
 
 		this.buttons_bar.init()
-		this.buttons_bar.triggerEnabledButtons()
+		this.buttons_bar.getButton('edit').trigger()
+		this.buttons_bar.getButton('helper').switch().trigger()
 		this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
 
 		document.body.appendChild(this.buttons_bar.dom)
