@@ -31,7 +31,7 @@ export class Theater {
 	cam_serializer: Vector3Serializer
 
 	models: THREE.Group
-	// bone_helper: THREE.Mesh
+	bone_helper: THREE.Mesh
 	line_helper: THREE.Line
 	scene: THREE.Scene
 
@@ -72,7 +72,7 @@ export class Theater {
 		)
 
 		this.models = new THREE.Group()
-		// this.bone_helper = new THREE.Mesh()
+		this.bone_helper = new THREE.Mesh()
 		this.line_helper = new THREE.Line()
 		this.scene = new THREE.Scene()
 
@@ -121,7 +121,7 @@ export class Theater {
 		this.scene.background = new THREE.Color(SKY_COLOR);
 		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
 
-		// this.bone_helper = this.#buildBoneHelper()
+		this.bone_helper = this.#buildBoneHelper()
 		this.line_helper = this.#buildLineHelper()
 
 		this.scene.add(
@@ -129,7 +129,7 @@ export class Theater {
 			this.#buildGrid(),
 			this.#buildFloor(),
 			this.#buildLights(),
-			// this.bone_helper,
+			this.bone_helper,
 			this.line_helper
 		)
 	}
@@ -262,7 +262,7 @@ export class Theater {
 			}
 		} else if ( this.helper_mode && ! this.on_drag && ! this.translate_mode && ! this.rotate_mode) {
 			this.#raycast()
-			// this.bone_helper.visible = this.focused_marionette != null
+			this.bone_helper.visible = this.focused_marionette != null
 			this.line_helper.visible = this.focused_marionette != null
 		}
 	}
@@ -307,20 +307,30 @@ export class Theater {
 
 	#raycast() {
 		this.raycaster.setFromCamera(this.normalized_pointer, this.camera);
-		const intersects = this.raycaster.intersectObjects(this.meshes, true)
+		const intersects = this.raycaster.intersectObjects(this.meshes, false)
 
 		if (intersects.length > 0 && intersects[0].object.parent) {
 			const model = intersects[0].object.parent
+			// console.log('intersect:', intersects[0], model)
 			const marionette_name = model.name.substring(MODEL_NAME_PREFIX.length)
 			this.focused_marionette = this.marionettes[marionette_name]
-			const focused_bone = this.focused_marionette.updateFocusedBone(intersects[0].point)
 
-			this.#updateLineHelper([
-				focused_bone.getWorldPosition(new THREE.Vector3()),
-				intersects[0].point
-			])
+			const focused_bone = this.focused_marionette.updateFocusedBone(intersects[0].point)
+			const focused_bone_pos = focused_bone.getWorldPosition(new THREE.Vector3())
+			this.bone_helper.position.copy(focused_bone_pos)
+
+			const points: THREE.Vector3[] = []
+			if (focused_bone.parent) {
+				points.push(focused_bone.parent.getWorldPosition(new THREE.Vector3()))
+			}
+			focused_bone.children.forEach(child => {
+				points.push(intersects[0].point)
+				points.push(child.getWorldPosition(new THREE.Vector3()))
+			})
+			this.#updateLineHelper(points)
 		} else {
 			this.line_helper.visible = false
+			this.bone_helper.visible = false
 			this.focused_marionette = null
 		}
 	}
@@ -333,7 +343,6 @@ export class Theater {
 		const material = new THREE.LineBasicMaterial({
 			color: 0xffffff,
 			depthTest: false,
-			// opacity: 0.5,
 			transparent: true
 		})
 		
@@ -374,7 +383,6 @@ export class Theater {
 			}, 'rotate', 'R'),
 			new Button('helper', true, button => {
 				this.helper_mode = button.is_enabled
-				// this.bone_helper.visible = this.helper_mode
 			}, 'helper', 'H'),
 			new Button('reset', false, () => {
 				this.resetPose()
