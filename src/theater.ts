@@ -256,7 +256,7 @@ export class Theater {
 			} else {
 				this.focused_marionette.rotateBone(this.pointer_delta, this.axe_modifier_id)
 			}
-		} else if ( this.helper_mode && ! this.on_drag) {
+		} else if ( this.helper_mode && ! this.on_drag && ! this.translate_mode && ! this.rotate_mode) {
 			this.#raycast()
 			this.bone_helper.visible = this.focused_marionette != null
 		}
