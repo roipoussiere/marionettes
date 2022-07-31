@@ -11,6 +11,8 @@ const POINTER_SENSIBILITY = 1.0
 const GROUND_COLOR = 0x9ec899
 const SKY_COLOR = 0x99b6c8
 const LIGHT_COLOR = 0xffdddd
+const ICONS_FILE_PATH = './icons.svg'
+
 
 type OnChange = (marionette: Marionette) => void
 
@@ -76,7 +78,7 @@ export class Theater {
 		this.meshes = []
 		this.axe_modifier_id = 0
 
-		this.buttons_bar = new ButtonsBar()
+		this.buttons_bar = new ButtonsBar(0.05, ICONS_FILE_PATH)
 		this.spinner = new Spinner()
 		this.initial_canvas_size = new THREE.Vector2(this.canvas.width, this.canvas.height)
 		this.pointer = new THREE.Vector2(0, 0)
@@ -229,7 +231,7 @@ export class Theater {
 		this.camera.updateProjectionMatrix()
 		this.renderer.setSize(canvas_size.width, canvas_size.height)
 
-		this.buttons_bar.updateGeometry(canvas_size, this.canvas_position)
+		this.buttons_bar.redraw(canvas_size, this.canvas_position)
 	}
 
 	#normalizePointer(pointer: THREE.Vector2) {
@@ -327,38 +329,38 @@ export class Theater {
 				this.buttons_bar.getButton('rotate').is_visible = this.is_editable
 				this.buttons_bar.getButton('helper').is_visible = this.is_editable
 				this.buttons_bar.getButton('reset').is_visible = this.is_editable
-				this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
-			}, 'E', false),
+				this.buttons_bar.redraw(this.canvas_size, this.canvas_position)
+			}, 'edit', 'E', false),
 			new Button('translate', true, button => {
 				if (button.is_enabled && this.rotate_mode) {
 					this.rotate_mode = false
 					this.buttons_bar.getButton('rotate').disable()
 				}
 				this.translate_mode = button.is_enabled
-			}, 'T'),
+			}, 'translate', 'T'),
 			new Button('rotate', true, button => {
 				this.rotate_mode = button.is_enabled
 				if (button.is_enabled && this.translate_mode) {
 					this.translate_mode = false
 					this.buttons_bar.getButton('translate').disable()
 				}
-			}, 'R'),
+			}, 'rotate', 'R'),
 			new Button('helper', true, button => {
 				this.helper_mode = button.is_enabled
 				this.bone_helper.visible = this.helper_mode
-			}, 'H'),
+			}, 'helper', 'H'),
 			new Button('reset', false, () => {
 				this.resetPose()
-			}, 'C'),
+			}, 'reset', 'C'),
 			new Button('fullscreen', true, button => {
 				this.fullscreen = button.is_enabled
-			}, 'F')
+			}, 'fullscreen', 'F')
 		]
 
 		this.buttons_bar.init()
 		this.buttons_bar.getButton('edit').trigger()
 		this.buttons_bar.getButton('helper').switch().trigger()
-		this.buttons_bar.updateGeometry(this.canvas_size, this.canvas_position)
+		this.buttons_bar.redraw(this.canvas_size, this.canvas_position)
 
 		document.body.appendChild(this.buttons_bar.dom)
 	}
