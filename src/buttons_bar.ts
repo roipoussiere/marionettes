@@ -9,7 +9,9 @@ const CLASS_NAME_BUTTONS_BAR = 'marionettes-buttons-bar'
 const CLASS_NAME_BUTTON = 'marionettes-button'
 const CLASS_NAME_BUTTON_ACTIVATED = 'is-activated'
 
-const DEFAULT_CSS = `
+const clean_str = (str: string) => str.replace(new RegExp('[\n\t]', 'g'), ' ')
+
+const DEFAULT_CSS = clean_str(`
 .${ CLASS_NAME_BUTTON } {
 	position: absolute;
 	padding: 0px;
@@ -27,15 +29,15 @@ const DEFAULT_CSS = `
 	background-color: #0003;
 	cursor: pointer;
 }
-`
+`)
 
-const ICON_CSS = `
+const ICON_CSS = clean_str(`
 fill: none;
 stroke: #222;
 stroke-linecap: round;
 stroke-linejoin: round;
 stroke-width: 30px;
-`
+`)
 
 export class ButtonsBar {
 	relative_size: number
@@ -214,13 +216,13 @@ export class Button {
 	}
 
 	redraw(button_size: number, button_pos: THREE.Vector2): Button {
-		this.dom.style.cssText = `
+		this.dom.style.cssText = clean_str(`
 			width: ${ button_size }px;
 			height: ${ button_size }px;
 			left: ${ button_pos.x }px;
 			top: ${ button_pos.y }px;
 			font-size: ${ Math.round(0.618 * button_size) }px;
-		`
+		`)
 		return this
 	}
 }

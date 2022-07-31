@@ -1,7 +1,9 @@
 const SPINNER_REL_SIZE = 0.3
 const CLASS_NAME_SPINNER = 'marionettes-spinner'
 
-const SPINNER_CSS = `
+const clean_str = (str: string) => str.replace(new RegExp('[\n\t]', 'g'), ' ')
+
+const SPINNER_CSS = clean_str(`
 .${ CLASS_NAME_SPINNER } {
 	position: absolute;
 	display: inline-block;
@@ -9,13 +11,12 @@ const SPINNER_CSS = `
 	border-top: 10px solid #3498db;
 	border-radius: 50%;
 	animation: spin 2s linear infinite;
-	}
-	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
-	}
 }
-`
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+`)
 
 export class Spinner {
 	relative_size: number
@@ -41,12 +42,12 @@ export class Spinner {
 		const top  = Math.round(canvas_position.y + canvas_size.height / 2 - spinner_size / 2)
 
 		this.dom.classList.add(CLASS_NAME_SPINNER)
-		this.dom.style.cssText = `
+		this.dom.style.cssText = clean_str(`
 			width: ${ spinner_size }px;
 			height: ${ spinner_size }px;
 			left: ${ left }px;
 			top: ${ top }px;
-		`;
+		`)
 	}
 
 	enable() {
