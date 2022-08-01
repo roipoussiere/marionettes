@@ -47,6 +47,23 @@ export function hintLine(start: THREE.Vector3, end: THREE.Vector3, color = DEFAU
 	return line
 }
 
+export function buildBoneHelper(): THREE.Mesh {
+	const handle_material = new THREE.MeshBasicMaterial({
+		color: 0xffffff,
+		depthTest: false,
+		opacity: 0.5,
+		transparent: true
+	})
+
+	const handle_geometry = new THREE.SphereGeometry(0.02, 6, 4)
+
+	const handle = new THREE.Mesh(handle_geometry, handle_material)
+	handle.name = 'bone_helper'
+	handle.visible = false
+
+	return handle
+}
+
 export function dump_scene(scene: THREE.Scene) {
     scene.traverse( obj => {
         let s = '+---';

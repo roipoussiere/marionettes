@@ -32,8 +32,7 @@ export class Theater {
 	cam_serializer: Vector3Serializer
 
 	models: THREE.Group
-	bone_helper: THREE.Mesh
-	lines_helper: THREE.Group
+	segments_helper: THREE.Group
 	scene: THREE.Scene
 
 	focused_marionette: Marionette | null
@@ -73,8 +72,7 @@ export class Theater {
 		)
 
 		this.models = new THREE.Group()
-		this.bone_helper = new THREE.Mesh()
-		this.lines_helper = new THREE.Group()
+		this.segments_helper = new THREE.Group()
 		this.scene = new THREE.Scene()
 
 		this.focused_marionette = null
@@ -122,15 +120,12 @@ export class Theater {
 		this.scene.background = new THREE.Color(SKY_COLOR);
 		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
 
-		this.bone_helper = this.#buildBoneHelper()
-
 		this.scene.add(
 			// new THREE.AxesHelper(),
 			this.#buildGrid(),
 			this.#buildFloor(),
 			this.#buildLights(),
-			this.bone_helper,
-			this.lines_helper
+			this.segments_helper
 		)
 	}
 
@@ -262,13 +257,13 @@ export class Theater {
 			}
 		} else if ( this.helper_mode && ! this.on_drag && ! this.translate_mode && ! this.rotate_mode) {
 			this.#raycast()
-			this.bone_helper.visible = this.focused_marionette != null
-			this.lines_helper.visible = this.focused_marionette != null
 		}
 	}
 
 	#onPointerPress() {
 		this.on_drag = true
+		this.segments_helper.clear()
+
 		if ( ! this.is_editable) {
 			return
 		}
@@ -315,23 +310,20 @@ export class Theater {
 			const marionette_name = model.name.substring(MODEL_NAME_PREFIX.length)
 			this.focused_marionette = this.marionettes[marionette_name]
 
-			const focused_bone = this.focused_marionette.updateFocusedBone(intersects[0].point)
-
-			const [ closest_bone, segments ] = this.focused_marionette.findCorrespondingBone(intersects[0].point)
-			console.log('closest bone:', closest_bone.name)
+			const segments = this.focused_marionette.findCorrespondingBone(intersects[0].point)
 			this.#updateSegmentsHelper(segments)
 
-			const focused_bone_pos = focused_bone.getWorldPosition(new THREE.Vector3())
-			this.bone_helper.position.copy(focused_bone_pos)
+			// console.log('closest bone:', this.focused_marionette.focused_bone.name)
+			// 	const focused_bone_pos = this.focused_marionette.focused_bone.getWorldPosition(new THREE.Vector3())
+			// 	this.bone_helper.position.copy(focused_bone_pos)
 		} else {
-			this.lines_helper.visible = false
-			this.bone_helper.visible = false
+			this.segments_helper.clear()
 			this.focused_marionette = null
 		}
 	}
 
 	#updateSegmentsHelper(segments: colored_segment[]) {
-		this.lines_helper.clear()
+		this.segments_helper.clear()
 
 		segments.forEach(segment => {
 			const material = new THREE.LineBasicMaterial({
@@ -340,7 +332,7 @@ export class Theater {
 				transparent: true
 			})
 			const geometry = new THREE.BufferGeometry().setFromPoints([ segment[0], segment[1] ])
-			this.lines_helper.add(new THREE.Line(geometry, material))
+			this.segments_helper.add(new THREE.Line(geometry, material))
 		})
 	}
 
@@ -434,22 +426,5 @@ export class Theater {
 		lights.add(ambient_light, main_light, secondary_light)
 
 		return lights
-	}
-
-	#buildBoneHelper(): THREE.Mesh {
-		const handle_material = new THREE.MeshBasicMaterial({
-			color: 0xffffff,
-			depthTest: false,
-			opacity: 0.5,
-			transparent: true
-		})
-
-		const handle_geometry = new THREE.SphereGeometry(0.02, 6, 4)
-
-		const handle = new THREE.Mesh(handle_geometry, handle_material)
-		handle.name = 'bone_helper'
-		handle.visible = false
-
-		return handle
 	}
 }

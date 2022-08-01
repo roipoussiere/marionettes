@@ -66,7 +66,7 @@ export class Marionette {
 		})
 	}
 
-	findCorrespondingBone(target: THREE.Vector3): [ THREE.Bone, colored_segment[] ] {
+	findCorrespondingBone(target: THREE.Vector3): colored_segment[] {
 		let min_height = Infinity
 		let closest_bone = new THREE.Bone()
 		const segments: { [id: string] : colored_segment } = {}
@@ -81,7 +81,7 @@ export class Marionette {
 				
 				const dot = se.dot(st)
 				if (dot > 0) {
-					segments[bone.name] = [ start, end, 0xffffff ]
+					segments[bone.name] = [ start, end, 0x888888 ]
 					const alpha = se.angleTo(st)
 					const st_len = st.length()
 					const height = Math.sin(alpha) * st_len
@@ -93,8 +93,9 @@ export class Marionette {
 				}
 			}
 		})
-		segments[closest_bone.name][2] = 0x0000ff
-		return [ closest_bone, Object.values(segments) ]
+		this.focused_bone = <THREE.Bone> closest_bone.parent
+		segments[closest_bone.name][2] = 0xffffff
+		return Object.values(segments)
 	}
 
 	resetPose() {
