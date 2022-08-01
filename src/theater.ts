@@ -15,6 +15,7 @@ const ICONS_FILE_PATH = './icons.svg'
 
 
 type OnChange = (marionette: Marionette) => void
+type segment = [ THREE.Vector3, THREE.Vector3 ]
 
 
 export class Theater {
@@ -32,7 +33,7 @@ export class Theater {
 
 	models: THREE.Group
 	bone_helper: THREE.Mesh
-	line_helper: THREE.Line
+	lines_helper: THREE.Group
 	scene: THREE.Scene
 
 	focused_marionette: Marionette | null
@@ -73,7 +74,7 @@ export class Theater {
 
 		this.models = new THREE.Group()
 		this.bone_helper = new THREE.Mesh()
-		this.line_helper = new THREE.Line()
+		this.lines_helper = new THREE.Group()
 		this.scene = new THREE.Scene()
 
 		this.focused_marionette = null
@@ -122,7 +123,6 @@ export class Theater {
 		this.scene.fog = new THREE.Fog(SKY_COLOR, 10, 20);
 
 		this.bone_helper = this.#buildBoneHelper()
-		this.line_helper = this.#buildLineHelper()
 
 		this.scene.add(
 			// new THREE.AxesHelper(),
@@ -130,7 +130,7 @@ export class Theater {
 			this.#buildFloor(),
 			this.#buildLights(),
 			this.bone_helper,
-			this.line_helper
+			this.lines_helper
 		)
 	}
 
@@ -263,7 +263,7 @@ export class Theater {
 		} else if ( this.helper_mode && ! this.on_drag && ! this.translate_mode && ! this.rotate_mode) {
 			this.#raycast()
 			this.bone_helper.visible = this.focused_marionette != null
-			this.line_helper.visible = this.focused_marionette != null
+			this.lines_helper.visible = this.focused_marionette != null
 		}
 	}
 
@@ -319,36 +319,34 @@ export class Theater {
 			const focused_bone_pos = focused_bone.getWorldPosition(new THREE.Vector3())
 			this.bone_helper.position.copy(focused_bone_pos)
 
-			const points: THREE.Vector3[] = []
+			const lines: segment[] = []
 			if (focused_bone.parent) {
-				points.push(focused_bone.parent.getWorldPosition(new THREE.Vector3()))
+				lines.push([ intersects[0].point, focused_bone.parent.getWorldPosition(new THREE.Vector3()) ])
 			}
 			focused_bone.children.forEach(child => {
-				points.push(intersects[0].point)
-				points.push(child.getWorldPosition(new THREE.Vector3()))
+				lines.push([ intersects[0].point, child.getWorldPosition(new THREE.Vector3()) ])
 			})
-			this.#updateLineHelper(points)
+			this.#updateLinesHelper(lines)
 		} else {
-			this.line_helper.visible = false
+			this.lines_helper.visible = false
 			this.bone_helper.visible = false
 			this.focused_marionette = null
 		}
 	}
 
-	#updateLineHelper(points: THREE.Vector3[]) {
-		this.line_helper.geometry = new THREE.BufferGeometry().setFromPoints(points)
-	}
+	#updateLinesHelper(lines: segment[]) {
+		this.lines_helper.clear()
 
-	#buildLineHelper(): THREE.Line {
 		const material = new THREE.LineBasicMaterial({
 			color: 0xffffff,
 			depthTest: false,
 			transparent: true
 		})
-		
-		const geometry = new THREE.BufferGeometry()
 
-		return new THREE.Line( geometry, material )
+		lines.forEach(line => {
+			const geometry = new THREE.BufferGeometry().setFromPoints(line)
+			this.lines_helper.add(new THREE.Line(geometry, material))
+		})
 	}
 
 	#addSpinner() {
