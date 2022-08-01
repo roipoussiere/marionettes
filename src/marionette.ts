@@ -11,6 +11,9 @@ const MIN_POS = new THREE.Vector3(-1.8, -1.8, -1.8)
 const MAX_POS = new THREE.Vector3( 1.8,  1.8,  1.8)
 
 
+type colored_segment = [ THREE.Vector3, THREE.Vector3, THREE.ColorRepresentation ]
+
+
 export class Marionette {
     name: string
 	default_pose: string
@@ -52,8 +55,8 @@ export class Marionette {
 			throw(`Skeleton not found in the model.`)
 		}
 
-		this.updateBonesWorldPos()
 		this.resetPose()
+		this.updateBonesWorldPos()
 	}
 
 	updateBonesWorldPos() {
@@ -63,10 +66,10 @@ export class Marionette {
 		})
 	}
 
-	findCorrespondingBone(target: THREE.Vector3): THREE.Bone {
-		console.log('---')
+	findCorrespondingBone(target: THREE.Vector3): [ THREE.Bone, colored_segment[] ] {
 		let min_height = Infinity
 		let closest_bone = new THREE.Bone()
+		const segments: { [id: string] : colored_segment } = {}
 
 		this.skeleton.bones.forEach(bone => {
 			if (bone.parent && bone.name != this.root_bone.name) {
@@ -78,6 +81,7 @@ export class Marionette {
 				
 				const dot = se.dot(st)
 				if (dot > 0) {
+					segments[bone.name] = [ start, end, 0xffffff ]
 					const alpha = se.angleTo(st)
 					const st_len = st.length()
 					const height = Math.sin(alpha) * st_len
@@ -85,12 +89,12 @@ export class Marionette {
 						min_height = height
 						closest_bone = bone
 					}
-					console.log('bone candidate:', bone.name, dot, height)
+					// console.log('bone candidate:', bone.name, dot, height)
 				}
 			}
 		})
-		console.log('closest bone:', closest_bone.name)
-		return closest_bone
+		segments[closest_bone.name][2] = 0x0000ff
+		return [ closest_bone, Object.values(segments) ]
 	}
 
 	resetPose() {

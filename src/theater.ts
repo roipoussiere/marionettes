@@ -15,7 +15,7 @@ const ICONS_FILE_PATH = './icons.svg'
 
 
 type OnChange = (marionette: Marionette) => void
-type colored_segment = [ THREE.Vector3, THREE.Vector3, THREE.Color ]
+type colored_segment = [ THREE.Vector3, THREE.Vector3, THREE.ColorRepresentation ]
 
 
 export class Theater {
@@ -316,25 +316,13 @@ export class Theater {
 			this.focused_marionette = this.marionettes[marionette_name]
 
 			const focused_bone = this.focused_marionette.updateFocusedBone(intersects[0].point)
+
+			const [ closest_bone, segments ] = this.focused_marionette.findCorrespondingBone(intersects[0].point)
+			console.log('closest bone:', closest_bone.name)
+			this.#updateSegmentsHelper(segments)
+
 			const focused_bone_pos = focused_bone.getWorldPosition(new THREE.Vector3())
 			this.bone_helper.position.copy(focused_bone_pos)
-
-			const lines: colored_segment[] = []
-			if (focused_bone.parent) {
-				lines.push([
-					intersects[0].point,
-					focused_bone.parent.getWorldPosition(new THREE.Vector3()),
-					new THREE.Color(0x0000ff)
-				])
-			}
-			focused_bone.children.forEach(child => {
-				lines.push([
-					intersects[0].point,
-					child.getWorldPosition(new THREE.Vector3()),
-					new THREE.Color(0xffffff)
-				])
-			})
-			this.#updateSegmentsHelper(lines)
 		} else {
 			this.lines_helper.visible = false
 			this.bone_helper.visible = false
