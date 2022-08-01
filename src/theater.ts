@@ -15,7 +15,7 @@ const ICONS_FILE_PATH = './icons.svg'
 
 
 type OnChange = (marionette: Marionette) => void
-type segment = [ THREE.Vector3, THREE.Vector3 ]
+type colored_segment = [ THREE.Vector3, THREE.Vector3, THREE.Color ]
 
 
 export class Theater {
@@ -319,14 +319,22 @@ export class Theater {
 			const focused_bone_pos = focused_bone.getWorldPosition(new THREE.Vector3())
 			this.bone_helper.position.copy(focused_bone_pos)
 
-			const lines: segment[] = []
+			const lines: colored_segment[] = []
 			if (focused_bone.parent) {
-				lines.push([ intersects[0].point, focused_bone.parent.getWorldPosition(new THREE.Vector3()) ])
+				lines.push([
+					intersects[0].point,
+					focused_bone.parent.getWorldPosition(new THREE.Vector3()),
+					new THREE.Color(0x0000ff)
+				])
 			}
 			focused_bone.children.forEach(child => {
-				lines.push([ intersects[0].point, child.getWorldPosition(new THREE.Vector3()) ])
+				lines.push([
+					intersects[0].point,
+					child.getWorldPosition(new THREE.Vector3()),
+					new THREE.Color(0xffffff)
+				])
 			})
-			this.#updateLinesHelper(lines)
+			this.#updateSegmentsHelper(lines)
 		} else {
 			this.lines_helper.visible = false
 			this.bone_helper.visible = false
@@ -334,17 +342,16 @@ export class Theater {
 		}
 	}
 
-	#updateLinesHelper(lines: segment[]) {
+	#updateSegmentsHelper(segments: colored_segment[]) {
 		this.lines_helper.clear()
 
-		const material = new THREE.LineBasicMaterial({
-			color: 0xffffff,
-			depthTest: false,
-			transparent: true
-		})
-
-		lines.forEach(line => {
-			const geometry = new THREE.BufferGeometry().setFromPoints(line)
+		segments.forEach(segment => {
+			const material = new THREE.LineBasicMaterial({
+				color: segment[2],
+				depthTest: false,
+				transparent: true
+			})
+			const geometry = new THREE.BufferGeometry().setFromPoints([ segment[0], segment[1] ])
 			this.lines_helper.add(new THREE.Line(geometry, material))
 		})
 	}
