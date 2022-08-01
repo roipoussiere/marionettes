@@ -66,38 +66,6 @@ export class Marionette {
 		})
 	}
 
-	findCorrespondingBone(target: THREE.Vector3): colored_segment[] {
-		let min_height = Infinity
-		let closest_bone = new THREE.Bone()
-		const segments: { [id: string] : colored_segment } = {}
-
-		this.skeleton.bones.forEach(bone => {
-			if (bone.parent && bone.name != this.root_bone.name) {
-				const start = this.bones_world_pos[bone.parent.name]
-				const end = this.bones_world_pos[bone.name]
-
-				const se = start.clone().sub(end)
-				const st = start.clone().sub(target)
-				
-				const dot = se.dot(st)
-				if (dot > 0) {
-					segments[bone.name] = [ start, end, 0x888888 ]
-					const alpha = se.angleTo(st)
-					const st_len = st.length()
-					const height = Math.sin(alpha) * st_len
-					if (height < min_height) {
-						min_height = height
-						closest_bone = bone
-					}
-					// console.log('bone candidate:', bone.name, dot, height)
-				}
-			}
-		})
-		this.focused_bone = <THREE.Bone> closest_bone.parent
-		segments[closest_bone.name][2] = 0xffffff
-		return Object.values(segments)
-	}
-
 	resetPose() {
 		this.loadFromString(this.default_pose)
 	}
@@ -169,23 +137,58 @@ export class Marionette {
 		this.updateBonesWorldPos()
 	}
 
-	updateFocusedBone(point: THREE.Vector3): THREE.Bone {
-		this.findCorrespondingBone(point)
+	updateFocusedBone(target: THREE.Vector3): colored_segment[] {
+		let min_height = Infinity
+		let closest_bone = new THREE.Bone()
+		const segments: { [id: string] : colored_segment } = {}
 
-		const position = new THREE.Vector3()
+		this.skeleton.bones.forEach(bone => {
+			if (bone.parent && bone.name != this.root_bone.name) {
+				const start = this.bones_world_pos[bone.parent.name]
+				const end = this.bones_world_pos[bone.name]
+
+				const se = start.clone().sub(end)
+				const st = start.clone().sub(target)
+				
+				const dot = se.dot(st)
+				if (dot > 0) {
+					segments[bone.name] = [ start, end, 0x888888 ]
+					const alpha = se.angleTo(st)
+					const st_len = st.length()
+					const height = Math.sin(alpha) * st_len
+					if (height < min_height) {
+						min_height = height
+						closest_bone = bone
+					}
+					// console.log('bone candidate:', bone.name, dot, height)
+				}
+			}
+		})
+		this.focused_bone = <THREE.Bone> closest_bone.parent
+		segments[closest_bone.name][2] = 0xffffff
+		return Object.values(segments)
+	}
+
+	updateFocusedBoneOld(point: THREE.Vector3): colored_segment[] {
+		this.updateFocusedBone(point)
+
+		const bone_world_position = new THREE.Vector3()
 		let closest_bone = new THREE.Bone
 		let closest_distance = Infinity
+		let closest_point = new THREE.Vector3()
 
 		BonesConfig.forEachEnabledBone(this.skeleton, bone => {
-			const distance = (bone.getWorldPosition(position).sub(point)).length()
+			bone.getWorldPosition(bone_world_position)
+			const distance = (bone_world_position.clone().sub(point)).length()
 			if (distance < closest_distance) {
 				closest_bone = bone
 				closest_distance = distance
+				closest_point.copy(bone_world_position)
 			}
 		})
 
 		this.focused_bone = closest_bone
-		return this.focused_bone
+		return [ [point, closest_point, 0xffffff] ]
 	}
 
 	roundPosition() {

@@ -310,12 +310,9 @@ export class Theater {
 			const marionette_name = model.name.substring(MODEL_NAME_PREFIX.length)
 			this.focused_marionette = this.marionettes[marionette_name]
 
-			const segments = this.focused_marionette.findCorrespondingBone(intersects[0].point)
+			// const segments = this.focused_marionette.updateFocusedBoneOld(intersects[0].point)
+			const segments = this.focused_marionette.updateFocusedBone(intersects[0].point)
 			this.#updateSegmentsHelper(segments)
-
-			// console.log('closest bone:', this.focused_marionette.focused_bone.name)
-			// 	const focused_bone_pos = this.focused_marionette.focused_bone.getWorldPosition(new THREE.Vector3())
-			// 	this.bone_helper.position.copy(focused_bone_pos)
 		} else {
 			this.segments_helper.clear()
 			this.focused_marionette = null
