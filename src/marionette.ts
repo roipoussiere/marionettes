@@ -38,9 +38,10 @@ export class Marionette {
 		this.model = <THREE.Group> SkeletonUtils.clone(model)
 		this.model.name = MODEL_NAME_PREFIX + this.name
 
-		const root_bone = <THREE.Bone> this.model.children.find(child => child instanceof THREE.Bone)
-		root_bone.traverse(bone => {
-			this.skeleton.bones.push(<THREE.Bone> bone)
+		this.root_bone.traverse(bone => {
+			if (bone.parent && bone.name != bone.parent.name) {
+				this.skeleton.bones.push(<THREE.Bone> bone)
+			}
 		})
 
 		if ( this.skeleton.bones.length == 0 ) {
