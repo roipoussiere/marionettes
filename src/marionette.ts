@@ -19,6 +19,8 @@ export class Marionette {
 	model: THREE.Group
 	doing_something: boolean
 	serializer: SkeletonSerializer
+	bones_world_pos: { [id: string] : THREE.Vector3 }
+
 
 	constructor(name: string, default_pose: string) {
         this.name = name
@@ -28,19 +30,21 @@ export class Marionette {
 		this.model = new THREE.Group()
 		this.doing_something = false
 		this.serializer = new SkeletonSerializer(MIN_POS, MAX_POS)
+		this.bones_world_pos = {}
 	}
 
 	get root_bone(): THREE.Bone {
 		return <THREE.Bone> this.model.children.find(child => child instanceof THREE.Bone)
 	}
 
-	setModel(model: THREE.Group) {
+	onModelLoaded(model: THREE.Group) {
 		this.model = <THREE.Group> SkeletonUtils.clone(model)
 		this.model.name = MODEL_NAME_PREFIX + this.name
 
 		this.root_bone.traverse(bone => {
 			if (bone.parent && bone.name != bone.parent.name) {
 				this.skeleton.bones.push(<THREE.Bone> bone)
+				this.bones_world_pos[bone.name] = new THREE.Vector3()
 			}
 		})
 
@@ -48,7 +52,45 @@ export class Marionette {
 			throw(`Skeleton not found in the model.`)
 		}
 
+		this.updateBonesWorldPos()
 		this.resetPose()
+	}
+
+	updateBonesWorldPos() {
+		// need optimization: iterate from a specific bone instead over all bones
+		this.skeleton.bones.forEach(bone => {
+			bone.getWorldPosition(this.bones_world_pos[bone.name])
+		})
+	}
+
+	findCorrespondingBone(target: THREE.Vector3): THREE.Bone {
+		console.log('---')
+		let min_height = Infinity
+		let closest_bone = new THREE.Bone()
+
+		this.skeleton.bones.forEach(bone => {
+			if (bone.parent && bone.name != this.root_bone.name) {
+				const start = this.bones_world_pos[bone.parent.name]
+				const end = this.bones_world_pos[bone.name]
+
+				const se = start.clone().sub(end)
+				const st = start.clone().sub(target)
+				
+				const dot = se.dot(st)
+				if (dot > 0) {
+					const alpha = se.angleTo(st)
+					const st_len = st.length()
+					const height = Math.sin(alpha) * st_len
+					if (height < min_height) {
+						min_height = height
+						closest_bone = bone
+					}
+					console.log('bone candidate:', bone.name, dot, height)
+				}
+			}
+		})
+		console.log('closest bone:', closest_bone.name)
+		return closest_bone
 	}
 
 	resetPose() {
@@ -84,6 +126,7 @@ export class Marionette {
 			this.model.translateY(- pointer_delta.x - pointer_delta.y)
 		}
 		this.model.position.clamp(MIN_POS, MAX_POS)
+		this.updateBonesWorldPos()
 	}
 
 	rotateModel(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
@@ -96,6 +139,7 @@ export class Marionette {
 		} else if (axe_modifier_id == 2) {
 			root_bone.rotateZ(pointer_delta.x + pointer_delta.y)
 		}
+		this.updateBonesWorldPos()
 	}
 
 	rotateBone(pointer_delta: THREE.Vector2, axe_modifier_id: number) {
@@ -117,9 +161,12 @@ export class Marionette {
 
 		const euler_rotation = new THREE.Euler().setFromVector3(rotation, bone_config.rotation_order)
 		this.focused_bone.setRotationFromEuler(euler_rotation)
+		this.updateBonesWorldPos()
 	}
 
 	updateFocusedBone(point: THREE.Vector3): THREE.Bone {
+		this.findCorrespondingBone(point)
+
 		const position = new THREE.Vector3()
 		let closest_bone = new THREE.Bone
 		let closest_distance = Infinity

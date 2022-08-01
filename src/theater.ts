@@ -205,7 +205,7 @@ export class Theater {
 
 	onModelLoaded(model: THREE.Group) {
 		Object.values(this.marionettes).forEach(marionette => {
-			marionette.setModel(model)
+			marionette.onModelLoaded(model)
 			marionette.model.children.forEach(grand_child => {
 				if(grand_child instanceof THREE.SkinnedMesh) {
 					this.meshes.push(<THREE.SkinnedMesh> grand_child)
